@@ -282,36 +282,49 @@ export function subscribeToLeaderboard(callback: (entries: LeaderboardEntry[]) =
       ]),
     )
 
-    const latestByGenerator = new Map<string, Measurement>()
+    const maxByGenerator = new Map<string, Measurement>()
 
     measurementSnapshot.docs.forEach((item) => {
       const measurement = {
         id: item.id,
         ...item.data(),
       } as Measurement
-      const current = latestByGenerator.get(measurement.generatorId)
+      const current = maxByGenerator.get(measurement.generatorId)
 
       if (!current) {
-        latestByGenerator.set(measurement.generatorId, measurement)
+        maxByGenerator.set(measurement.generatorId, measurement)
         return
       }
 
       const currentMs = current.createdAt?.toMillis() ?? 0
       const nextMs = measurement.createdAt?.toMillis() ?? 0
 
-      if (nextMs > currentMs) {
-        latestByGenerator.set(measurement.generatorId, measurement)
+      if (measurement.value > current.value) {
+        maxByGenerator.set(measurement.generatorId, measurement)
+        return
+      }
+
+      if (measurement.value === current.value && nextMs > currentMs) {
+        maxByGenerator.set(measurement.generatorId, measurement)
       }
     })
 
-    const entries = Array.from(latestByGenerator.values())
+    const entries = Array.from(maxByGenerator.values())
       .map((measurement) => ({
         generatorId: measurement.generatorId,
         code: generatorMap.get(measurement.generatorId)?.code ?? 'unbekannt',
-        latestValue: measurement.value,
-        measuredAt: measurement.createdAt ?? null,
+        maxValue: measurement.value,
+        maxMeasuredAt: measurement.createdAt ?? null,
       }))
-      .sort((left, right) => right.latestValue - left.latestValue)
+      .sort((left, right) => {
+        if (right.maxValue !== left.maxValue) {
+          return right.maxValue - left.maxValue
+        }
+
+        const rightMs = right.maxMeasuredAt?.toMillis() ?? 0
+        const leftMs = left.maxMeasuredAt?.toMillis() ?? 0
+        return rightMs - leftMs
+      })
 
     callback(entries)
   })

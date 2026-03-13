@@ -284,9 +284,9 @@ export function AdminPage() {
         <Grid size={{ xs: 12, md: 4 }}>
           <DashboardCard
             eyebrow="Ranking"
-            title="Aktueller Wert"
-            value={formatMeasurement(currentLeaderboardEntry?.latestValue)}
-            helper={formatTimestamp(currentLeaderboardEntry?.measuredAt)}
+            title="Maximalwert"
+            value={formatMeasurement(currentLeaderboardEntry?.maxValue)}
+            helper={formatTimestamp(currentLeaderboardEntry?.maxMeasuredAt)}
             accent="success"
           />
         </Grid>

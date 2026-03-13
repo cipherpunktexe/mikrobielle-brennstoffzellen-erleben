@@ -34,32 +34,32 @@ const sampleLeaderboardEntries: LeaderboardEntry[] = [
   {
     generatorId: 'demo-brennstoffzelle-001',
     code: 'beispiel-001',
-    latestValue: 1.82,
-    measuredAt: null,
+    maxValue: 1.82,
+    maxMeasuredAt: null,
   },
   {
     generatorId: 'demo-brennstoffzelle-002',
     code: 'beispiel-002',
-    latestValue: 1.67,
-    measuredAt: null,
+    maxValue: 1.67,
+    maxMeasuredAt: null,
   },
   {
     generatorId: 'demo-brennstoffzelle-003',
     code: 'beispiel-003',
-    latestValue: 1.49,
-    measuredAt: null,
+    maxValue: 1.49,
+    maxMeasuredAt: null,
   },
   {
     generatorId: 'demo-brennstoffzelle-004',
     code: 'beispiel-004',
-    latestValue: 1.38,
-    measuredAt: null,
+    maxValue: 1.38,
+    maxMeasuredAt: null,
   },
   {
     generatorId: 'demo-brennstoffzelle-005',
     code: 'beispiel-005',
-    latestValue: 1.21,
-    measuredAt: null,
+    maxValue: 1.21,
+    maxMeasuredAt: null,
   },
 ]
 
@@ -291,8 +291,8 @@ export function LeaderboardPage() {
               Aktuelles Ranking
             </Typography>
             <Typography color="text.secondary" sx={{ maxWidth: 760 }}>
-              Hier werden die zuletzt gespeicherten Messwerte aller Brennstoffzellen verglichen.
-              Die hoechste aktuelle Spannung steht oben.
+              Hier werden die maximal gemessenen Werte aller Brennstoffzellen verglichen. Der
+              hoechste Messwert steht oben.
             </Typography>
           </Box>
 
@@ -374,7 +374,7 @@ export function LeaderboardPage() {
                             variant="h3"
                             sx={{ fontSize: { xs: '1.8rem', sm: '2rem' }, lineHeight: 1, letterSpacing: '-0.02em' }}
                           >
-                            {formatMeasurement(entry.latestValue)}
+                            {formatMeasurement(entry.maxValue)}
                           </Typography>
                         </Box>
 
@@ -404,7 +404,7 @@ export function LeaderboardPage() {
                   <TableCell sx={{ color: 'text.secondary', fontWeight: 700 }}>Platz</TableCell>
                   <TableCell sx={{ color: 'text.secondary', fontWeight: 700 }}>Brennstoffzelle</TableCell>
                   <TableCell align="right" sx={{ color: 'text.secondary', fontWeight: 700 }}>
-                    Messwert
+                    Maximalwert
                   </TableCell>
                 </TableRow>
               </TableHead>
@@ -453,7 +453,7 @@ export function LeaderboardPage() {
                     </TableCell>
                     <TableCell align="right">
                       <Typography sx={{ fontWeight: 800, fontSize: '1.05rem' }}>
-                        {formatMeasurement(entry.latestValue)}
+                        {formatMeasurement(entry.maxValue)}
                       </Typography>
                     </TableCell>
                   </TableRow>

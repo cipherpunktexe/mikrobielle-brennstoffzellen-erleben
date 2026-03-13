@@ -22,8 +22,8 @@ describe('LeaderboardPage', () => {
         {
           generatorId: 'gen-1',
           code: 'station-017',
-          latestValue: 1.42,
-          measuredAt: {
+          maxValue: 1.42,
+          maxMeasuredAt: {
             toDate: () => new Date('2026-03-12T21:15:00.000Z'),
           },
         },
@@ -91,8 +91,8 @@ describe('LeaderboardPage', () => {
         {
           generatorId: 'gen-1',
           code: 'station-017',
-          latestValue: 1.42,
-          measuredAt: {
+          maxValue: 1.42,
+          maxMeasuredAt: {
             toDate: () => new Date('2026-03-12T21:15:00.000Z'),
           },
         },

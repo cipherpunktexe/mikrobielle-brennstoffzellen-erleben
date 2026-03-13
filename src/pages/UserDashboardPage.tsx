@@ -262,7 +262,7 @@ export function UserDashboardPage() {
             <Grid size={{ xs: 12, sm: 4 }}>
               <Stack spacing={0.5}>
                 <Typography variant="caption" color="text.secondary">
-                  Aktuelle Platzierung
+                  Platzierung nach Maximalwert
                 </Typography>
                 <Typography variant="h5">
                   {ranking ? `#${ranking}` : 'n/a'}
