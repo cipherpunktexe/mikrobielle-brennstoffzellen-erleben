@@ -23,10 +23,10 @@ interface AuthCardProps {
 export function AuthCard(props: AuthCardProps) {
   return (
     <Card>
-      <CardContent sx={{ p: 3 }}>
+      <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
         <Stack spacing={2.5}>
           <div>
-            <Typography variant="h4" gutterBottom>
+            <Typography variant="h4" gutterBottom sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }}>
               {props.title}
             </Typography>
             <Typography color="text.secondary">{props.description}</Typography>
@@ -51,7 +51,7 @@ export function AuthCard(props: AuthCardProps) {
               required
               fullWidth
             />
-            <Button disabled={props.loading} type="submit" variant="contained">
+            <Button disabled={props.loading} type="submit" variant="contained" fullWidth>
               {props.loading ? 'Bitte warten...' : props.submitLabel}
             </Button>
           </Stack>
@@ -64,6 +64,7 @@ export function AuthCard(props: AuthCardProps) {
                 variant="outlined"
                 startIcon={<GoogleIcon />}
                 onClick={() => void props.onGoogleSignIn?.()}
+                fullWidth
               >
                 {props.googleLabel ?? 'Mit Google anmelden'}
               </Button>

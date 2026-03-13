@@ -1,7 +1,4 @@
-import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
-import LogoutIcon from '@mui/icons-material/Logout'
-import WaterDropIcon from '@mui/icons-material/WaterDrop'
 import {
   Alert,
   Box,
@@ -9,6 +6,7 @@ import {
   Card,
   CardContent,
   CircularProgress,
+  Divider,
   Grid,
   List,
   ListItem,
@@ -20,15 +18,15 @@ import {
   TableHead,
   TableRow,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material'
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link as RouterLink } from 'react-router-dom'
 import { AuthCard } from '../components/AuthCard'
-import { DashboardCard } from '../components/DashboardCard'
 import { formatMeasurement, formatTimestamp } from '../lib/format'
 import {
   login,
-  logout,
   signInWithGoogle,
   subscribeToAuth,
   subscribeToGenerator,
@@ -39,6 +37,8 @@ import {
 import type { Generator, LeaderboardEntry, Measurement, UserProfile } from '../types/domain'
 
 export function UserDashboardPage() {
+  const theme = useTheme()
+  const isMobileViewport = useMediaQuery(theme.breakpoints.down('sm'))
   const [authUserId, setAuthUserId] = useState('')
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [generator, setGenerator] = useState<Generator | null>(null)
@@ -115,7 +115,6 @@ export function UserDashboardPage() {
     }
   }
 
-  const latestMeasurement = measurements[0]
   const ranking = generator
     ? leaderboard.findIndex((entry) => entry.generatorId === generator.id) + 1
     : 0
@@ -130,11 +129,11 @@ export function UserDashboardPage() {
 
   if (!authUserId) {
     return (
-      <Grid container spacing={3} alignItems="stretch">
+      <Grid container spacing={{ xs: 2, md: 3 }} alignItems="stretch">
         <Grid size={{ xs: 12, md: 6 }}>
           <AuthCard
             title="User-Login"
-            description="Nutzer melden sich mit Firebase Authentication an und sehen danach Generator, Messwert und Leaderboard."
+            description="Nutzer melden sich an und sehen danach Generator, Platzierung und Messwerthistorie."
             values={formValues}
             submitLabel="Einloggen"
             googleLabel="Mit Google anmelden"
@@ -149,31 +148,22 @@ export function UserDashboardPage() {
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
           <Card sx={{ height: '100%' }}>
-            <CardContent sx={{ p: 3 }}>
-              <Stack spacing={2}>
-                <Typography variant="h4">Nutzer-Workflow</Typography>
+            <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
+              <Stack spacing={1.5}>
+                <Typography variant="h5">Deine Brennstoffzelle</Typography>
                 <Typography color="text.secondary">
-                  Der QR-Link zur Registrierung liegt unter `/register/:code`. Nach der
-                  Registrierung wird der Generator automatisch angelegt.
+                  Nach dem Login siehst du deinen Generatorcode, deine aktuelle Platzierung
+                  und die letzten Messwerte.
                 </Typography>
                 <List dense disablePadding>
                   <ListItem disableGutters>
-                    <ListItemText
-                      primary="QR-Code scannen"
-                      secondary="Der Link öffnet den passenden Registrierungsflow."
-                    />
+                    <ListItemText primary="Generatorcode" secondary="Automatisch mit dem Konto verknüpft." />
                   </ListItem>
                   <ListItem disableGutters>
-                    <ListItemText
-                      primary="Account anlegen"
-                      secondary="Authentication und Firestore werden in einem Schritt beschrieben."
-                    />
+                    <ListItemText primary="Platzierung" secondary="Live aus dem Leaderboard berechnet." />
                   </ListItem>
                   <ListItem disableGutters>
-                    <ListItemText
-                      primary="Messwert sehen"
-                      secondary="Die Ansicht aktualisiert sich live über Firestore."
-                    />
+                    <ListItemText primary="Messwerthistorie" secondary="Alle Einträge in chronologischer Reihenfolge." />
                   </ListItem>
                 </List>
               </Stack>
@@ -185,23 +175,12 @@ export function UserDashboardPage() {
   }
 
   return (
-    <Stack spacing={3}>
-      <Stack
-        direction={{ xs: 'column', md: 'row' }}
-        justifyContent="space-between"
-        alignItems={{ xs: 'flex-start', md: 'center' }}
-        spacing={2}
-      >
-        <div>
-          <Typography variant="overline">User</Typography>
-          <Typography variant="h2">
-            {profile?.name ? `Willkommen, ${profile.name}` : 'Nutzer-Dashboard'}
-          </Typography>
-        </div>
-        <Button variant="outlined" startIcon={<LogoutIcon />} onClick={() => void logout()}>
-          Abmelden
-        </Button>
-      </Stack>
+    <Stack spacing={{ xs: 2, md: 2.5 }}>
+      <Box>
+        <Typography variant="h2" sx={{ fontSize: { xs: '1.75rem', sm: '2.2rem' } }}>
+          {`Willkommen, ${profile?.name ?? ''}!`.trim()}
+        </Typography>
+      </Box>
 
       {profile?.role === 'admin' ? (
         <Alert severity="info">
@@ -210,102 +189,114 @@ export function UserDashboardPage() {
         </Alert>
       ) : null}
 
-      <Grid container spacing={3}>
-        <Grid size={{ xs: 12, md: 4 }}>
-          <DashboardCard
-            eyebrow="Generator"
-            title="Zugeteilter Code"
-            value={generator?.code ?? 'offen'}
-            helper={generator ? 'Mit dem Nutzerkonto verknüpft.' : 'Noch kein Generator vorhanden.'}
-            accent="primary"
-          />
-        </Grid>
-        <Grid size={{ xs: 12, md: 4 }}>
-          <DashboardCard
-            eyebrow="Aktuell"
-            title="Letzter Messwert"
-            value={formatMeasurement(latestMeasurement?.value)}
-            helper={formatTimestamp(latestMeasurement?.createdAt)}
-            icon={<WaterDropIcon />}
-            accent="success"
-          />
-        </Grid>
-        <Grid size={{ xs: 12, md: 4 }}>
-          <DashboardCard
-            eyebrow="Ranking"
-            title="Leaderboard"
-            value={ranking ? `#${ranking}` : 'n/a'}
-            helper={
-              ranking
-                ? `Von ${leaderboard.length} aktiven Generatoren.`
-                : 'Sobald ein Messwert vorliegt, erscheint der Generator im Ranking.'
-            }
-            icon={<EmojiEventsIcon />}
-            accent="warning"
-          />
-        </Grid>
-      </Grid>
-
-      <Grid container spacing={3}>
-        <Grid size={{ xs: 12, lg: 4 }}>
-          <Card sx={{ height: '100%' }}>
-            <CardContent sx={{ p: 3 }}>
-              <Stack spacing={2}>
-                <Typography variant="h4">Leaderboard</Typography>
-                <Typography color="text.secondary">
-                  Das vollständige Ranking wird auf einer eigenen Seite angezeigt.
+      <Card>
+        <CardContent sx={{ p: { xs: 2.25, sm: 2.5 } }}>
+          <Grid container spacing={{ xs: 1.5, sm: 2 }} alignItems="center">
+            <Grid size={{ xs: 12, sm: 5 }}>
+              <Stack spacing={0.5}>
+                <Typography variant="caption" color="text.secondary">
+                  Generatorcode
                 </Typography>
-                <Button
-                  component={RouterLink}
-                  to="/leaderboard"
-                  variant="outlined"
-                  endIcon={<ArrowForwardIcon />}
-                >
-                  Zum Leaderboard
-                </Button>
+                <Typography variant="h5" sx={{ overflowWrap: 'anywhere' }}>
+                  {generator?.code ?? 'offen'}
+                </Typography>
               </Stack>
-            </CardContent>
-          </Card>
-        </Grid>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 4 }}>
+              <Stack spacing={0.5}>
+                <Typography variant="caption" color="text.secondary">
+                  Aktuelle Platzierung
+                </Typography>
+                <Typography variant="h5">
+                  {ranking ? `#${ranking}` : 'n/a'}
+                </Typography>
+              </Stack>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 3 }}>
+              <Button
+                component={RouterLink}
+                to="/leaderboard"
+                variant="outlined"
+                endIcon={<ArrowForwardIcon />}
+                size="small"
+                fullWidth
+              >
+                Leaderboard
+              </Button>
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
 
-        <Grid size={{ xs: 12, lg: 8 }}>
-          <Card sx={{ height: '100%' }}>
-            <CardContent sx={{ p: 3 }}>
-              <Typography variant="h4" gutterBottom>
-                Letzte Messungen
+      <Card>
+        <CardContent sx={{ p: { xs: 2.25, sm: 2.5 } }}>
+          <Stack spacing={1.5}>
+            <Typography variant="h5">Messwerthistorie</Typography>
+            {measurements.length === 0 ? (
+              <Typography color="text.secondary">
+                Für diesen Generator liegen noch keine Messwerte vor.
               </Typography>
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Zeitpunkt</TableCell>
-                    <TableCell align="right">Wert</TableCell>
-                    <TableCell>Eingetragen von</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {measurements.length === 0 ? (
+            ) : isMobileViewport ? (
+              <Stack
+                divider={<Divider flexItem />}
+                sx={{
+                  border: '1px solid rgba(121,101,66,0.16)',
+                  borderRadius: '16px',
+                  overflow: 'hidden',
+                  bgcolor: 'rgba(248,242,231,0.42)',
+                }}
+              >
+                {measurements.map((measurement) => (
+                  <Stack
+                    key={measurement.id}
+                    direction="row"
+                    justifyContent="space-between"
+                    alignItems="flex-start"
+                    spacing={2}
+                    sx={{ px: 1.5, py: 1.25 }}
+                  >
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography variant="caption" color="text.secondary">
+                        Zeitpunkt
+                      </Typography>
+                      <Typography variant="body2">{formatTimestamp(measurement.createdAt)}</Typography>
+                    </Box>
+                    <Box sx={{ textAlign: 'right', flexShrink: 0 }}>
+                      <Typography variant="caption" color="text.secondary">
+                        Wert
+                      </Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                        {formatMeasurement(measurement.value)}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                ))}
+              </Stack>
+            ) : (
+              <Box sx={{ overflowX: 'auto', mx: { xs: -0.5, sm: 0 } }}>
+                <Table size="small" sx={{ minWidth: 520 }}>
+                  <TableHead>
                     <TableRow>
-                      <TableCell colSpan={3}>
-                        Für diesen Generator liegen noch keine Messwerte vor.
-                      </TableCell>
+                      <TableCell>Zeitpunkt</TableCell>
+                      <TableCell align="right">Wert</TableCell>
                     </TableRow>
-                  ) : (
-                    measurements.map((measurement) => (
+                  </TableHead>
+                  <TableBody>
+                    {measurements.map((measurement) => (
                       <TableRow key={measurement.id}>
                         <TableCell>{formatTimestamp(measurement.createdAt)}</TableCell>
                         <TableCell align="right">
                           {formatMeasurement(measurement.value)}
                         </TableCell>
-                        <TableCell>{measurement.enteredBy}</TableCell>
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+                    ))}
+                  </TableBody>
+                </Table>
+              </Box>
+            )}
+          </Stack>
+        </CardContent>
+      </Card>
     </Stack>
   )
 }

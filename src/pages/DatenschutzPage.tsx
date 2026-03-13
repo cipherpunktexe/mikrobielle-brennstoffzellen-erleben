@@ -1,132 +1,232 @@
-import { Card, CardContent, Divider, Grid, Stack, Typography } from '@mui/material'
+import { Box, Card, CardContent, Link, Stack, Typography } from '@mui/material'
 
-const providerItems = [
+type SectionProps = {
+  title: string
+  children: React.ReactNode
+}
+
+function Section({ title, children }: SectionProps) {
+  return (
+    <Box
+      sx={{
+        border: '1px solid rgba(121,101,66,0.18)',
+        borderRadius: 3,
+        p: { xs: 2, sm: 3 },
+        background: 'rgba(248,242,231,0.3)',
+      }}
+    >
+      <Typography variant="h5" sx={{ mb: 1.5, fontSize: { xs: '1.2rem', sm: '1.5rem' } }}>
+        {title}
+      </Typography>
+      <Stack spacing={1.5}>{children}</Stack>
+    </Box>
+  )
+}
+
+function Subsection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <Box>
+      <Typography variant="subtitle1" sx={{ mb: 0.75, fontWeight: 700 }}>
+        {title}
+      </Typography>
+      <Stack spacing={1}>{children}</Stack>
+    </Box>
+  )
+}
+
+type ServiceItem = {
+  title: string
+  description: string
+  dataItems: string[]
+  provider: string
+  providerUrl: string
+}
+
+function ServiceCard({ title, description, dataItems, provider, providerUrl }: ServiceItem) {
+  return (
+    <Card variant="outlined">
+      <CardContent sx={{ p: { xs: 2, sm: 2.5 } }}>
+        <Stack spacing={1.25}>
+          <Typography variant="h6" sx={{ fontSize: { xs: '1rem', sm: '1.2rem' } }}>
+            {title}
+          </Typography>
+          <Typography color="text.secondary">{description}</Typography>
+          <Box>
+            <Typography variant="subtitle2" sx={{ mb: 0.5, fontWeight: 700 }}>
+              Verarbeitete Daten
+            </Typography>
+            <Stack component="ul" spacing={0.5} sx={{ pl: 2, m: 0 }}>
+              {dataItems.map((item) => (
+                <Typography component="li" key={item} variant="body2" color="text.secondary">
+                  {item}
+                </Typography>
+              ))}
+            </Stack>
+          </Box>
+          <Typography variant="body2">
+            Anbieter:{' '}
+            <Link href={providerUrl} target="_blank" rel="noreferrer">
+              {provider}
+            </Link>
+          </Typography>
+        </Stack>
+      </CardContent>
+    </Card>
+  )
+}
+
+const serviceItems: ServiceItem[] = [
   {
     title: 'Firebase Authentication',
-    text: 'Wird für Nutzer- und Admin-Login verwendet. Dabei werden insbesondere E-Mail-Adresse, Passwort-Login-Daten und technische Verbindungsdaten verarbeitet.',
+    description:
+      'Wird für die Registrierung und Anmeldung mit E-Mail/Passwort sowie per Google-Login verwendet.',
+    dataItems: [
+      'E-Mail-Adresse',
+      'Passwort-Login-Daten',
+      'Google-Konto-Profildaten bei Google-Anmeldung',
+      'technische Anmelde- und Verbindungsdaten',
+    ],
+    provider: 'Google / Firebase',
+    providerUrl: 'https://firebase.google.com/support/privacy',
   },
   {
     title: 'Cloud Firestore',
-    text: 'Wird zur Speicherung von Nutzerprofilen, Generatoren und Messwerten verwendet. In diesem Projekt betrifft das insbesondere Name, E-Mail-Adresse, Rollen, Generatorzuordnungen und Messwerte.',
+    description:
+      'Wird zur Speicherung von Nutzerprofilen, Generatoren und Messwerten genutzt.',
+    dataItems: [
+      'Name',
+      'E-Mail-Adresse',
+      'Rolle',
+      'Generator-Zuordnung',
+      'Generatorcode',
+      'Messwerte und Zeitstempel',
+    ],
+    provider: 'Google / Firebase',
+    providerUrl: 'https://firebase.google.com/support/privacy',
   },
   {
     title: 'Firebase Hosting',
-    text: 'Wird für die Bereitstellung der Web-Anwendung verwendet. Dabei können technische Zugriffsdaten wie IP-Adresse, Zeitstempel und aufgerufene Ressourcen verarbeitet werden.',
-  },
-  {
-    title: 'Google Analytics for Firebase',
-    text: 'Ist im Frontend vorbereitet und kann zur Analyse der Nutzung eingesetzt werden. Wenn Analytics aktiv genutzt wird, sind die Hinweise zu Analyse- und Nutzungsdaten entsprechend zu ergänzen.',
+    description: 'Wird für die Bereitstellung der Web-App verwendet.',
+    dataItems: [
+      'IP-Adresse',
+      'Zeitpunkt des Zugriffs',
+      'aufgerufene Seiten und Dateien',
+      'technische Request- und Logdaten',
+    ],
+    provider: 'Google / Firebase',
+    providerUrl: 'https://firebase.google.com/support/privacy',
   },
 ]
 
 export function DatenschutzPage() {
   return (
-    <Stack spacing={3}>
+    <Stack spacing={{ xs: 2, md: 3 }}>
       <Card>
-        <CardContent sx={{ p: { xs: 3, md: 4 } }}>
-          <Stack spacing={2}>
-            <Typography variant="overline">Rechtliches</Typography>
-            <Typography variant="h2">Datenschutz</Typography>
+        <CardContent sx={{ p: { xs: 2.25, sm: 3, md: 4 } }}>
+          <Stack spacing={{ xs: 1.5, sm: 2 }}>
+            <Typography
+              variant="overline"
+              sx={{ fontSize: { xs: '0.68rem', sm: undefined }, lineHeight: 1.2 }}
+            >
+              Rechtliches
+            </Typography>
+            <Typography variant="h2" sx={{ fontSize: { xs: '1.9rem', sm: undefined } }}>
+              Datenschutzerklärung
+            </Typography>
             <Typography color="text.secondary">
-              Diese Seite ist eine projektbezogene Vorlage für die Datenschutzhinweise
-              von "Mikrobielle Brennstoffzellen erleben". Sie sollte vor der
-              Veröffentlichung rechtlich geprüft und mit den tatsächlichen Angaben zur
-              verantwortlichen Stelle ergänzt werden.
+              Diese Datenschutzerklärung ist als veröffentlichungsfähige Vorlage mit
+              Platzhaltern angelegt. Ersetze die eckigen Klammern vor der Veröffentlichung
+              durch die tatsächlichen Angaben zur verantwortlichen Stelle.
             </Typography>
           </Stack>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardContent sx={{ p: { xs: 3, md: 4 } }}>
-          <Stack spacing={2}>
-            <Typography variant="h4">Verantwortliche Stelle</Typography>
-            <Typography>
-              Bitte ergänze hier Name, Anschrift, E-Mail-Adresse und gegebenenfalls
-              weitere Kontaktdaten der verantwortlichen Stelle.
-            </Typography>
-          </Stack>
-        </CardContent>
-      </Card>
+      <Section title="1. Verantwortliche Stelle">
+        <Typography variant="body2">
+          [Name der verantwortlichen Person oder Organisation]
+          <br />
+          [Straße und Hausnummer]
+          <br />
+          [PLZ Ort]
+          <br />
+          [Land]
+        </Typography>
+        <Typography variant="body2">
+          E-Mail: [E-Mail-Adresse]
+          <br />
+          Telefon: [Telefonnummer]
+        </Typography>
+      </Section>
 
-      <Card>
-        <CardContent sx={{ p: { xs: 3, md: 4 } }}>
-          <Stack spacing={3}>
-            <div>
-              <Typography variant="h4" gutterBottom>
-                Eingesetzte Anbieter
-              </Typography>
-              <Typography color="text.secondary">
-                Im aktuellen Projektstand werden zentral Dienste von Google Firebase
-                eingesetzt. Aus den offiziellen Firebase-Unterlagen ergibt sich für
-                EWR-/EMEA-Kunden in der Regel Google Ireland Limited als
-                Vertragsanbieter; technisch können Daten je nach Dienst auch über
-                Google LLC verarbeitet werden.
-              </Typography>
-            </div>
+      <Section title="2. Datenschutz auf einen Blick">
+        <Subsection title="Welche Daten werden verarbeitet?">
+          <Typography variant="body2">
+            Im Rahmen der Nutzung der App werden insbesondere Registrierungs-, Login-,
+            Rollen-, Generator- und Messwertdaten verarbeitet. Zusätzlich fallen beim
+            Aufruf der Web-App technische Zugriffsdaten an.
+          </Typography>
+        </Subsection>
 
-            <Card variant="outlined">
-              <CardContent>
-                <Stack spacing={1.5}>
-                  <Typography variant="h6">Google Firebase / Google</Typography>
-                  <Typography>
-                    Anbieterzuordnung für Europa nach den Firebase-Unterlagen in der
-                    Regel: Google Ireland Limited, Gordon House, Barrow Street, Dublin
-                    4, Irland.
-                  </Typography>
-                  <Typography color="text.secondary">
-                    Mögliche technische Mitverarbeitung innerhalb des Google-Konzerns:
-                    Google LLC, 1600 Amphitheatre Parkway, Mountain View, CA 94043,
-                    USA.
-                  </Typography>
-                </Stack>
-              </CardContent>
-            </Card>
+        <Subsection title="Wofür werden die Daten genutzt?">
+          <Typography variant="body2">
+            Die Daten werden genutzt, um Nutzerkonten anzulegen, Anmeldungen zu
+            ermöglichen, Generatoren Nutzern zuzuordnen, Messwerte zu speichern und das
+            Leaderboard bereitzustellen.
+          </Typography>
+        </Subsection>
 
-            <Grid container spacing={2}>
-              {providerItems.map((item) => (
-                <Grid key={item.title} size={{ xs: 12, md: 6 }}>
-                  <Card variant="outlined" sx={{ height: '100%' }}>
-                    <CardContent>
-                      <Typography variant="h6" gutterBottom>
-                        {item.title}
-                      </Typography>
-                      <Typography color="text.secondary">{item.text}</Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              ))}
-            </Grid>
-          </Stack>
-        </CardContent>
-      </Card>
+        <Subsection title="Wer erhält die Daten?">
+          <Typography variant="body2">
+            Empfänger sind im aktuellen Stand vor allem die eingesetzten Google-Firebase-
+            Dienste für Authentifizierung, Datenbank und Hosting.
+          </Typography>
+        </Subsection>
+      </Section>
 
-      <Card>
-        <CardContent sx={{ p: { xs: 3, md: 4 } }}>
-          <Stack spacing={2}>
-            <Typography variant="h4">Hinweise zur Datenverarbeitung</Typography>
-            <Typography>
-              Im Rahmen der Nutzung dieser Anwendung können insbesondere Registrierungs-,
-              Login-, Rollen-, Generator- und Messwertdaten verarbeitet werden. Welche
-              Daten im Einzelfall betroffen sind, hängt davon ab, ob du die App als
-              Nutzer oder als Admin verwendest.
-            </Typography>
-            <Divider />
-            <Typography>
-              Nach den Firebase-Datenschutzhinweisen wird Firebase Authentication aus
-              US-Rechenzentren betrieben. Andere hier eingesetzte Firebase-Dienste wie
-              Cloud Firestore oder Firebase Hosting können über globale Google-
-              Infrastruktur verarbeitet werden.
-            </Typography>
-            <Typography>
-              Wenn Google Analytics for Firebase tatsächlich für Auswertungen verwendet
-              wird, sollten Zweck, Rechtsgrundlage, Speicherdauer, Opt-out- bzw.
-              Einwilligungsmechanismus und die konkret erhobenen Analyseinformationen
-              noch genauer ergänzt werden.
-            </Typography>
-          </Stack>
-        </CardContent>
-      </Card>
+      <Section title="3. Rechtsgrundlagen">
+        <Typography variant="body2">
+          Soweit die App für Registrierung, Anmeldung, Benutzerverwaltung und die
+          Bereitstellung der Kernfunktionen genutzt wird, erfolgt die Verarbeitung in der
+          Regel zur Durchführung der bereitgestellten Anwendung. Daneben können gesetzliche
+          Verpflichtungen oder berechtigte Interessen als Rechtsgrundlage einschlägig sein.
+          Die konkrete rechtliche Einordnung sollte vor Veröffentlichung abschließend
+          geprüft werden.
+        </Typography>
+      </Section>
+
+      <Section title="4. Speicherdauer">
+        <Typography variant="body2">
+          Personenbezogene Daten werden nur so lange gespeichert, wie sie für den Betrieb
+          der Anwendung, die bereitgestellten Funktionen oder gesetzliche
+          Aufbewahrungspflichten erforderlich sind. Nach Wegfall des jeweiligen Zwecks
+          werden die Daten gelöscht, soweit keine gesetzlichen Pflichten entgegenstehen.
+        </Typography>
+      </Section>
+
+      <Section title="5. Ihre Rechte">
+        <Typography variant="body2">
+          Betroffene Personen haben nach Maßgabe der gesetzlichen Vorschriften
+          insbesondere das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der
+          Verarbeitung, Datenübertragbarkeit sowie auf Beschwerde bei einer zuständigen
+          Datenschutzaufsichtsbehörde.
+        </Typography>
+      </Section>
+
+      <Section title="6. Eingesetzte Dienste">
+        <Typography variant="body2" color="text.secondary">
+          Aufgeführt sind nur Dienste, die im aktuellen Stand der App tatsächlich
+          verwendet werden.
+        </Typography>
+
+        <Stack spacing={2}>
+          {serviceItems.map((item) => (
+            <ServiceCard key={item.title} {...item} />
+          ))}
+        </Stack>
+      </Section>
+
+      
     </Stack>
   )
 }

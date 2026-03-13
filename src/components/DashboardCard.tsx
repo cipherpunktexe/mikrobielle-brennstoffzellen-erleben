@@ -20,25 +20,37 @@ export function DashboardCard({
 }: DashboardCardProps) {
   return (
     <Card sx={{ height: '100%' }}>
-      <CardContent sx={{ p: 3 }}>
+      <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
         <Stack spacing={2}>
-          <Stack direction="row" justifyContent="space-between" alignItems="center">
+          <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1.5}>
             <Chip
               label={eyebrow}
               color={accent}
               size="small"
               sx={{ alignSelf: 'flex-start' }}
             />
-            {icon}
+            <Typography component="span" sx={{ color: `${accent}.main`, lineHeight: 1 }}>
+              {icon}
+            </Typography>
           </Stack>
           <div>
-            <Typography variant="h6" gutterBottom>
+            <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
               {title}
             </Typography>
-            <Typography variant="h3" sx={{ lineHeight: 1, mb: 1 }}>
+            <Typography
+              variant="h3"
+              sx={{
+                lineHeight: 1,
+                mb: 1,
+                fontSize: { xs: '1.85rem', sm: '2.4rem' },
+                overflowWrap: 'anywhere',
+              }}
+            >
               {value}
             </Typography>
-            <Typography color="text.secondary">{helper}</Typography>
+            <Typography color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>
+              {helper}
+            </Typography>
           </div>
         </Stack>
       </CardContent>

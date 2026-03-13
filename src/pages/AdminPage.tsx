@@ -185,7 +185,7 @@ export function AdminPage() {
 
   if (!authUserId) {
     return (
-      <Grid container spacing={3}>
+      <Grid container spacing={{ xs: 2, md: 3 }}>
         <Grid size={{ xs: 12, md: 6 }}>
           <AuthCard
             title="Admin-Login"
@@ -204,12 +204,14 @@ export function AdminPage() {
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
           <Card sx={{ height: '100%' }}>
-            <CardContent sx={{ p: 3 }}>
+            <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
               <Stack spacing={2}>
-                <Typography variant="h4">Admin-Workflow</Typography>
+                <Typography variant="h4" sx={{ fontSize: { xs: '1.45rem', sm: '2rem' } }}>
+                  Admin-Workflow
+                </Typography>
                 <Typography color="text.secondary">
-                  `/admin` dient zum QR-Export. `/admin/generator/:code` ist die
-                  direkte Messwertmaske für einen Generatorcode.
+                  `/admin` dient zum QR-Export. `/admin/generator/:code` ist die direkte
+                  Messwertmaske für einen Generatorcode.
                 </Typography>
                 <Typography color="text.secondary">
                   Voraussetzung ist ein Firestore-User mit `role: "admin"` für das
@@ -230,7 +232,7 @@ export function AdminPage() {
           Das angemeldete Konto hat keine Admin-Rolle. Lege in Firestore unter `users/{'{uid}'}`
           den Wert `role: "admin"` an.
         </Alert>
-        <Button variant="outlined" onClick={() => void logout()}>
+        <Button variant="outlined" onClick={() => void logout()} sx={{ width: { xs: '100%', sm: 'auto' } }}>
           Abmelden
         </Button>
       </Stack>
@@ -238,18 +240,20 @@ export function AdminPage() {
   }
 
   return (
-    <Stack spacing={3}>
+    <Stack spacing={{ xs: 2.5, md: 3 }}>
       <Stack
         direction={{ xs: 'column', md: 'row' }}
         justifyContent="space-between"
-        alignItems={{ xs: 'flex-start', md: 'center' }}
+        alignItems={{ xs: 'stretch', md: 'center' }}
         spacing={2}
       >
         <div>
           <Typography variant="overline">Admin</Typography>
-          <Typography variant="h2">QR-Export und Messwerterfassung</Typography>
+          <Typography variant="h2" sx={{ fontSize: { xs: '1.9rem', sm: undefined } }}>
+            QR-Export und Messwerterfassung
+          </Typography>
         </div>
-        <Button variant="outlined" onClick={() => void logout()}>
+        <Button variant="outlined" onClick={() => void logout()} sx={{ width: { xs: '100%', sm: 'auto' } }}>
           Abmelden
         </Button>
       </Stack>
@@ -257,7 +261,7 @@ export function AdminPage() {
       {status ? <Alert severity="success">{status}</Alert> : null}
       {error ? <Alert severity="error">{error}</Alert> : null}
 
-      <Grid container spacing={3}>
+      <Grid container spacing={{ xs: 2, md: 3 }}>
         <Grid size={{ xs: 12, md: 4 }}>
           <DashboardCard
             eyebrow="QR"
@@ -288,25 +292,34 @@ export function AdminPage() {
         </Grid>
       </Grid>
 
-      <Grid container spacing={3}>
+      <Grid container spacing={{ xs: 2, md: 3 }}>
         <Grid size={{ xs: 12, lg: 5 }}>
           <Card sx={{ height: '100%' }}>
-            <CardContent sx={{ p: 3 }}>
+            <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
               <Stack spacing={2}>
-                <Typography variant="h4">QR-Codes exportieren</Typography>
+                <Typography variant="h4" sx={{ fontSize: { xs: '1.45rem', sm: '2rem' } }}>
+                  QR-Codes exportieren
+                </Typography>
                 <TextField
                   label="Stationspräfix"
                   value={exportPrefix}
                   onChange={(event) => setExportPrefix(event.target.value)}
                   helperText='Ergebnisformat: "station-001", "station-002", ...'
+                  fullWidth
                 />
                 <TextField
                   label="Anzahl"
                   type="number"
                   value={exportCount}
                   onChange={(event) => setExportCount(event.target.value)}
+                  fullWidth
                 />
-                <Button variant="contained" onClick={() => void handleExport()} startIcon={<PrintIcon />}>
+                <Button
+                  variant="contained"
+                  onClick={() => void handleExport()}
+                  startIcon={<PrintIcon />}
+                  fullWidth
+                >
                   Druckfertige QR-Karten öffnen
                 </Button>
               </Stack>
@@ -316,12 +329,13 @@ export function AdminPage() {
 
         <Grid size={{ xs: 12, lg: 7 }}>
           <Card sx={{ height: '100%' }}>
-            <CardContent sx={{ p: 3 }}>
+            <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
               <Stack spacing={2}>
-                <Typography variant="h4">Generator aufrufen</Typography>
+                <Typography variant="h4" sx={{ fontSize: { xs: '1.45rem', sm: '2rem' } }}>
+                  Generator aufrufen
+                </Typography>
                 <Typography color="text.secondary">
-                  Admins können einen QR-Link direkt öffnen oder einen Stationscode
-                  manuell eingeben.
+                  Admins können einen QR-Link direkt öffnen oder einen Stationscode manuell eingeben.
                 </Typography>
                 <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
                   <TextField
@@ -334,6 +348,7 @@ export function AdminPage() {
                     variant="outlined"
                     onClick={handleLookup}
                     startIcon={<OpenInNewIcon />}
+                    sx={{ width: { xs: '100%', md: 'auto' } }}
                   >
                     Maske öffnen
                   </Button>
@@ -344,25 +359,29 @@ export function AdminPage() {
         </Grid>
       </Grid>
 
-      <Grid container spacing={3}>
+      <Grid container spacing={{ xs: 2, md: 3 }}>
         <Grid size={{ xs: 12, lg: 5 }}>
           <Card sx={{ height: '100%' }}>
-            <CardContent sx={{ p: 3 }}>
+            <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
               <Stack component="form" spacing={2} onSubmit={handleMeasurementSubmit}>
-                <Typography variant="h4">Messwert eintragen</Typography>
+                <Typography variant="h4" sx={{ fontSize: { xs: '1.45rem', sm: '2rem' } }}>
+                  Messwert eintragen
+                </Typography>
                 <TextField
                   label="Generatorcode"
                   value={scanCode}
                   onChange={(event) => setScanCode(formatCode(event.target.value))}
                   required
+                  fullWidth
                 />
                 <TextField
                   label="Messwert in Volt"
                   value={measurementValue}
                   onChange={(event) => setMeasurementValue(event.target.value)}
                   required
+                  fullWidth
                 />
-                <Button type="submit" variant="contained" startIcon={<SaveIcon />}>
+                <Button type="submit" variant="contained" startIcon={<SaveIcon />} fullWidth>
                   Messwert speichern
                 </Button>
               </Stack>
@@ -372,9 +391,11 @@ export function AdminPage() {
 
         <Grid size={{ xs: 12, lg: 7 }}>
           <Card sx={{ height: '100%' }}>
-            <CardContent sx={{ p: 3 }}>
+            <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
               <Stack spacing={2}>
-                <Typography variant="h4">Leaderboard</Typography>
+                <Typography variant="h4" sx={{ fontSize: { xs: '1.45rem', sm: '2rem' } }}>
+                  Leaderboard
+                </Typography>
                 <Typography color="text.secondary">
                   Das vollständige Ranking befindet sich auf einer eigenen Seite und
                   aktualisiert sich live aus den gespeicherten Messwerten.
@@ -384,7 +405,7 @@ export function AdminPage() {
                   to="/leaderboard"
                   variant="outlined"
                   endIcon={<ArrowForwardIcon />}
-                  sx={{ alignSelf: 'flex-start' }}
+                  sx={{ alignSelf: { xs: 'stretch', sm: 'flex-start' } }}
                 >
                   Zum Leaderboard
                 </Button>

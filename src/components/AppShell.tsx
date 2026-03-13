@@ -1,7 +1,6 @@
 import CompostIcon from '@mui/icons-material/Compost'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
 import LogoutIcon from '@mui/icons-material/Logout'
-import MenuIcon from '@mui/icons-material/Menu'
 import QrCode2Icon from '@mui/icons-material/QrCode2'
 import ScienceIcon from '@mui/icons-material/Science'
 import {
@@ -17,6 +16,8 @@ import {
   Stack,
   Toolbar,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material'
 import { useEffect, useState, type MouseEvent } from 'react'
 import { Link as RouterLink, Outlet, useLocation } from 'react-router-dom'
@@ -31,7 +32,8 @@ const navigationItems = [
 
 export function AppShell() {
   const location = useLocation()
-  const [showMobileNav, setShowMobileNav] = useState(false)
+  const theme = useTheme()
+  const isMobileViewport = useMediaQuery(theme.breakpoints.down('sm'))
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null)
   const [authUserId, setAuthUserId] = useState('')
   const [authEmail, setAuthEmail] = useState('')
@@ -93,7 +95,7 @@ export function AppShell() {
       <AppBar position="sticky">
         <Container maxWidth="lg">
           <Toolbar disableGutters sx={{ minHeight: 80, gap: 2 }}>
-            <Stack direction="row" spacing={1.5} alignItems="center" sx={{ flexGrow: 1 }}>
+            <Stack direction="row" spacing={1.5} alignItems="center" sx={{ flexGrow: 1, minWidth: 0 }}>
               <Box
                 sx={{
                   width: 52,
@@ -103,25 +105,27 @@ export function AppShell() {
                   placeItems: 'center',
                   background: 'rgba(249,246,239,0.14)',
                   border: '1px solid rgba(255,248,231,0.22)',
+                  flexShrink: 0,
                 }}
               >
                 <CompostIcon sx={{ color: 'primary.contrastText' }} />
               </Box>
-              <Box component={RouterLink} to="/" sx={{ textDecoration: 'none', color: 'inherit' }}>
+              <Box component={RouterLink} to="/" sx={{ textDecoration: 'none', color: 'inherit', minWidth: 0 }}>
                 <Typography
                   variant="h6"
-                  sx={{ color: 'primary.contrastText', lineHeight: 1, fontWeight: 700 }}
+                  sx={{
+                    color: 'primary.contrastText',
+                    lineHeight: 1,
+                    fontWeight: 700,
+                    fontSize: isMobileViewport ? '1rem' : undefined,
+                  }}
                 >
                   Mikrobielle Brennstoffzellen erleben!
                 </Typography>
               </Box>
             </Stack>
 
-            <Stack
-              direction="row"
-              spacing={1}
-              sx={{ display: { xs: 'none', md: 'flex' } }}
-            >
+            <Stack direction="row" spacing={1} sx={{ display: { xs: 'none', md: 'flex' } }}>
               {visibleNavigationItems.map((item) => {
                 const active =
                   item.to === '/'
@@ -147,14 +151,6 @@ export function AppShell() {
             </Stack>
 
             <IconButton
-              color="inherit"
-              onClick={() => setShowMobileNav((value) => !value)}
-              sx={{ display: { xs: 'inline-flex', md: 'none' } }}
-            >
-              <MenuIcon />
-            </IconButton>
-
-            <IconButton
               aria-label="Account-Menü öffnen"
               color="inherit"
               onClick={handleOpenMenu}
@@ -174,24 +170,6 @@ export function AppShell() {
               </Avatar>
             </IconButton>
           </Toolbar>
-
-          {showMobileNav ? (
-            <Stack direction="column" spacing={1} sx={{ pb: 2, display: { md: 'none' } }}>
-              {visibleNavigationItems.map((item) => (
-                <Button
-                  key={item.to}
-                  component={RouterLink}
-                  to={item.to}
-                  color="inherit"
-                  startIcon={item.icon}
-                  onClick={() => setShowMobileNav(false)}
-                  sx={{ justifyContent: 'flex-start', color: 'primary.contrastText' }}
-                >
-                  {item.label}
-                </Button>
-              ))}
-            </Stack>
-          ) : null}
         </Container>
       </AppBar>
 
@@ -223,6 +201,27 @@ export function AppShell() {
           </Typography>
         </Box>
         <Divider />
+        {isMobileViewport
+          ? visibleNavigationItems.map((item) => (
+              <MenuItem
+                key={item.to}
+                component={RouterLink}
+                to={item.to}
+                onClick={handleCloseMenu}
+                selected={
+                  item.to === '/'
+                    ? location.pathname === item.to
+                    : location.pathname.startsWith(item.to)
+                }
+              >
+                <Stack direction="row" spacing={1.25} alignItems="center">
+                  {item.icon}
+                  <span>{item.label}</span>
+                </Stack>
+              </MenuItem>
+            ))
+          : null}
+        {isMobileViewport ? <Divider /> : null}
         <MenuItem component={RouterLink} to="/user" onClick={handleCloseMenu}>
           Account-Info
         </MenuItem>
@@ -249,29 +248,73 @@ export function AppShell() {
           backdropFilter: 'blur(14px)',
         }}
       >
-        <Container maxWidth="lg" sx={{ py: 3 }}>
+        <Container maxWidth="lg" sx={{ py: { xs: 1.5, sm: 3 } }}>
           <Stack
-            direction={{ xs: 'column', md: 'row' }}
+            direction="row"
             spacing={2}
             justifyContent="space-between"
-            alignItems={{ xs: 'flex-start', md: 'center' }}
+            alignItems="center"
           >
             <Box>
-              <Typography variant="body2" color="text.secondary">
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                  fontSize: { xs: '0.68rem', sm: undefined },
+                }}
+              >
                 Rechtliches
               </Typography>
-              <Typography variant="body1">Mikrobielle Brennstoffzellen erleben</Typography>
             </Box>
 
             <Stack
-              direction={{ xs: 'column', sm: 'row' }}
-              spacing={1}
-              divider={<Divider flexItem orientation="vertical" sx={{ display: { xs: 'none', sm: 'block' } }} />}
+              direction="row"
+              spacing={{ xs: 1, sm: 1 }}
+              sx={{ ml: 'auto' }}
+              divider={
+                <Divider
+                  flexItem
+                  orientation="vertical"
+                  sx={{ display: { xs: 'block', sm: 'block' } }}
+                />
+              }
             >
-              <Button component={RouterLink} to="/impressum" color="inherit">
+              <Button
+                component={RouterLink}
+                to="/impressum"
+                color="inherit"
+                variant="text"
+                size={isMobileViewport ? 'small' : 'medium'}
+                fullWidth={false}
+                sx={{
+                  justifyContent: 'center',
+                  minHeight: { xs: 30, sm: 36 },
+                  px: { xs: 0, sm: 2 },
+                  py: { xs: 0.25, sm: 0.5 },
+                  minWidth: 0,
+                  fontSize: { xs: '0.82rem', sm: undefined },
+                }}
+              >
                 Impressum
               </Button>
-              <Button component={RouterLink} to="/datenschutz" color="inherit">
+              <Button
+                component={RouterLink}
+                to="/datenschutz"
+                color="inherit"
+                variant="text"
+                size={isMobileViewport ? 'small' : 'medium'}
+                fullWidth={false}
+                sx={{
+                  justifyContent: 'center',
+                  minHeight: { xs: 30, sm: 36 },
+                  px: { xs: 0, sm: 2 },
+                  py: { xs: 0.25, sm: 0.5 },
+                  minWidth: 0,
+                  fontSize: { xs: '0.82rem', sm: undefined },
+                }}
+              >
                 Datenschutz
               </Button>
             </Stack>
