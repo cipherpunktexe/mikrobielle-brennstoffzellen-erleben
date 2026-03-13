@@ -146,24 +146,21 @@ const sampleMeasurementsByGeneratorId: Record<string, Measurement[]> = {
 
 const rankStyles = [
   {
-    background:
-      'linear-gradient(180deg, rgba(196,151,67,0.22), rgba(248,242,231,0.94))',
-    border: '1px solid rgba(196,151,67,0.35)',
-    badgeBg: 'rgba(179,130,37,0.18)',
+    background: 'rgba(248,242,231,0.88)',
+    border: '1px solid rgba(196,151,67,0.24)',
+    badgeBg: 'rgba(179,130,37,0.12)',
     badgeColor: '#8F6410',
   },
   {
-    background:
-      'linear-gradient(180deg, rgba(140,147,161,0.2), rgba(248,242,231,0.94))',
-    border: '1px solid rgba(140,147,161,0.35)',
-    badgeBg: 'rgba(112,119,134,0.16)',
+    background: 'rgba(248,242,231,0.88)',
+    border: '1px solid rgba(140,147,161,0.24)',
+    badgeBg: 'rgba(112,119,134,0.12)',
     badgeColor: '#5E6676',
   },
   {
-    background:
-      'linear-gradient(180deg, rgba(160,101,73,0.18), rgba(248,242,231,0.94))',
-    border: '1px solid rgba(160,101,73,0.28)',
-    badgeBg: 'rgba(136,84,59,0.14)',
+    background: 'rgba(248,242,231,0.88)',
+    border: '1px solid rgba(160,101,73,0.22)',
+    badgeBg: 'rgba(136,84,59,0.1)',
     badgeColor: '#8B553C',
   },
 ]
@@ -215,23 +212,13 @@ export function LeaderboardPage() {
   return (
     <Card>
       <CardContent sx={{ p: { xs: 2.5, sm: 3, md: 4 } }}>
-        <Stack spacing={{ xs: 2.5, md: 3 }} sx={{ position: 'relative' }}>
-          <Box
-            sx={{
-              position: 'absolute',
-              inset: 0,
-              pointerEvents: 'none',
-              background:
-                'radial-gradient(circle at top right, rgba(122,209,44,0.08), transparent 32%), radial-gradient(circle at top left, rgba(61,177,236,0.08), transparent 26%)',
-            }}
-          />
-
-          <Box sx={{ position: 'relative' }}>
+        <Stack spacing={{ xs: 2.5, md: 3 }}>
+          <Box>
             <Chip icon={<EmojiEventsIcon />} label="Leaderboard" color="warning" sx={{ mb: 2 }} />
             <Typography variant="h2" gutterBottom sx={{ fontSize: { xs: '1.9rem', sm: undefined } }}>
               Aktuelles Ranking
             </Typography>
-            <Typography color="text.secondary">
+            <Typography color="text.secondary" sx={{ maxWidth: 760 }}>
               Hier werden die zuletzt gespeicherten Messwerte aller Brennstoffzellen verglichen.
               Die hoechste aktuelle Spannung steht oben.
             </Typography>
@@ -240,15 +227,14 @@ export function LeaderboardPage() {
           {showingSampleEntries ? (
             <Box
               sx={{
-                position: 'relative',
                 display: 'flex',
                 alignItems: 'center',
                 gap: 1.5,
                 px: { xs: 1.5, sm: 2 },
                 py: 1.25,
-                borderRadius: '18px',
-                background: 'rgba(61,177,236,0.12)',
-                border: '1px solid rgba(61,177,236,0.22)',
+                borderRadius: '16px',
+                background: 'rgba(61,177,236,0.08)',
+                border: '1px solid rgba(61,177,236,0.16)',
               }}
             >
               <Chip label="Demo" color="info" size="small" />
@@ -258,7 +244,7 @@ export function LeaderboardPage() {
             </Box>
           ) : null}
 
-          <Grid container spacing={{ xs: 1.5, md: 2 }} sx={{ position: 'relative' }}>
+          <Grid container spacing={{ xs: 1.5, md: 2 }}>
             {featuredEntries.map((entry, index) => {
               const rankStyle = rankStyles[index] ?? rankStyles[2]
 
@@ -268,15 +254,16 @@ export function LeaderboardPage() {
                     elevation={0}
                     sx={{
                       height: '100%',
-                      borderRadius: '22px',
+                      borderRadius: '18px',
                       background: rankStyle.background,
                       border: rankStyle.border,
-                      boxShadow: '0 16px 34px rgba(36,28,19,0.08)',
+                      boxShadow: '0 8px 18px rgba(36,28,19,0.05)',
                       cursor: 'pointer',
-                      transition: 'transform 180ms ease, box-shadow 180ms ease',
+                      transition: 'border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease',
                       '&:hover': {
-                        transform: 'translateY(-2px)',
-                        boxShadow: '0 20px 40px rgba(36,28,19,0.12)',
+                        background: 'rgba(248,242,231,0.96)',
+                        boxShadow: '0 12px 22px rgba(36,28,19,0.07)',
+                        borderColor: 'rgba(121,101,66,0.28)',
                       },
                     }}
                     onClick={() => handleOpenEntry(entry)}
@@ -286,9 +273,9 @@ export function LeaderboardPage() {
                         <Stack direction="row" justifyContent="space-between" alignItems="center">
                           <Box
                             sx={{
-                              width: 38,
-                              height: 38,
-                              borderRadius: '12px',
+                              width: 36,
+                              height: 36,
+                              borderRadius: '10px',
                               display: 'grid',
                               placeItems: 'center',
                               fontWeight: 800,
@@ -305,19 +292,22 @@ export function LeaderboardPage() {
                           <Typography variant="body2" color="text.secondary" sx={{ mb: 0.75 }}>
                             Brennstoffzelle
                           </Typography>
-                          <Typography variant="h5" sx={{ overflowWrap: 'anywhere', mb: 1 }}>
+                          <Typography
+                            variant="h5"
+                            sx={{ overflowWrap: 'anywhere', mb: 1, fontSize: { xs: '1.2rem', sm: '1.3rem' } }}
+                          >
                             {entry.code}
                           </Typography>
                           <Typography
                             variant="h3"
-                            sx={{ fontSize: { xs: '2rem', sm: '2.35rem' }, lineHeight: 1 }}
+                            sx={{ fontSize: { xs: '1.8rem', sm: '2rem' }, lineHeight: 1, letterSpacing: '-0.02em' }}
                           >
                             {formatMeasurement(entry.latestValue)}
                           </Typography>
                         </Box>
 
-                        <Typography variant="body2" color="text.secondary">
-                          Zum Anzeigen des Messverlaufs klicken
+                        <Typography variant="body2" color="text.secondary" sx={{ opacity: 0.85 }}>
+                          Messverlauf oeffnen
                         </Typography>
                       </Stack>
                     </CardContent>
@@ -329,21 +319,21 @@ export function LeaderboardPage() {
 
           <Box
             sx={{
-              position: 'relative',
               overflowX: 'auto',
               mx: { xs: -0.5, sm: 0 },
-              border: '1px solid rgba(121,101,66,0.14)',
-              borderRadius: '22px',
-              bgcolor: 'rgba(248,242,231,0.5)',
-              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.45)',
+              border: '1px solid rgba(121,101,66,0.12)',
+              borderRadius: '18px',
+              bgcolor: 'rgba(248,242,231,0.34)',
             }}
           >
             <Table sx={{ minWidth: 520 }}>
               <TableHead>
                 <TableRow>
-                  <TableCell>Platz</TableCell>
-                  <TableCell>Brennstoffzelle</TableCell>
-                  <TableCell align="right">Messwert</TableCell>
+                  <TableCell sx={{ color: 'text.secondary', fontWeight: 700 }}>Platz</TableCell>
+                  <TableCell sx={{ color: 'text.secondary', fontWeight: 700 }}>Brennstoffzelle</TableCell>
+                  <TableCell align="right" sx={{ color: 'text.secondary', fontWeight: 700 }}>
+                    Messwert
+                  </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -358,7 +348,7 @@ export function LeaderboardPage() {
                       cursor: 'pointer',
                       transition: 'background-color 160ms ease',
                       '&:hover': {
-                        bgcolor: 'rgba(121,101,66,0.08)',
+                        bgcolor: 'rgba(121,101,66,0.05)',
                       },
                       '&:focus-visible': {
                         outline: '2px solid rgba(61,177,236,0.6)',
@@ -374,14 +364,9 @@ export function LeaderboardPage() {
                         sx={{
                           minWidth: 52,
                           fontWeight: 700,
+                          color: 'text.primary',
                           bgcolor:
-                            index === 0
-                              ? 'rgba(196,151,67,0.18)'
-                              : index === 1
-                                ? 'rgba(140,147,161,0.16)'
-                                : index === 2
-                                  ? 'rgba(160,101,73,0.14)'
-                                  : 'rgba(121,101,66,0.08)',
+                            index < 3 ? 'rgba(121,101,66,0.08)' : 'rgba(121,101,66,0.06)',
                         }}
                       />
                     </TableCell>
@@ -405,7 +390,7 @@ export function LeaderboardPage() {
             </Table>
           </Box>
 
-          <Typography variant="body2" color="text.secondary" sx={{ position: 'relative' }}>
+          <Typography variant="body2" color="text.secondary">
             Tipp: Klicke auf eine Brennstoffzelle, um den Messverlauf im Diagramm zu oeffnen.
           </Typography>
         </Stack>
