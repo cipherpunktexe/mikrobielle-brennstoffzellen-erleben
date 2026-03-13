@@ -272,6 +272,7 @@ export function subscribeToMeasurements(
 export function subscribeToLeaderboard(callback: (entries: LeaderboardEntry[]) => void) {
   return onSnapshot(measurementsCollection, async (measurementSnapshot) => {
     const generatorSnapshot = await getDocs(generatorsCollection)
+    const userSnapshot = await getDocs(usersCollection)
     const generatorMap = new Map(
       generatorSnapshot.docs.map((item) => [
         item.id,
@@ -279,6 +280,15 @@ export function subscribeToLeaderboard(callback: (entries: LeaderboardEntry[]) =
           id: item.id,
           ...item.data(),
         } as Generator,
+      ]),
+    )
+    const userMap = new Map(
+      userSnapshot.docs.map((item) => [
+        item.id,
+        {
+          id: item.id,
+          ...item.data(),
+        } as UserProfile,
       ]),
     )
 
@@ -310,12 +320,19 @@ export function subscribeToLeaderboard(callback: (entries: LeaderboardEntry[]) =
     })
 
     const entries = Array.from(maxByGenerator.values())
-      .map((measurement) => ({
-        generatorId: measurement.generatorId,
-        code: generatorMap.get(measurement.generatorId)?.code ?? 'unbekannt',
-        maxValue: measurement.value,
-        maxMeasuredAt: measurement.createdAt ?? null,
-      }))
+      .map((measurement) => {
+        const generator = generatorMap.get(measurement.generatorId)
+        const ownerProfile = generator?.ownerUid ? userMap.get(generator.ownerUid) : null
+        const code = generator?.code ?? 'unbekannt'
+
+        return {
+          generatorId: measurement.generatorId,
+          code,
+          displayName: ownerProfile?.name?.trim() || code,
+          maxValue: measurement.value,
+          maxMeasuredAt: measurement.createdAt ?? null,
+        }
+      })
       .sort((left, right) => {
         if (right.maxValue !== left.maxValue) {
           return right.maxValue - left.maxValue

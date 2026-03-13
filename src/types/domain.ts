@@ -30,6 +30,7 @@ export interface Measurement {
 export interface LeaderboardEntry {
   generatorId: string
   code: string
+  displayName: string
   maxValue: number
   maxMeasuredAt?: Timestamp | null
 }

@@ -32,30 +32,35 @@ const sampleLeaderboardEntries: LeaderboardEntry[] = [
   {
     generatorId: 'demo-brennstoffzelle-001',
     code: 'beispiel-001',
+    displayName: 'Lina',
     maxValue: 1.82,
     maxMeasuredAt: null,
   },
   {
     generatorId: 'demo-brennstoffzelle-002',
     code: 'beispiel-002',
+    displayName: 'Noah',
     maxValue: 1.67,
     maxMeasuredAt: null,
   },
   {
     generatorId: 'demo-brennstoffzelle-003',
     code: 'beispiel-003',
+    displayName: 'Mila',
     maxValue: 1.49,
     maxMeasuredAt: null,
   },
   {
     generatorId: 'demo-brennstoffzelle-004',
     code: 'beispiel-004',
+    displayName: 'Ben',
     maxValue: 1.38,
     maxMeasuredAt: null,
   },
   {
     generatorId: 'demo-brennstoffzelle-005',
     code: 'beispiel-005',
+    displayName: 'Emma',
     maxValue: 1.21,
     maxMeasuredAt: null,
   },
@@ -448,7 +453,7 @@ export function LeaderboardPage() {
                           overflowWrap: 'anywhere',
                         }}
                       >
-                        {entry.code}
+                        {entry.displayName}
                       </Typography>
 
                       <Box
@@ -596,6 +601,13 @@ export function LeaderboardPage() {
                           <TableCell>
                             <Stack direction="row" alignItems="center" spacing={1}>
                               <Typography sx={{ fontWeight: 600 }}>{entry.code}</Typography>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                sx={{ display: { xs: 'none', sm: 'block' } }}
+                              >
+                                {entry.code}
+                              </Typography>
                               <KeyboardArrowRightIcon
                                 fontSize="small"
                                 sx={{ color: 'text.secondary', opacity: 0.8 }}
@@ -624,7 +636,7 @@ export function LeaderboardPage() {
 
       <Dialog open={Boolean(selectedEntry)} onClose={handleCloseDialog} fullWidth maxWidth="md">
         <DialogTitle sx={{ pr: 6 }}>
-          {selectedEntry ? `Messverlauf fuer ${selectedEntry.code}` : 'Messverlauf'}
+          {selectedEntry ? `Messverlauf fuer ${selectedEntry.displayName}` : 'Messverlauf'}
           <IconButton
             aria-label="Dialog schliessen"
             onClick={handleCloseDialog}

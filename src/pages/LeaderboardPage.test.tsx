@@ -22,6 +22,7 @@ describe('LeaderboardPage', () => {
         {
           generatorId: 'gen-1',
           code: 'station-017',
+          displayName: 'Julia',
           maxValue: 1.42,
           maxMeasuredAt: {
             toDate: () => new Date('2026-03-12T21:15:00.000Z'),
@@ -34,7 +35,7 @@ describe('LeaderboardPage', () => {
 
     renderWithProviders(<LeaderboardPage />)
 
-    expect((await screen.findAllByText('station-017')).length).toBeGreaterThan(0)
+    expect((await screen.findAllByText('Julia')).length).toBeGreaterThan(0)
     expect((await screen.findAllByText('1.42 V')).length).toBeGreaterThan(0)
   })
 
@@ -52,7 +53,7 @@ describe('LeaderboardPage', () => {
         'Aktuell werden Beispiel-Brennstoffzellen angezeigt, bis echte Messwerte vorhanden sind.',
       ),
     ).toBeInTheDocument()
-    expect((await screen.findAllByText('beispiel-001')).length).toBe(1)
+    expect((await screen.findAllByText('Lina')).length).toBe(1)
     expect((await screen.findAllByText('1.82 V')).length).toBeGreaterThan(0)
     expect(screen.getByText('Top 5')).toBeInTheDocument()
     expect(screen.getByText('Plaetze 4-5')).toBeInTheDocument()
@@ -66,6 +67,7 @@ describe('LeaderboardPage', () => {
         Array.from({ length: 12 }, (_, index) => ({
           generatorId: `gen-${index + 1}`,
           code: `station-${String(index + 1).padStart(3, '0')}`,
+          displayName: `Nutzer ${index + 1}`,
           maxValue: 2 - index * 0.05,
           maxMeasuredAt: null,
         })),
@@ -119,6 +121,7 @@ describe('LeaderboardPage', () => {
         {
           generatorId: 'gen-1',
           code: 'station-017',
+          displayName: 'Julia',
           maxValue: 1.42,
           maxMeasuredAt: {
             toDate: () => new Date('2026-03-12T21:15:00.000Z'),
@@ -131,9 +134,9 @@ describe('LeaderboardPage', () => {
 
     renderWithProviders(<LeaderboardPage />)
 
-    await user.click((await screen.findAllByText('station-017'))[0])
+    await user.click((await screen.findAllByText('Julia'))[0])
 
-    expect(await screen.findByText('Messverlauf fuer station-017')).toBeInTheDocument()
+    expect(await screen.findByText('Messverlauf fuer Julia')).toBeInTheDocument()
     expect(screen.getByLabelText('Diagramm der Messwerthistorie')).toBeInTheDocument()
     expect(screen.getByText('Aktueller Messwert: 1.42 V')).toBeInTheDocument()
   })
