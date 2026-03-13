@@ -94,13 +94,13 @@ export function AppShell() {
     <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <AppBar position="sticky">
         <Container maxWidth="lg">
-          <Toolbar disableGutters sx={{ minHeight: 80, gap: 2 }}>
+          <Toolbar disableGutters sx={{ minHeight: { xs: 88, sm: 96 }, gap: 2 }}>
             <Stack direction="row" spacing={1.5} alignItems="center" sx={{ flexGrow: 1, minWidth: 0 }}>
               <Box
                 sx={{
-                  width: 52,
-                  height: 52,
-                  borderRadius: '14px',
+                  width: { xs: 64, sm: 76 },
+                  height: { xs: 64, sm: 76 },
+                  borderRadius: { xs: '16px', sm: '20px' },
                   overflow: 'hidden',
                   background: 'rgba(249,246,239,0.14)',
                   border: '1px solid rgba(255,248,231,0.22)',
