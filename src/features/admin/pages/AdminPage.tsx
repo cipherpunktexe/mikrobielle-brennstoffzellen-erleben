@@ -1,7 +1,5 @@
-import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings'
 import EditNoteIcon from '@mui/icons-material/EditNote'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
-import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1'
 import QrCode2Icon from '@mui/icons-material/QrCode2'
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner'
 import SaveIcon from '@mui/icons-material/Save'
@@ -52,8 +50,6 @@ import {
 import type { QrPdfLayoutMode } from '../../../shared/utils/qr'
 import {
   addMeasurementByCode,
-  findUserProfileByEmailForAdmin,
-  getAdminProfiles,
   getGeneratorByCode,
   getMeasurementsForAdmin,
   getRecentMeasurementsEnteredBy,
@@ -75,7 +71,7 @@ import type {
 } from '../../../shared/types/domain'
 import type { AdminRecentMeasurementItem } from '../../../shared/data/firebaseData'
 
-type AdminTabValue = 'qr' | 'scan' | 'moderation' | 'admins'
+type AdminTabValue = 'qr' | 'scan' | 'moderation'
 type ModerationTabValue = 'users' | 'generators'
 type MeasurementUnit = 'uV' | 'mV' | 'V' | 'kV'
 
@@ -207,13 +203,6 @@ export function AdminPage() {
   const [userForm, setUserForm] = useState<UserFormState>(createEmptyUserForm)
   const [generatorForm, setGeneratorForm] = useState<GeneratorFormState>(createEmptyGeneratorForm)
 
-  const [adminUsers, setAdminUsers] = useState<UserProfile[]>([])
-  const [adminDialogOpen, setAdminDialogOpen] = useState(false)
-  const [adminEmail, setAdminEmail] = useState('')
-  const [adminSubmitting, setAdminSubmitting] = useState(false)
-  const [adminStatus, setAdminStatus] = useState('')
-  const [adminError, setAdminError] = useState('')
-
   const [formValues, setFormValues] = useState({
     email: '',
     password: '',
@@ -242,14 +231,6 @@ export function AdminPage() {
     setActiveTab('scan')
     setScanCode(routeCode)
   }, [routeCode])
-
-  useEffect(() => {
-    if (activeTab !== 'admins' || !authUserId) {
-      return
-    }
-
-    void loadAdminUsers()
-  }, [activeTab, authUserId])
 
   useEffect(() => {
     if (activeTab !== 'moderation') {
@@ -619,73 +600,31 @@ export function AdminPage() {
     setGeneratorMeasurementsLoading(false)
   }
 
-  async function loadAdminUsers() {
-    try {
-      const admins = await getAdminProfiles()
-      setAdminUsers(admins)
-    } catch (loadIssue) {
-      setAdminError(
-        loadIssue instanceof Error ? loadIssue.message : 'Admin-Übersicht konnte nicht geladen werden.',
-      )
-    }
-  }
-
-  function handleOpenAdminDialog() {
-    setAdminStatus('')
-    setAdminError('')
-    setAdminEmail('')
-    setAdminDialogOpen(true)
-  }
-
-  function handleCloseAdminDialog() {
-    if (adminSubmitting) {
+  async function handlePromoteUserToAdmin() {
+    if (!menuUser || menuUser.role === 'admin') {
+      handleCloseUserMenu()
       return
     }
 
-    setAdminDialogOpen(false)
-    setAdminEmail('')
-    setAdminError('')
-  }
-
-  async function handlePromoteAdmin(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setAdminSubmitting(true)
-    setAdminStatus('')
-    setAdminError('')
+    setModerationStatus('')
+    setModerationError('')
 
     try {
-      const foundUser = await findUserProfileByEmailForAdmin(adminEmail)
-
-      if (!foundUser) {
-        throw new Error('Es gibt keinen bereits registrierten Nutzer mit dieser E-Mail-Adresse.')
-      }
-
-      if (foundUser.role === 'admin') {
-        setAdminStatus(`${foundUser.name} hat bereits Admin-Rechte.`)
-        await loadAdminUsers()
-        setAdminDialogOpen(false)
-        setAdminEmail('')
-        return
-      }
-
-      await updateUserProfileAsAdmin(foundUser.id, {
-        name: foundUser.name,
-        email: foundUser.email,
+      await updateUserProfileAsAdmin(menuUser.id, {
+        name: menuUser.name,
+        email: menuUser.email,
         role: 'admin',
       })
-
-      await loadAdminUsers()
-      setAdminStatus(`${foundUser.name} ist jetzt Admin.`)
-      setAdminDialogOpen(false)
-      setAdminEmail('')
+      await loadModerationEntries('users')
+      setModerationStatus(`${menuUser.name} ist jetzt Admin.`)
     } catch (promoteIssue) {
-      setAdminError(
+      setModerationError(
         promoteIssue instanceof Error
           ? promoteIssue.message
-          : 'Admin-Rolle konnte nicht vergeben werden.',
+          : 'Admin-Rechte konnten nicht vergeben werden.',
       )
     } finally {
-      setAdminSubmitting(false)
+      handleCloseUserMenu()
     }
   }
 
@@ -787,12 +726,6 @@ export function AdminPage() {
             value="moderation"
             label="Moderieren"
             icon={<EditNoteIcon />}
-            iconPosition="start"
-          />
-          <Tab
-            value="admins"
-            label="Admins ernennen"
-            icon={<AdminPanelSettingsIcon />}
             iconPosition="start"
           />
         </Tabs>
@@ -1111,72 +1044,6 @@ export function AdminPage() {
         </Card>
       </TabPanel>
 
-      <TabPanel active={activeTab} value="admins">
-        <Grid container spacing={{ xs: 2, md: 3 }}>
-          <Grid size={{ xs: 12 }}>
-            <Card sx={{ height: '100%' }}>
-              <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
-                <Stack spacing={2.5}>
-                  <Typography variant="h4" sx={{ fontSize: { xs: '1.45rem', sm: '2rem' } }}>
-                    Admins
-                  </Typography>
-                  <Typography color="text.secondary">
-                    Übersicht aller aktuell freigeschalteten Admin-Konten.
-                  </Typography>
-                  {adminStatus ? <Alert severity="success">{adminStatus}</Alert> : null}
-                  {adminError ? <Alert severity="error">{adminError}</Alert> : null}
-                  <Stack direction="row" justifyContent="space-between" alignItems="center">
-                    <Chip label={`${adminUsers.length} Admins`} />
-                    <Button
-                      variant="contained"
-                      startIcon={<PersonAddAlt1Icon />}
-                      onClick={handleOpenAdminDialog}
-                    >
-                      Admin hinzufügen
-                    </Button>
-                  </Stack>
-                  <List
-                    disablePadding
-                    sx={{
-                      borderRadius: 3,
-                      overflow: 'hidden',
-                      bgcolor: 'background.default',
-                      border: (theme) => `1px solid ${theme.palette.divider}`,
-                    }}
-                  >
-                    {adminUsers.length ? (
-                      adminUsers.map((adminUser, index) => (
-                        <ListItem
-                          key={adminUser.id}
-                          divider={index < adminUsers.length - 1}
-                          sx={{ py: 1.5, alignItems: 'flex-start' }}
-                        >
-                          <ListItemText
-                            primary={adminUser.name}
-                            secondary={
-                              adminUser.generatorId
-                                ? `${adminUser.email} · Brennstoffzelle ${adminUser.generatorId}`
-                                : adminUser.email
-                            }
-                          />
-                        </ListItem>
-                      ))
-                    ) : (
-                      <ListItem sx={{ py: 2 }}>
-                        <ListItemText
-                          primary="Noch keine Admins gefunden"
-                          secondary="Sobald Konten die Admin-Rolle haben, erscheinen sie hier."
-                        />
-                      </ListItem>
-                    )}
-                  </List>
-                </Stack>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-      </TabPanel>
-
       <Menu
         anchorEl={userMenuAnchorEl}
         open={Boolean(userMenuAnchorEl)}
@@ -1190,6 +1057,9 @@ export function AdminPage() {
           }}
         >
           Bearbeiten
+        </MenuItem>
+        <MenuItem onClick={() => void handlePromoteUserToAdmin()} disabled={menuUser?.role === 'admin'}>
+          {menuUser?.role === 'admin' ? 'Bereits Admin' : 'Zum Admin machen'}
         </MenuItem>
       </Menu>
 
@@ -1439,35 +1309,6 @@ export function AdminPage() {
         </Box>
       </Dialog>
 
-      <Dialog open={adminDialogOpen} onClose={handleCloseAdminDialog} fullWidth maxWidth="xs">
-        <DialogTitle>Admin hinzufügen</DialogTitle>
-        <Box component="form" onSubmit={handlePromoteAdmin}>
-          <DialogContent>
-            <Stack spacing={2}>
-              <Typography color="text.secondary">
-                Gib die E-Mail-Adresse eines bereits registrierten Nutzers ein.
-              </Typography>
-              <TextField
-                label="E-Mail"
-                type="email"
-                value={adminEmail}
-                onChange={(event) => setAdminEmail(event.target.value)}
-                autoFocus
-                fullWidth
-              />
-              {adminError ? <Alert severity="error">{adminError}</Alert> : null}
-            </Stack>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleCloseAdminDialog} disabled={adminSubmitting}>
-              Abbrechen
-            </Button>
-            <Button type="submit" variant="contained" disabled={adminSubmitting}>
-              Admin hinzufügen
-            </Button>
-          </DialogActions>
-        </Box>
-      </Dialog>
     </Stack>
   )
 }
