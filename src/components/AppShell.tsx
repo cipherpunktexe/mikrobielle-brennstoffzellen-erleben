@@ -269,7 +269,7 @@ export function AppShell() {
             >
               <Button
                 component={RouterLink}
-                to="/"
+                to="/ueber-uns"
                 color="inherit"
                 variant="text"
                 size={isMobileViewport ? 'small' : 'medium'}

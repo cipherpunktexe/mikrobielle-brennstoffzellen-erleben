@@ -28,6 +28,9 @@ const LeaderboardPage = lazy(() =>
 const ImpressumPage = lazy(() =>
   import('./pages/ImpressumPage').then((module) => ({ default: module.ImpressumPage })),
 )
+const AboutPage = lazy(() =>
+  import('./pages/AboutPage').then((module) => ({ default: module.AboutPage })),
+)
 const DatenschutzPage = lazy(() =>
   import('./pages/DatenschutzPage').then((module) => ({
     default: module.DatenschutzPage,
@@ -60,6 +63,7 @@ export const router = createBrowserRouter([
       { path: 'admin', element: withSuspense(<AdminPage />) },
       { path: 'admin/generator/:code', element: withSuspense(<AdminPage />) },
       { path: 'leaderboard', element: withSuspense(<LeaderboardPage />) },
+      { path: 'ueber-uns', element: withSuspense(<AboutPage />) },
       { path: 'impressum', element: withSuspense(<ImpressumPage />) },
       { path: 'datenschutz', element: withSuspense(<DatenschutzPage />) },
     ],
