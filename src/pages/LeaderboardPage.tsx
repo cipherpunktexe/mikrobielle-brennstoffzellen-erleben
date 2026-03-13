@@ -2,7 +2,6 @@ import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight'
 import CloseIcon from '@mui/icons-material/Close'
-import { Timestamp } from 'firebase/firestore'
 import {
   Accordion,
   AccordionDetails,
@@ -31,197 +30,6 @@ import { MeasurementChart } from '../components/MeasurementChart'
 import { formatMeasurement } from '../lib/format'
 import { subscribeToLeaderboard, subscribeToMeasurements } from '../services/firebaseData'
 import type { LeaderboardEntry, Measurement } from '../types/domain'
-
-const sampleLeaderboardEntries: LeaderboardEntry[] = [
-  {
-    generatorId: 'demo-brennstoffzelle-001',
-    code: 'beispiel-001',
-    displayName: 'Lina',
-    maxValue: 1.82,
-    maxMeasuredAt: null,
-  },
-  {
-    generatorId: 'demo-brennstoffzelle-002',
-    code: 'beispiel-002',
-    displayName: 'Noah',
-    maxValue: 1.67,
-    maxMeasuredAt: null,
-  },
-  {
-    generatorId: 'demo-brennstoffzelle-003',
-    code: 'beispiel-003',
-    displayName: 'Mila',
-    maxValue: 1.49,
-    maxMeasuredAt: null,
-  },
-  {
-    generatorId: 'demo-brennstoffzelle-004',
-    code: 'beispiel-004',
-    displayName: 'Ben',
-    maxValue: 1.38,
-    maxMeasuredAt: null,
-  },
-  {
-    generatorId: 'demo-brennstoffzelle-005',
-    code: 'beispiel-005',
-    displayName: 'Emma',
-    maxValue: 1.21,
-    maxMeasuredAt: null,
-  },
-]
-
-const sampleMeasurementsByGeneratorId: Record<string, Measurement[]> = {
-  'demo-brennstoffzelle-001': [
-    {
-      id: 'demo-001-a',
-      generatorId: 'demo-brennstoffzelle-001',
-      value: 1.31,
-      enteredBy: 'demo',
-      createdAt: Timestamp.fromDate(new Date('2026-03-08T09:00:00.000Z')),
-    },
-    {
-      id: 'demo-001-b',
-      generatorId: 'demo-brennstoffzelle-001',
-      value: 1.48,
-      enteredBy: 'demo',
-      createdAt: Timestamp.fromDate(new Date('2026-03-09T09:00:00.000Z')),
-    },
-    {
-      id: 'demo-001-c',
-      generatorId: 'demo-brennstoffzelle-001',
-      value: 1.62,
-      enteredBy: 'demo',
-      createdAt: Timestamp.fromDate(new Date('2026-03-10T09:00:00.000Z')),
-    },
-    {
-      id: 'demo-001-d',
-      generatorId: 'demo-brennstoffzelle-001',
-      value: 1.82,
-      enteredBy: 'demo',
-      createdAt: Timestamp.fromDate(new Date('2026-03-11T09:00:00.000Z')),
-    },
-  ],
-  'demo-brennstoffzelle-002': [
-    {
-      id: 'demo-002-a',
-      generatorId: 'demo-brennstoffzelle-002',
-      value: 1.22,
-      enteredBy: 'demo',
-      createdAt: Timestamp.fromDate(new Date('2026-03-08T09:00:00.000Z')),
-    },
-    {
-      id: 'demo-002-b',
-      generatorId: 'demo-brennstoffzelle-002',
-      value: 1.35,
-      enteredBy: 'demo',
-      createdAt: Timestamp.fromDate(new Date('2026-03-09T09:00:00.000Z')),
-    },
-    {
-      id: 'demo-002-c',
-      generatorId: 'demo-brennstoffzelle-002',
-      value: 1.51,
-      enteredBy: 'demo',
-      createdAt: Timestamp.fromDate(new Date('2026-03-10T09:00:00.000Z')),
-    },
-    {
-      id: 'demo-002-d',
-      generatorId: 'demo-brennstoffzelle-002',
-      value: 1.67,
-      enteredBy: 'demo',
-      createdAt: Timestamp.fromDate(new Date('2026-03-11T09:00:00.000Z')),
-    },
-  ],
-  'demo-brennstoffzelle-003': [
-    {
-      id: 'demo-003-a',
-      generatorId: 'demo-brennstoffzelle-003',
-      value: 1.06,
-      enteredBy: 'demo',
-      createdAt: Timestamp.fromDate(new Date('2026-03-08T09:00:00.000Z')),
-    },
-    {
-      id: 'demo-003-b',
-      generatorId: 'demo-brennstoffzelle-003',
-      value: 1.18,
-      enteredBy: 'demo',
-      createdAt: Timestamp.fromDate(new Date('2026-03-09T09:00:00.000Z')),
-    },
-    {
-      id: 'demo-003-c',
-      generatorId: 'demo-brennstoffzelle-003',
-      value: 1.33,
-      enteredBy: 'demo',
-      createdAt: Timestamp.fromDate(new Date('2026-03-10T09:00:00.000Z')),
-    },
-    {
-      id: 'demo-003-d',
-      generatorId: 'demo-brennstoffzelle-003',
-      value: 1.49,
-      enteredBy: 'demo',
-      createdAt: Timestamp.fromDate(new Date('2026-03-11T09:00:00.000Z')),
-    },
-  ],
-  'demo-brennstoffzelle-004': [
-    {
-      id: 'demo-004-a',
-      generatorId: 'demo-brennstoffzelle-004',
-      value: 1.02,
-      enteredBy: 'demo',
-      createdAt: Timestamp.fromDate(new Date('2026-03-08T09:00:00.000Z')),
-    },
-    {
-      id: 'demo-004-b',
-      generatorId: 'demo-brennstoffzelle-004',
-      value: 1.16,
-      enteredBy: 'demo',
-      createdAt: Timestamp.fromDate(new Date('2026-03-09T09:00:00.000Z')),
-    },
-    {
-      id: 'demo-004-c',
-      generatorId: 'demo-brennstoffzelle-004',
-      value: 1.27,
-      enteredBy: 'demo',
-      createdAt: Timestamp.fromDate(new Date('2026-03-10T09:00:00.000Z')),
-    },
-    {
-      id: 'demo-004-d',
-      generatorId: 'demo-brennstoffzelle-004',
-      value: 1.38,
-      enteredBy: 'demo',
-      createdAt: Timestamp.fromDate(new Date('2026-03-11T09:00:00.000Z')),
-    },
-  ],
-  'demo-brennstoffzelle-005': [
-    {
-      id: 'demo-005-a',
-      generatorId: 'demo-brennstoffzelle-005',
-      value: 0.88,
-      enteredBy: 'demo',
-      createdAt: Timestamp.fromDate(new Date('2026-03-08T09:00:00.000Z')),
-    },
-    {
-      id: 'demo-005-b',
-      generatorId: 'demo-brennstoffzelle-005',
-      value: 0.97,
-      enteredBy: 'demo',
-      createdAt: Timestamp.fromDate(new Date('2026-03-09T09:00:00.000Z')),
-    },
-    {
-      id: 'demo-005-c',
-      generatorId: 'demo-brennstoffzelle-005',
-      value: 1.11,
-      enteredBy: 'demo',
-      createdAt: Timestamp.fromDate(new Date('2026-03-10T09:00:00.000Z')),
-    },
-    {
-      id: 'demo-005-d',
-      generatorId: 'demo-brennstoffzelle-005',
-      value: 1.21,
-      enteredBy: 'demo',
-      createdAt: Timestamp.fromDate(new Date('2026-03-11T09:00:00.000Z')),
-    },
-  ],
-}
 
 const rankStyles = [
   {
@@ -293,7 +101,7 @@ export function LeaderboardPage() {
   useEffect(() => subscribeToLeaderboard(setLeaderboard), [])
 
   useEffect(() => {
-    if (!selectedEntry || sampleMeasurementsByGeneratorId[selectedEntry.generatorId]) {
+    if (!selectedEntry) {
       return
     }
 
@@ -302,7 +110,7 @@ export function LeaderboardPage() {
 
   function handleOpenEntry(entry: LeaderboardEntry) {
     setSelectedEntry(entry)
-    setSelectedMeasurements(sampleMeasurementsByGeneratorId[entry.generatorId] ?? null)
+    setSelectedMeasurements(null)
   }
 
   function handleCloseDialog() {
@@ -325,8 +133,27 @@ export function LeaderboardPage() {
     )
   }
 
-  const showingSampleEntries = leaderboard.length === 0
-  const visibleEntries = showingSampleEntries ? sampleLeaderboardEntries : leaderboard
+  if (leaderboard.length === 0) {
+    return (
+      <Card>
+        <CardContent sx={{ p: { xs: 2.5, sm: 3, md: 4 } }}>
+          <Stack spacing={2}>
+            <Box>
+              <Chip icon={<EmojiEventsIcon />} label="Leaderboard" color="warning" sx={{ mb: 2 }} />
+              <Typography variant="h2" gutterBottom sx={{ fontSize: { xs: '1.9rem', sm: undefined } }}>
+                Aktuelles Ranking
+              </Typography>
+              <Typography color="text.secondary">
+                Noch keine Messwerte vorhanden.
+              </Typography>
+            </Box>
+          </Stack>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  const visibleEntries = leaderboard
   const featuredEntries = visibleEntries.slice(0, 3)
   const remainingEntries = visibleEntries.slice(3)
   const leaderboardSections = buildLeaderboardSections(remainingEntries, 4)
@@ -345,30 +172,8 @@ export function LeaderboardPage() {
             <Typography variant="h2" gutterBottom sx={{ fontSize: { xs: '1.9rem', sm: undefined } }}>
               Aktuelles Ranking
             </Typography>
-            <Typography color="text.secondary">
-              Ranking nach hoechstem Messwert.
-            </Typography>
+            
           </Box>
-
-          {showingSampleEntries ? (
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1.5,
-                px: { xs: 1.5, sm: 2 },
-                py: 1.25,
-                borderRadius: '16px',
-                background: 'rgba(61,177,236,0.08)',
-                border: '1px solid rgba(61,177,236,0.16)',
-              }}
-            >
-              <Chip label="Demo" color="info" size="small" />
-              <Typography variant="body2" color="text.secondary">
-                Aktuell werden Beispiel-Brennstoffzellen angezeigt, bis echte Messwerte vorhanden sind.
-              </Typography>
-            </Box>
-          ) : null}
 
           {podiumEntries.length > 0 ? (
             <Box

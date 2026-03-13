@@ -39,7 +39,7 @@ describe('LeaderboardPage', () => {
     expect((await screen.findAllByText('1.42 V')).length).toBeGreaterThan(0)
   })
 
-  test('renders sample fuel cells when no leaderboard entries exist yet', async () => {
+  test('renders an empty state when no leaderboard entries exist yet', async () => {
     subscribeToMeasurementsMock.mockImplementation(() => vi.fn())
     subscribeToLeaderboardMock.mockImplementation((callback: (entries: unknown[]) => void) => {
       callback([])
@@ -48,16 +48,8 @@ describe('LeaderboardPage', () => {
 
     renderWithProviders(<LeaderboardPage />)
 
-    expect(
-      await screen.findByText(
-        'Aktuell werden Beispiel-Brennstoffzellen angezeigt, bis echte Messwerte vorhanden sind.',
-      ),
-    ).toBeInTheDocument()
-    expect((await screen.findAllByText('Lina')).length).toBe(1)
-    expect((await screen.findAllByText('1.82 V')).length).toBeGreaterThan(0)
-    expect(screen.getByText('Top 5')).toBeInTheDocument()
-    expect(screen.getByText('Plaetze 4-5')).toBeInTheDocument()
-    expect(screen.queryByText('Top 10')).not.toBeInTheDocument()
+    expect(await screen.findByText('Noch keine Messwerte vorhanden.')).toBeInTheDocument()
+    expect(screen.queryByText('Top 5')).not.toBeInTheDocument()
   })
 
   test('splits larger rankings into progressive leaderboard sections', async () => {
