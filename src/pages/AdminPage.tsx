@@ -1,3 +1,4 @@
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings'
 import EditNoteIcon from '@mui/icons-material/EditNote'
 import OpenInNewIcon from '@mui/icons-material/OpenInNew'
 import PrintIcon from '@mui/icons-material/Print'
@@ -47,7 +48,7 @@ import {
 } from '../services/firebaseData'
 import type { Generator, LeaderboardEntry, Measurement, UserProfile, UserRole } from '../types/domain'
 
-type AdminTabValue = 'qr' | 'scan' | 'moderation'
+type AdminTabValue = 'qr' | 'scan' | 'moderation' | 'admins'
 type ModerationTabValue = 'users' | 'generators' | 'measurements'
 
 interface UserFormState {
@@ -167,6 +168,11 @@ export function AdminPage() {
   )
   const [measurementStatus, setMeasurementStatus] = useState('')
   const [measurementError, setMeasurementError] = useState('')
+
+  const [adminLookup, setAdminLookup] = useState('')
+  const [adminCandidate, setAdminCandidate] = useState<UserProfile | null>(null)
+  const [adminStatus, setAdminStatus] = useState('')
+  const [adminError, setAdminError] = useState('')
 
   const [formValues, setFormValues] = useState({
     email: '',
@@ -572,6 +578,60 @@ export function AdminPage() {
     }
   }
 
+  async function handleAdminLookup(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setAdminStatus('')
+    setAdminError('')
+
+    try {
+      const foundUser = await findUserProfileForAdmin(adminLookup)
+
+      if (!foundUser) {
+        throw new Error('Kein Nutzer mit dieser ID oder E-Mail gefunden.')
+      }
+
+      setAdminCandidate(foundUser)
+      setAdminStatus(`Nutzer ${foundUser.name} geladen.`)
+    } catch (lookupIssue) {
+      setAdminCandidate(null)
+      setAdminError(
+        lookupIssue instanceof Error ? lookupIssue.message : 'Nutzer konnte nicht geladen werden.',
+      )
+    }
+  }
+
+  async function handlePromoteAdmin() {
+    if (!adminCandidate) {
+      return
+    }
+
+    setAdminStatus('')
+    setAdminError('')
+
+    try {
+      await updateUserProfileAsAdmin(adminCandidate.id, {
+        name: adminCandidate.name,
+        email: adminCandidate.email,
+        role: 'admin',
+      })
+
+      const refreshedUser = await findUserProfileForAdmin(adminCandidate.id)
+
+      if (!refreshedUser) {
+        throw new Error('Der Nutzer konnte nach dem Speichern nicht erneut geladen werden.')
+      }
+
+      setAdminCandidate(refreshedUser)
+      setAdminStatus(`${refreshedUser.name} ist jetzt Admin.`)
+    } catch (promoteIssue) {
+      setAdminError(
+        promoteIssue instanceof Error
+          ? promoteIssue.message
+          : 'Admin-Rolle konnte nicht vergeben werden.',
+      )
+    }
+  }
+
   if (!authUserId) {
     return (
       <Grid container spacing={{ xs: 2, md: 3 }}>
@@ -670,6 +730,12 @@ export function AdminPage() {
             value="moderation"
             label="Moderieren"
             icon={<EditNoteIcon />}
+            iconPosition="start"
+          />
+          <Tab
+            value="admins"
+            label="Admins ernennen"
+            icon={<AdminPanelSettingsIcon />}
             iconPosition="start"
           />
         </Tabs>
@@ -1194,6 +1260,84 @@ export function AdminPage() {
             </Grid>
           </Grid>
         </TabPanel>
+      </TabPanel>
+
+      <TabPanel active={activeTab} value="admins">
+        <Grid container spacing={{ xs: 2, md: 3 }}>
+          <Grid size={{ xs: 12, lg: 4 }}>
+            <Card sx={{ height: '100%' }}>
+              <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
+                <Stack component="form" spacing={2} onSubmit={handleAdminLookup}>
+                  <Typography variant="h4" sx={{ fontSize: { xs: '1.45rem', sm: '2rem' } }}>
+                    Nutzer suchen
+                  </Typography>
+                  <Typography color="text.secondary">
+                    Suche per Dokument-ID oder E-Mail und vergebe danach die Admin-Rolle.
+                  </Typography>
+                  {adminStatus ? <Alert severity="success">{adminStatus}</Alert> : null}
+                  {adminError ? <Alert severity="error">{adminError}</Alert> : null}
+                  <TextField
+                    label="Nutzer-ID oder E-Mail"
+                    value={adminLookup}
+                    onChange={(event) => setAdminLookup(event.target.value)}
+                    fullWidth
+                  />
+                  <Button type="submit" variant="outlined" startIcon={<SearchIcon />} fullWidth>
+                    Nutzer laden
+                  </Button>
+                </Stack>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          <Grid size={{ xs: 12, lg: 8 }}>
+            <Card sx={{ height: '100%' }}>
+              <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
+                <Stack spacing={2}>
+                  <Typography variant="h4" sx={{ fontSize: { xs: '1.45rem', sm: '2rem' } }}>
+                    Admin-Rolle vergeben
+                  </Typography>
+                  <TextField
+                    label="Name"
+                    value={adminCandidate?.name ?? ''}
+                    disabled
+                    fullWidth
+                  />
+                  <TextField
+                    label="E-Mail"
+                    value={adminCandidate?.email ?? ''}
+                    disabled
+                    fullWidth
+                  />
+                  <TextField
+                    label="Aktuelle Rolle"
+                    value={adminCandidate?.role ?? 'Keine Auswahl'}
+                    disabled
+                    fullWidth
+                  />
+                  <TextField
+                    label="Verknuepfte Brennstoffzelle"
+                    value={adminCandidate?.generatorId ?? 'Keine'}
+                    disabled
+                    fullWidth
+                  />
+                  {adminCandidate?.role === 'admin' ? (
+                    <Alert severity="info">Dieser Nutzer hat bereits Admin-Rechte.</Alert>
+                  ) : null}
+                  <Button
+                    variant="contained"
+                    startIcon={<AdminPanelSettingsIcon />}
+                    onClick={() => void handlePromoteAdmin()}
+                    disabled={!adminCandidate || adminCandidate.role === 'admin'}
+                    fullWidth
+                  >
+                    Zum Admin ernennen
+                  </Button>
+                </Stack>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
       </TabPanel>
 
       <QrScannerDialog
