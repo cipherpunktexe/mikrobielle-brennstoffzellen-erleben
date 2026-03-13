@@ -1366,7 +1366,7 @@ export function AdminPage() {
 
       <TabPanel active={activeTab} value="admins">
         <Grid container spacing={{ xs: 2, md: 3 }}>
-          <Grid size={{ xs: 12, lg: 5 }}>
+          <Grid size={{ xs: 12 }}>
             <Card sx={{ height: '100%' }}>
               <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
                 <Stack spacing={2.5}>
@@ -1423,33 +1423,6 @@ export function AdminPage() {
                       </ListItem>
                     )}
                   </List>
-                </Stack>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid size={{ xs: 12, lg: 7 }}>
-            <Card sx={{ height: '100%' }}>
-              <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
-                <Stack spacing={2.5}>
-                  <Typography variant="h4" sx={{ fontSize: { xs: '1.45rem', sm: '2rem' } }}>
-                    Rechte vergeben
-                  </Typography>
-                  <Typography color="text.secondary">
-                    Neue Admins werden ausschließlich über die bereits registrierte E-Mail-Adresse
-                    hinzugefügt.
-                  </Typography>
-                  <Alert severity="info">
-                    Die E-Mail muss bereits zu einem vorhandenen Nutzerkonto in Firestore gehören.
-                  </Alert>
-                  <Button
-                    variant="outlined"
-                    startIcon={<AdminPanelSettingsIcon />}
-                    onClick={handleOpenAdminDialog}
-                    sx={{ alignSelf: 'flex-start' }}
-                  >
-                    Admin per E-Mail hinzufügen
-                  </Button>
                 </Stack>
               </CardContent>
             </Card>
