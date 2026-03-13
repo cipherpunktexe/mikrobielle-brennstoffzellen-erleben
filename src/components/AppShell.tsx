@@ -208,9 +208,6 @@ export function AppShell() {
             ))
           : null}
         {isMobileViewport ? <Divider /> : null}
-        <MenuItem component={RouterLink} to="/user" onClick={handleCloseMenu}>
-          Account-Info
-        </MenuItem>
         <MenuItem onClick={() => void handleLogout()} disabled={!authUserId}>
           <Stack direction="row" spacing={1.25} alignItems="center">
             <LogoutIcon fontSize="small" />
