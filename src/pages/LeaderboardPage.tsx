@@ -49,6 +49,18 @@ const sampleLeaderboardEntries: LeaderboardEntry[] = [
     latestValue: 1.49,
     measuredAt: null,
   },
+  {
+    generatorId: 'demo-brennstoffzelle-004',
+    code: 'beispiel-004',
+    latestValue: 1.38,
+    measuredAt: null,
+  },
+  {
+    generatorId: 'demo-brennstoffzelle-005',
+    code: 'beispiel-005',
+    latestValue: 1.21,
+    measuredAt: null,
+  },
 ]
 
 const sampleMeasurementsByGeneratorId: Record<string, Measurement[]> = {
@@ -138,6 +150,66 @@ const sampleMeasurementsByGeneratorId: Record<string, Measurement[]> = {
       id: 'demo-003-d',
       generatorId: 'demo-brennstoffzelle-003',
       value: 1.49,
+      enteredBy: 'demo',
+      createdAt: Timestamp.fromDate(new Date('2026-03-11T09:00:00.000Z')),
+    },
+  ],
+  'demo-brennstoffzelle-004': [
+    {
+      id: 'demo-004-a',
+      generatorId: 'demo-brennstoffzelle-004',
+      value: 1.02,
+      enteredBy: 'demo',
+      createdAt: Timestamp.fromDate(new Date('2026-03-08T09:00:00.000Z')),
+    },
+    {
+      id: 'demo-004-b',
+      generatorId: 'demo-brennstoffzelle-004',
+      value: 1.16,
+      enteredBy: 'demo',
+      createdAt: Timestamp.fromDate(new Date('2026-03-09T09:00:00.000Z')),
+    },
+    {
+      id: 'demo-004-c',
+      generatorId: 'demo-brennstoffzelle-004',
+      value: 1.27,
+      enteredBy: 'demo',
+      createdAt: Timestamp.fromDate(new Date('2026-03-10T09:00:00.000Z')),
+    },
+    {
+      id: 'demo-004-d',
+      generatorId: 'demo-brennstoffzelle-004',
+      value: 1.38,
+      enteredBy: 'demo',
+      createdAt: Timestamp.fromDate(new Date('2026-03-11T09:00:00.000Z')),
+    },
+  ],
+  'demo-brennstoffzelle-005': [
+    {
+      id: 'demo-005-a',
+      generatorId: 'demo-brennstoffzelle-005',
+      value: 0.88,
+      enteredBy: 'demo',
+      createdAt: Timestamp.fromDate(new Date('2026-03-08T09:00:00.000Z')),
+    },
+    {
+      id: 'demo-005-b',
+      generatorId: 'demo-brennstoffzelle-005',
+      value: 0.97,
+      enteredBy: 'demo',
+      createdAt: Timestamp.fromDate(new Date('2026-03-09T09:00:00.000Z')),
+    },
+    {
+      id: 'demo-005-c',
+      generatorId: 'demo-brennstoffzelle-005',
+      value: 1.11,
+      enteredBy: 'demo',
+      createdAt: Timestamp.fromDate(new Date('2026-03-10T09:00:00.000Z')),
+    },
+    {
+      id: 'demo-005-d',
+      generatorId: 'demo-brennstoffzelle-005',
+      value: 1.21,
       enteredBy: 'demo',
       createdAt: Timestamp.fromDate(new Date('2026-03-11T09:00:00.000Z')),
     },
