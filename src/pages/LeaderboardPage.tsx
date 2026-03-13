@@ -1,5 +1,6 @@
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
 import {
+  Alert,
   Box,
   Card,
   CardContent,
@@ -18,6 +19,27 @@ import { formatMeasurement } from '../lib/format'
 import { subscribeToLeaderboard } from '../services/firebaseData'
 import type { LeaderboardEntry } from '../types/domain'
 
+const sampleLeaderboardEntries: LeaderboardEntry[] = [
+  {
+    generatorId: 'demo-brennstoffzelle-001',
+    code: 'beispiel-001',
+    latestValue: 1.82,
+    measuredAt: null,
+  },
+  {
+    generatorId: 'demo-brennstoffzelle-002',
+    code: 'beispiel-002',
+    latestValue: 1.67,
+    measuredAt: null,
+  },
+  {
+    generatorId: 'demo-brennstoffzelle-003',
+    code: 'beispiel-003',
+    latestValue: 1.49,
+    measuredAt: null,
+  },
+]
+
 export function LeaderboardPage() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[] | null>(null)
 
@@ -30,6 +52,9 @@ export function LeaderboardPage() {
       </Stack>
     )
   }
+
+  const showingSampleEntries = leaderboard.length === 0
+  const visibleEntries = showingSampleEntries ? sampleLeaderboardEntries : leaderboard
 
   return (
     <Card>
@@ -46,6 +71,12 @@ export function LeaderboardPage() {
             </Typography>
           </div>
 
+          {showingSampleEntries ? (
+            <Alert severity="info">
+              Aktuell werden Beispiel-Brennstoffzellen angezeigt, bis echte Messwerte vorhanden sind.
+            </Alert>
+          ) : null}
+
           <Box sx={{ overflowX: 'auto', mx: { xs: -0.5, sm: 0 } }}>
             <Table sx={{ minWidth: 520 }}>
               <TableHead>
@@ -56,19 +87,13 @@ export function LeaderboardPage() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {leaderboard.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={3}>Noch keine Messwerte vorhanden.</TableCell>
+                {visibleEntries.map((entry, index) => (
+                  <TableRow key={entry.generatorId}>
+                    <TableCell>{index + 1}</TableCell>
+                    <TableCell>{entry.code}</TableCell>
+                    <TableCell align="right">{formatMeasurement(entry.latestValue)}</TableCell>
                   </TableRow>
-                ) : (
-                  leaderboard.map((entry, index) => (
-                    <TableRow key={entry.generatorId}>
-                      <TableCell>{index + 1}</TableCell>
-                      <TableCell>{entry.code}</TableCell>
-                      <TableCell align="right">{formatMeasurement(entry.latestValue)}</TableCell>
-                    </TableRow>
-                  ))
-                )}
+                ))}
               </TableBody>
             </Table>
           </Box>

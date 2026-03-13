@@ -33,4 +33,21 @@ describe('LeaderboardPage', () => {
     expect(await screen.findByText('station-017')).toBeInTheDocument()
     expect(screen.getByText('1.42 V')).toBeInTheDocument()
   })
+
+  test('renders sample fuel cells when no leaderboard entries exist yet', async () => {
+    subscribeToLeaderboardMock.mockImplementation((callback: (entries: unknown[]) => void) => {
+      callback([])
+      return vi.fn()
+    })
+
+    renderWithProviders(<LeaderboardPage />)
+
+    expect(
+      await screen.findByText(
+        'Aktuell werden Beispiel-Brennstoffzellen angezeigt, bis echte Messwerte vorhanden sind.',
+      ),
+    ).toBeInTheDocument()
+    expect(screen.getByText('beispiel-001')).toBeInTheDocument()
+    expect(screen.getByText('1.82 V')).toBeInTheDocument()
+  })
 })
