@@ -60,11 +60,11 @@ export function LandingPage() {
               >
                 <CardContent
                   sx={{
-                    p: { xs: 2.5, sm: 3.5 },
+                    p: { xs: 1.5, sm: 2, md: 2.5 },
                     display: 'flex',
                     justifyContent: 'center',
                     alignItems: 'center',
-                    minHeight: { xs: 280, sm: 320, md: 360 },
+                    minHeight: { xs: 320, sm: 360, md: 420 },
                   }}
                 >
                   <Box
@@ -73,7 +73,7 @@ export function LandingPage() {
                     alt="Projektlogo"
                     sx={{
                       width: 'auto',
-                      height: { xs: 220, sm: 250, md: 290 },
+                      height: { xs: 280, sm: 320, md: 380 },
                       maxWidth: '100%',
                       objectFit: 'contain',
                       display: 'block',

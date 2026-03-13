@@ -112,12 +112,12 @@ export function AppShell() {
                   src="/app-logo.png"
                   alt="App-Logo"
                   sx={{
-                    width: { xs: 44, sm: 52 },
-                    height: { xs: 44, sm: 52 },
+                    width: { xs: 52, sm: 60 },
+                    height: { xs: 52, sm: 60 },
                     objectFit: 'contain',
                     display: 'block',
                     mx: 'auto',
-                    my: { xs: 1.25, sm: 1.5 },
+                    my: { xs: 0.75, sm: 1 },
                   }}
                 />
               </Box>
