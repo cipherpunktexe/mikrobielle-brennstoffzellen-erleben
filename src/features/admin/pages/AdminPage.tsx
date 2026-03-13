@@ -23,10 +23,13 @@ import {
   ListItemText,
   Menu,
   MenuItem,
+  Slider,
   Stack,
   Tab,
   Tabs,
   TextField,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
 } from '@mui/material'
 import {
@@ -74,6 +77,7 @@ import type { AdminRecentMeasurementItem } from '../../../shared/data/firebaseDa
 type AdminTabValue = 'qr' | 'scan' | 'moderation'
 type ModerationTabValue = 'users' | 'generators'
 type MeasurementUnit = 'uV' | 'mV' | 'V' | 'kV'
+type ExportPreviewMode = 'single' | 'page'
 
 interface UserFormState {
   name: string
@@ -163,6 +167,7 @@ export function AdminPage() {
   const [exportLayoutMode, setExportLayoutMode] = useState<QrPdfLayoutMode>('cardsPerPage')
   const [exportCardsPerPage, setExportCardsPerPage] = useState('12')
   const [exportQrSize, setExportQrSize] = useState('42')
+  const [exportPreviewMode, setExportPreviewMode] = useState<ExportPreviewMode>('page')
   const [exportStatus, setExportStatus] = useState('')
   const [exportError, setExportError] = useState('')
 
@@ -243,19 +248,33 @@ export function AdminPage() {
   }, [activeTab, moderationTab])
 
   const parsedExportCount = Number.parseInt(exportCount, 10)
+  const requestedCardsPerPage = Number.parseInt(exportCardsPerPage, 10)
+  const requestedQrSize = Number.parseFloat(exportQrSize)
   let exportLayoutPreview: ReturnType<typeof getQrPdfLayoutPreview> | null = null
 
   if (Number.isFinite(parsedExportCount) && parsedExportCount > 0) {
     try {
       exportLayoutPreview = getQrPdfLayoutPreview(parsedExportCount, {
         mode: exportLayoutMode,
-        cardsPerPage: Number.parseInt(exportCardsPerPage, 10),
-        qrSizeMm: Number.parseFloat(exportQrSize),
+        cardsPerPage: requestedCardsPerPage,
+        qrSizeMm: requestedQrSize,
       })
     } catch {
       exportLayoutPreview = null
     }
   }
+
+  const normalizedExportPrefix = formatCode(exportPrefix) || 'station'
+  const previewTotalCards = Number.isFinite(parsedExportCount) && parsedExportCount > 0 ? parsedExportCount : 1
+  const previewCardsVisible =
+    exportPreviewMode === 'single'
+      ? 1
+      : Math.min(exportLayoutPreview?.cardsPerPage ?? 1, previewTotalCards)
+  const previewCardLabels = createStationCodes(normalizedExportPrefix, previewCardsVisible)
+  const cardsPerPageSliderMax = Math.max(1, Math.min(previewTotalCards, 24))
+  const previewPageLabel = exportLayoutPreview
+    ? `Seite 1 / ${exportLayoutPreview.pageCount}`
+    : 'Seite 1 / 1'
 
   useEffect(() => {
     const enteredBy = profile?.email?.trim() || authUserId
@@ -758,7 +777,317 @@ export function AdminPage() {
 
       <TabPanel active={activeTab} value="qr">
         <Grid container spacing={{ xs: 2, md: 3 }}>
-          <Grid size={{ xs: 12, lg: 5 }}>
+          <Grid size={{ xs: 12, lg: 4 }}>
+            <Card sx={{ height: '100%' }}>
+              <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
+                <Stack spacing={2.5}>
+                  <Box>
+                    <Typography variant="h4" sx={{ fontSize: { xs: '1.45rem', sm: '2rem' } }}>
+                      QR-Export
+                    </Typography>
+                    <Typography color="text.secondary">
+                      Erzeuge ein A4-PDF mit automatisch optimierter Seitenbelegung.
+                    </Typography>
+                  </Box>
+                  {exportStatus ? <Alert severity="success">{exportStatus}</Alert> : null}
+                  {exportError ? <Alert severity="error">{exportError}</Alert> : null}
+                  <Stack spacing={2}>
+                    <Stack direction="row" spacing={1.5} alignItems="flex-start">
+                      <Chip label="1" color="primary" sx={{ minWidth: 36, height: 36, borderRadius: 999 }} />
+                      <Card variant="outlined" sx={{ flex: 1 }}>
+                        <CardContent sx={{ p: 2 }}>
+                          <Stack spacing={1.5}>
+                            <Typography fontWeight={700}>Generatoren</Typography>
+                            <TextField
+                              label="Präfix"
+                              value={exportPrefix}
+                              onChange={(event) => setExportPrefix(event.target.value)}
+                              helperText='Ergebnisformat: "station-001", "station-002", ...'
+                              fullWidth
+                            />
+                            <TextField
+                              label="Anzahl"
+                              type="number"
+                              value={exportCount}
+                              onChange={(event) => setExportCount(event.target.value)}
+                              fullWidth
+                            />
+                          </Stack>
+                        </CardContent>
+                      </Card>
+                    </Stack>
+                    <Stack direction="row" spacing={1.5} alignItems="flex-start">
+                      <Chip label="2" color="primary" sx={{ minWidth: 36, height: 36, borderRadius: 999 }} />
+                      <Card variant="outlined" sx={{ flex: 1 }}>
+                        <CardContent sx={{ p: 2 }}>
+                          <Stack spacing={2}>
+                            <Typography fontWeight={700}>Drucklayout</Typography>
+                            <ToggleButtonGroup
+                              exclusive
+                              value={exportLayoutMode}
+                              onChange={(_event, value: QrPdfLayoutMode | null) => {
+                                if (value) {
+                                  setExportLayoutMode(value)
+                                }
+                              }}
+                              fullWidth
+                              size="small"
+                            >
+                              <ToggleButton value="cardsPerPage">Pro Seite</ToggleButton>
+                              <ToggleButton value="qrSize">QR-Größe</ToggleButton>
+                            </ToggleButtonGroup>
+                            {exportLayoutMode === 'cardsPerPage' ? (
+                              <Stack spacing={1}>
+                                <Stack direction="row" justifyContent="space-between" alignItems="center">
+                                  <Typography fontWeight={600}>Karten pro Seite</Typography>
+                                  <Typography color="text.secondary">{exportCardsPerPage}</Typography>
+                                </Stack>
+                                <Slider
+                                  value={Math.max(1, Math.min(cardsPerPageSliderMax, requestedCardsPerPage || 1))}
+                                  min={1}
+                                  max={cardsPerPageSliderMax}
+                                  step={1}
+                                  onChange={(_event, value) => setExportCardsPerPage(String(value))}
+                                  valueLabelDisplay="auto"
+                                />
+                                <Typography variant="body2" color="text.secondary">
+                                  Das Layout nutzt den A4-Platz automatisch bestmöglich aus.
+                                </Typography>
+                              </Stack>
+                            ) : (
+                              <Stack spacing={1.5}>
+                                <TextField
+                                  label="QR-Größe in mm"
+                                  type="number"
+                                  value={exportQrSize}
+                                  onChange={(event) => setExportQrSize(event.target.value)}
+                                  fullWidth
+                                />
+                                <Typography variant="body2" color="text.secondary">
+                                  Die Anzahl pro Seite wird aus der QR-Größe automatisch berechnet.
+                                </Typography>
+                              </Stack>
+                            )}
+                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} flexWrap="wrap" useFlexGap>
+                              {exportLayoutPreview ? <Chip label={`${exportLayoutPreview.columns} × ${exportLayoutPreview.rows}`} /> : null}
+                              {exportLayoutPreview ? <Chip label={`${exportLayoutPreview.cardsPerPage} pro Seite`} /> : null}
+                              {exportLayoutPreview ? <Chip label={`QR ${exportLayoutPreview.qrSizeMm.toFixed(0)} mm`} /> : null}
+                            </Stack>
+                          </Stack>
+                        </CardContent>
+                      </Card>
+                    </Stack>
+                    <Stack direction="row" spacing={1.5} alignItems="flex-start">
+                      <Chip label="3" color="primary" sx={{ minWidth: 36, height: 36, borderRadius: 999 }} />
+                      <Card variant="outlined" sx={{ flex: 1 }}>
+                        <CardContent sx={{ p: 2 }}>
+                          <Stack spacing={1.5}>
+                            <Typography fontWeight={700}>Export</Typography>
+                            <Button
+                              variant="contained"
+                              onClick={() => void handleExport()}
+                              startIcon={<SaveIcon />}
+                              fullWidth
+                            >
+                              PDF herunterladen
+                            </Button>
+                            <Typography variant="body2" color="text.secondary">
+                              Die Karten enthalten den App-internen QR-Payload und sind direkt
+                              druckbar.
+                            </Typography>
+                          </Stack>
+                        </CardContent>
+                      </Card>
+                    </Stack>
+                  </Stack>
+                </Stack>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          <Grid size={{ xs: 12, lg: 8 }}>
+            <Card sx={{ height: '100%' }}>
+              <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
+                <Stack spacing={2.5}>
+                  <Stack
+                    direction={{ xs: 'column', sm: 'row' }}
+                    justifyContent="space-between"
+                    alignItems={{ xs: 'flex-start', sm: 'center' }}
+                    spacing={1.5}
+                  >
+                    <Box>
+                      <Typography variant="h4" sx={{ fontSize: { xs: '1.45rem', sm: '2rem' } }}>
+                        Ticket-Vorschau
+                      </Typography>
+                      <Typography color="text.secondary">
+                        Vorschau für Einzelkarte oder komplette Seite.
+                      </Typography>
+                    </Box>
+                    <ToggleButtonGroup
+                      exclusive
+                      size="small"
+                      value={exportPreviewMode}
+                      onChange={(_event, value: ExportPreviewMode | null) => {
+                        if (value) {
+                          setExportPreviewMode(value)
+                        }
+                      }}
+                    >
+                      <ToggleButton value="single">Einzeln</ToggleButton>
+                      <ToggleButton value="page">Seite</ToggleButton>
+                    </ToggleButtonGroup>
+                  </Stack>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} flexWrap="wrap" useFlexGap>
+                    <Chip label={`Präfix ${normalizedExportPrefix}`} />
+                    <Chip label={`${previewTotalCards} Karten`} />
+                    {exportLayoutPreview ? (
+                      <Chip label={exportLayoutPreview.orientation === 'landscape' ? 'A4 quer' : 'A4 hoch'} />
+                    ) : null}
+                    {exportLayoutPreview ? <Chip label={`${exportLayoutPreview.pageCount} Seiten`} /> : null}
+                  </Stack>
+                  <Box
+                    sx={{
+                      p: { xs: 1.5, sm: 2 },
+                      borderRadius: 4,
+                      bgcolor: 'rgba(36,28,19,0.06)',
+                      border: (theme) => `1px solid ${theme.palette.divider}`,
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        mx: 'auto',
+                        width: '100%',
+                        maxWidth:
+                          exportPreviewMode === 'single'
+                            ? 360
+                            : exportLayoutPreview?.orientation === 'landscape'
+                              ? 760
+                              : 560,
+                        aspectRatio:
+                          exportPreviewMode === 'single'
+                            ? '0.72'
+                            : exportLayoutPreview?.orientation === 'landscape'
+                              ? '1.414 / 1'
+                              : '1 / 1.414',
+                        bgcolor: '#fbf7ef',
+                        borderRadius: 3,
+                        border: '1px solid rgba(36,28,19,0.14)',
+                        p: { xs: 2, sm: 3 },
+                        display: 'flex',
+                        alignItems: 'stretch',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      {exportPreviewMode === 'single' ? (
+                        <Box
+                          sx={{
+                            width: '100%',
+                            maxWidth: 280,
+                            borderRadius: 2.5,
+                            border: '1px solid rgba(36,28,19,0.18)',
+                            bgcolor: '#fffdf8',
+                            p: 2,
+                            display: 'grid',
+                            gridTemplateRows: 'auto 1fr auto',
+                            gap: 1.5,
+                          }}
+                        >
+                          <Typography align="center" fontWeight={700}>
+                            {previewCardLabels[0]}
+                          </Typography>
+                          <Box
+                            sx={{
+                              borderRadius: 2,
+                              border: '1px dashed rgba(36,28,19,0.24)',
+                              bgcolor: 'rgba(36,28,19,0.03)',
+                              display: 'grid',
+                              placeItems: 'center',
+                              minHeight: 220,
+                            }}
+                          >
+                            <Stack spacing={1} alignItems="center">
+                              <Box
+                                sx={{
+                                  width: 96,
+                                  height: 96,
+                                  borderRadius: 2,
+                                  border: '1px dashed rgba(36,28,19,0.24)',
+                                  bgcolor: '#f6efe2',
+                                  display: 'grid',
+                                  placeItems: 'center',
+                                }}
+                              >
+                                <Typography fontWeight={700}>QR</Typography>
+                              </Box>
+                              <Typography variant="body2" color="text.secondary">
+                                App-QR-Code
+                              </Typography>
+                            </Stack>
+                          </Box>
+                          <Typography variant="body2" color="text.secondary" align="center">
+                            Scannen in der App
+                          </Typography>
+                        </Box>
+                      ) : (
+                        <Box
+                          sx={{
+                            width: '100%',
+                            display: 'grid',
+                            gridTemplateColumns: `repeat(${exportLayoutPreview?.columns ?? 1}, minmax(0, 1fr))`,
+                            gap: 1.25,
+                            alignContent: 'start',
+                          }}
+                        >
+                          {previewCardLabels.map((label, index) => (
+                            <Box
+                              key={label}
+                              sx={{
+                                borderRadius: 2,
+                                border: '1px solid rgba(36,28,19,0.14)',
+                                bgcolor: '#fffdf8',
+                                p: 1,
+                                minHeight: 84,
+                                display: 'grid',
+                                placeItems: 'center',
+                              }}
+                            >
+                              <Box
+                                sx={{
+                                  width: '100%',
+                                  height: '100%',
+                                  borderRadius: 1.5,
+                                  border: '1px dashed rgba(36,28,19,0.2)',
+                                  display: 'grid',
+                                  placeItems: 'center',
+                                  p: 1,
+                                }}
+                              >
+                                <Typography variant="body2" fontWeight={700} align="center" sx={{ wordBreak: 'break-word' }}>
+                                  {label || `#${index + 1}`}
+                                </Typography>
+                              </Box>
+                            </Box>
+                          ))}
+                        </Box>
+                      )}
+                    </Box>
+                  </Box>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" spacing={1}>
+                    <Typography variant="body2" color="text.secondary">
+                      {previewPageLabel}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {exportPreviewMode === 'single'
+                        ? '1 Ticket in der Einzelansicht'
+                        : `${previewCardsVisible} von ${previewTotalCards} Tickets auf dieser Seite`}
+                    </Typography>
+                  </Stack>
+                </Stack>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          <Grid size={{ xs: 12, lg: 4 }} sx={{ display: 'none' }}>
             <Card sx={{ height: '100%' }}>
               <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
                 <Stack spacing={2}>
@@ -827,7 +1156,7 @@ export function AdminPage() {
             </Card>
           </Grid>
 
-          <Grid size={{ xs: 12, lg: 7 }}>
+          <Grid size={{ xs: 12, lg: 8 }} sx={{ display: 'none' }}>
             <Card sx={{ height: '100%' }}>
               <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
                 <Stack spacing={2.5}>
