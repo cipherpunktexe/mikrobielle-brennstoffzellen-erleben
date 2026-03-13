@@ -336,6 +336,24 @@ export async function findUserProfileByEmailForAdmin(email: string) {
   } as UserProfile
 }
 
+export async function listUserProfilesForAdmin() {
+  const snapshot = await getDocs(usersCollection)
+
+  return snapshot.docs
+    .map(
+      (item) =>
+        ({
+          id: item.id,
+          ...item.data(),
+        }) as UserProfile,
+    )
+    .sort((left, right) => {
+      const leftLabel = `${left.name} ${left.email}`.trim().toLocaleLowerCase('de-DE')
+      const rightLabel = `${right.name} ${right.email}`.trim().toLocaleLowerCase('de-DE')
+      return leftLabel.localeCompare(rightLabel, 'de-DE')
+    })
+}
+
 export async function getAdminProfiles() {
   const snapshot = await getDocs(query(usersCollection, where('role', '==', 'admin')))
 
@@ -534,6 +552,24 @@ export async function findGeneratorForAdmin(identifier: string) {
   }
 
   return getGeneratorByCode(trimmedIdentifier)
+}
+
+export async function listGeneratorsForAdmin() {
+  const snapshot = await getDocs(generatorsCollection)
+
+  return snapshot.docs
+    .map(
+      (item) =>
+        ({
+          id: item.id,
+          ...item.data(),
+        }) as Generator,
+    )
+    .sort((left, right) => {
+      const leftLabel = `${left.ownerName ?? ''} ${left.code}`.trim().toLocaleLowerCase('de-DE')
+      const rightLabel = `${right.ownerName ?? ''} ${right.code}`.trim().toLocaleLowerCase('de-DE')
+      return leftLabel.localeCompare(rightLabel, 'de-DE')
+    })
 }
 
 export async function updateGeneratorAsAdmin(

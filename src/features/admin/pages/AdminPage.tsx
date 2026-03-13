@@ -1,10 +1,10 @@
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings'
 import EditNoteIcon from '@mui/icons-material/EditNote'
+import MoreVertIcon from '@mui/icons-material/MoreVert'
 import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1'
 import QrCode2Icon from '@mui/icons-material/QrCode2'
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner'
 import SaveIcon from '@mui/icons-material/Save'
-import SearchIcon from '@mui/icons-material/Search'
 import {
   Alert,
   Box,
@@ -18,17 +18,27 @@ import {
   DialogContent,
   DialogTitle,
   Grid,
+  IconButton,
   List,
   ListItem,
   ListItemButton,
   ListItemText,
+  Menu,
+  MenuItem,
   Stack,
   Tab,
   Tabs,
   TextField,
   Typography,
 } from '@mui/material'
-import { useEffect, useState, type FormEvent, type ReactNode, type SyntheticEvent } from 'react'
+import {
+  useEffect,
+  useState,
+  type FormEvent,
+  type MouseEvent,
+  type ReactNode,
+  type SyntheticEvent,
+} from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { AuthCard } from '../../../shared/ui/AuthCard'
 import { QrScannerDialog } from '../../../shared/qr/QrScannerDialog'
@@ -42,20 +52,19 @@ import {
 import type { QrPdfLayoutMode } from '../../../shared/utils/qr'
 import {
   addMeasurementByCode,
-  findGeneratorForAdmin,
   findUserProfileByEmailForAdmin,
-  findUserProfileForAdmin,
   getAdminProfiles,
   getGeneratorByCode,
   getMeasurementsForAdmin,
   getRecentMeasurementsEnteredBy,
   getUserProfile,
+  listGeneratorsForAdmin,
+  listUserProfilesForAdmin,
   login,
   logout,
   signInWithGoogle,
   subscribeToAuth,
   updateGeneratorAsAdmin,
-  updateMeasurementAsAdmin,
   updateUserProfileAsAdmin,
 } from '../../../shared/data/firebaseData'
 import type {
@@ -67,7 +76,7 @@ import type {
 import type { AdminRecentMeasurementItem } from '../../../shared/data/firebaseData'
 
 type AdminTabValue = 'qr' | 'scan' | 'moderation' | 'admins'
-type ModerationTabValue = 'users' | 'generators' | 'measurements'
+type ModerationTabValue = 'users' | 'generators'
 type MeasurementUnit = 'uV' | 'mV' | 'V' | 'kV'
 
 interface UserFormState {
@@ -80,11 +89,6 @@ interface GeneratorFormState {
   code: string
   ownerUid: string
   ownerName: string
-}
-
-interface MeasurementFormState {
-  value: string
-  enteredBy: string
 }
 
 function createStationCodes(prefix: string, count: number) {
@@ -124,21 +128,6 @@ function createEmptyGeneratorForm(): GeneratorFormState {
     ownerUid: '',
     ownerName: '',
   }
-}
-
-function createEmptyMeasurementForm(): MeasurementFormState {
-  return {
-    value: '',
-    enteredBy: '',
-  }
-}
-
-function getMeasurementSummary(measurements: Measurement[]) {
-  if (!measurements.length) {
-    return 'Noch keine Messwerte'
-  }
-
-  return `${measurements.length} Einträge`
 }
 
 function getCurrentDateTimeInputValue() {
@@ -196,27 +185,27 @@ export function AdminPage() {
   const [scanMeasurementError, setScanMeasurementError] = useState('')
   const [recentMeasurements, setRecentMeasurements] = useState<AdminRecentMeasurementItem[]>([])
 
-  const [userLookup, setUserLookup] = useState('')
-  const [loadedUser, setLoadedUser] = useState<UserProfile | null>(null)
-  const [userForm, setUserForm] = useState<UserFormState>(createEmptyUserForm)
-  const [userStatus, setUserStatus] = useState('')
-  const [userError, setUserError] = useState('')
-
-  const [generatorLookup, setGeneratorLookup] = useState(routeCode)
-  const [loadedGenerator, setLoadedGenerator] = useState<Generator | null>(null)
-  const [generatorForm, setGeneratorForm] = useState<GeneratorFormState>(createEmptyGeneratorForm)
-  const [generatorStatus, setGeneratorStatus] = useState('')
-  const [generatorError, setGeneratorError] = useState('')
-
-  const [measurementLookup, setMeasurementLookup] = useState(routeCode)
-  const [measurementGenerator, setMeasurementGenerator] = useState<Generator | null>(null)
-  const [measurementItems, setMeasurementItems] = useState<Measurement[]>([])
-  const [selectedMeasurementId, setSelectedMeasurementId] = useState('')
-  const [measurementForm, setMeasurementForm] = useState<MeasurementFormState>(
-    createEmptyMeasurementForm,
+  const [moderationUsers, setModerationUsers] = useState<UserProfile[]>([])
+  const [moderationGenerators, setModerationGenerators] = useState<Generator[]>([])
+  const [moderationLoading, setModerationLoading] = useState(false)
+  const [moderationStatus, setModerationStatus] = useState('')
+  const [moderationError, setModerationError] = useState('')
+  const [userMenuAnchorEl, setUserMenuAnchorEl] = useState<HTMLElement | null>(null)
+  const [generatorMenuAnchorEl, setGeneratorMenuAnchorEl] = useState<HTMLElement | null>(null)
+  const [menuUser, setMenuUser] = useState<UserProfile | null>(null)
+  const [menuGenerator, setMenuGenerator] = useState<Generator | null>(null)
+  const [userDialogOpen, setUserDialogOpen] = useState(false)
+  const [generatorDialogOpen, setGeneratorDialogOpen] = useState(false)
+  const [generatorMeasurementsDialogOpen, setGeneratorMeasurementsDialogOpen] = useState(false)
+  const [generatorMeasurementsLoading, setGeneratorMeasurementsLoading] = useState(false)
+  const [generatorMeasurements, setGeneratorMeasurements] = useState<Measurement[]>([])
+  const [selectedMeasurementGenerator, setSelectedMeasurementGenerator] = useState<Generator | null>(
+    null,
   )
-  const [measurementStatus, setMeasurementStatus] = useState('')
-  const [measurementError, setMeasurementError] = useState('')
+  const [editingUser, setEditingUser] = useState<UserProfile | null>(null)
+  const [editingGenerator, setEditingGenerator] = useState<Generator | null>(null)
+  const [userForm, setUserForm] = useState<UserFormState>(createEmptyUserForm)
+  const [generatorForm, setGeneratorForm] = useState<GeneratorFormState>(createEmptyGeneratorForm)
 
   const [adminUsers, setAdminUsers] = useState<UserProfile[]>([])
   const [adminDialogOpen, setAdminDialogOpen] = useState(false)
@@ -252,8 +241,6 @@ export function AdminPage() {
 
     setActiveTab('scan')
     setScanCode(routeCode)
-    setGeneratorLookup(routeCode)
-    setMeasurementLookup(routeCode)
   }, [routeCode])
 
   useEffect(() => {
@@ -264,8 +251,14 @@ export function AdminPage() {
     void loadAdminUsers()
   }, [activeTab, authUserId])
 
-  const selectedMeasurement =
-    measurementItems.find((item) => item.id === selectedMeasurementId) ?? null
+  useEffect(() => {
+    if (activeTab !== 'moderation') {
+      return
+    }
+
+    void loadModerationEntries(moderationTab)
+  }, [activeTab, moderationTab])
+
   const parsedExportCount = Number.parseInt(exportCount, 10)
   let exportLayoutPreview: ReturnType<typeof getQrPdfLayoutPreview> | null = null
 
@@ -470,123 +463,128 @@ export function AdminPage() {
     }
   }
 
-  async function handleUserLookup(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setUserStatus('')
-    setUserError('')
+  async function loadModerationEntries(targetTab: ModerationTabValue) {
+    setModerationLoading(true)
+    setModerationError('')
 
     try {
-      const foundUser = await findUserProfileForAdmin(userLookup)
-
-      if (!foundUser) {
-        throw new Error('Kein Nutzer mit dieser ID oder E-Mail gefunden.')
+      if (targetTab === 'users') {
+        const users = await listUserProfilesForAdmin()
+        setModerationUsers(users)
+      } else {
+        const generators = await listGeneratorsForAdmin()
+        setModerationGenerators(generators)
       }
-
-      setLoadedUser(foundUser)
-      setUserForm({
-        name: foundUser.name,
-        email: foundUser.email,
-        role: foundUser.role,
-      })
-      setUserStatus(`Nutzer ${foundUser.name} geladen.`)
-    } catch (lookupIssue) {
-      setLoadedUser(null)
-      setUserForm(createEmptyUserForm())
-      setUserError(
-        lookupIssue instanceof Error ? lookupIssue.message : 'Nutzer konnte nicht geladen werden.',
+    } catch (loadIssue) {
+      setModerationError(
+        loadIssue instanceof Error
+          ? loadIssue.message
+          : 'Die Liste konnte nicht geladen werden.',
       )
+    } finally {
+      setModerationLoading(false)
     }
+  }
+
+  function handleUserMenuOpen(event: MouseEvent<HTMLElement>, user: UserProfile) {
+    event.stopPropagation()
+    setMenuUser(user)
+    setUserMenuAnchorEl(event.currentTarget)
+  }
+
+  function handleGeneratorMenuOpen(event: MouseEvent<HTMLElement>, generator: Generator) {
+    event.stopPropagation()
+    setMenuGenerator(generator)
+    setGeneratorMenuAnchorEl(event.currentTarget)
+  }
+
+  function handleCloseUserMenu() {
+    setUserMenuAnchorEl(null)
+    setMenuUser(null)
+  }
+
+  function handleCloseGeneratorMenu() {
+    setGeneratorMenuAnchorEl(null)
+    setMenuGenerator(null)
+  }
+
+  function handleOpenUserDialog(user: UserProfile) {
+    setModerationStatus('')
+    setModerationError('')
+    setEditingUser(user)
+    setUserForm({
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    })
+    setUserDialogOpen(true)
+    handleCloseUserMenu()
+  }
+
+  function handleCloseUserDialog() {
+    setUserDialogOpen(false)
+    setEditingUser(null)
+    setUserForm(createEmptyUserForm())
   }
 
   async function handleUserSave(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
-    if (!loadedUser) {
+    if (!editingUser) {
       return
     }
 
-    setUserStatus('')
-    setUserError('')
+    setModerationStatus('')
+    setModerationError('')
 
     try {
-      await updateUserProfileAsAdmin(loadedUser.id, userForm)
-      const refreshedUser = await findUserProfileForAdmin(loadedUser.id)
-
-      if (!refreshedUser) {
-        throw new Error('Der Nutzer konnte nach dem Speichern nicht erneut geladen werden.')
-      }
-
-      setLoadedUser(refreshedUser)
-      setUserForm({
-        name: refreshedUser.name,
-        email: refreshedUser.email,
-        role: refreshedUser.role,
-      })
-      setUserStatus('Nutzerprofil aktualisiert.')
+      await updateUserProfileAsAdmin(editingUser.id, userForm)
+      await loadModerationEntries('users')
+      setModerationStatus(`Nutzer ${userForm.name.trim() || editingUser.name} aktualisiert.`)
+      handleCloseUserDialog()
     } catch (saveIssue) {
-      setUserError(
+      setModerationError(
         saveIssue instanceof Error ? saveIssue.message : 'Nutzer konnte nicht gespeichert werden.',
       )
     }
   }
 
-  async function handleGeneratorLookup(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setGeneratorStatus('')
-    setGeneratorError('')
+  function handleOpenGeneratorDialog(generator: Generator) {
+    setModerationStatus('')
+    setModerationError('')
+    setEditingGenerator(generator)
+    setGeneratorForm({
+      code: generator.code,
+      ownerUid: generator.ownerUid,
+      ownerName: generator.ownerName ?? '',
+    })
+    setGeneratorDialogOpen(true)
+    handleCloseGeneratorMenu()
+  }
 
-    try {
-      const foundGenerator = await findGeneratorForAdmin(generatorLookup)
-
-      if (!foundGenerator) {
-        throw new Error('Keine Brennstoffzelle mit diesem Code oder dieser ID gefunden.')
-      }
-
-      setLoadedGenerator(foundGenerator)
-      setGeneratorForm({
-        code: foundGenerator.code,
-        ownerUid: foundGenerator.ownerUid,
-        ownerName: foundGenerator.ownerName ?? '',
-      })
-      setGeneratorStatus(`Brennstoffzelle ${foundGenerator.code} geladen.`)
-    } catch (lookupIssue) {
-      setLoadedGenerator(null)
-      setGeneratorForm(createEmptyGeneratorForm())
-      setGeneratorError(
-        lookupIssue instanceof Error
-          ? lookupIssue.message
-          : 'Brennstoffzelle konnte nicht geladen werden.',
-      )
-    }
+  function handleCloseGeneratorDialog() {
+    setGeneratorDialogOpen(false)
+    setEditingGenerator(null)
+    setGeneratorForm(createEmptyGeneratorForm())
   }
 
   async function handleGeneratorSave(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
-    if (!loadedGenerator) {
+    if (!editingGenerator) {
       return
     }
 
-    setGeneratorStatus('')
-    setGeneratorError('')
+    setModerationStatus('')
+    setModerationError('')
 
     try {
-      await updateGeneratorAsAdmin(loadedGenerator.id, generatorForm)
-      const refreshedGenerator = await findGeneratorForAdmin(loadedGenerator.id)
-
-      if (!refreshedGenerator) {
-        throw new Error('Die Brennstoffzelle konnte nach dem Speichern nicht erneut geladen werden.')
-      }
-
-      setLoadedGenerator(refreshedGenerator)
-      setGeneratorForm({
-        code: refreshedGenerator.code,
-        ownerUid: refreshedGenerator.ownerUid,
-        ownerName: refreshedGenerator.ownerName ?? '',
-      })
-      setGeneratorStatus('Brennstoffzelle aktualisiert.')
+      await updateGeneratorAsAdmin(editingGenerator.id, generatorForm)
+      await loadModerationEntries('generators')
+      setModerationStatus(`Brennstoffzelle ${formatCode(generatorForm.code)} aktualisiert.`)
+      handleCloseGeneratorDialog()
     } catch (saveIssue) {
-      setGeneratorError(
+      setModerationError(
         saveIssue instanceof Error
           ? saveIssue.message
           : 'Brennstoffzelle konnte nicht gespeichert werden.',
@@ -594,87 +592,31 @@ export function AdminPage() {
     }
   }
 
-  function selectMeasurement(measurement: Measurement | null) {
-    setSelectedMeasurementId(measurement?.id ?? '')
-    setMeasurementForm(
-      measurement
-        ? {
-            value: measurement.value.toString(),
-            enteredBy: measurement.enteredBy,
-          }
-        : createEmptyMeasurementForm(),
-    )
-  }
-
-  async function handleMeasurementLookup(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setMeasurementStatus('')
-    setMeasurementError('')
+  async function handleOpenGeneratorMeasurements(generator: Generator) {
+    setModerationStatus('')
+    setModerationError('')
+    setSelectedMeasurementGenerator(generator)
+    setGeneratorMeasurements([])
+    setGeneratorMeasurementsLoading(true)
+    setGeneratorMeasurementsDialogOpen(true)
 
     try {
-      const foundGenerator = await findGeneratorForAdmin(measurementLookup)
-
-      if (!foundGenerator) {
-        throw new Error('Keine Brennstoffzelle für diese Messwerte gefunden.')
-      }
-
-      const measurements = await getMeasurementsForAdmin(foundGenerator.id)
-
-      setMeasurementGenerator(foundGenerator)
-      setMeasurementItems(measurements)
-      selectMeasurement(measurements[0] ?? null)
-
-      if (!measurements.length) {
-        setMeasurementStatus('Brennstoffzelle geladen, aber noch ohne Messwerte.')
-        return
-      }
-
-      setMeasurementStatus(`Messwerte für ${foundGenerator.code} geladen.`)
-    } catch (lookupIssue) {
-      setMeasurementGenerator(null)
-      setMeasurementItems([])
-      selectMeasurement(null)
-      setMeasurementError(
-        lookupIssue instanceof Error
-          ? lookupIssue.message
-          : 'Messwerte konnten nicht geladen werden.',
+      const measurements = await getMeasurementsForAdmin(generator.id)
+      setGeneratorMeasurements(measurements)
+    } catch (loadIssue) {
+      setModerationError(
+        loadIssue instanceof Error ? loadIssue.message : 'Messwerte konnten nicht geladen werden.',
       )
+    } finally {
+      setGeneratorMeasurementsLoading(false)
     }
   }
 
-  async function handleMeasurementSave(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-
-    if (!selectedMeasurement || !measurementGenerator) {
-      return
-    }
-
-    setMeasurementStatus('')
-    setMeasurementError('')
-
-    try {
-      const numericValue = Number.parseFloat(measurementForm.value)
-
-      if (Number.isNaN(numericValue)) {
-        throw new Error('Bitte einen gültigen Messwert eingeben.')
-      }
-
-      await updateMeasurementAsAdmin(selectedMeasurement.id, {
-        value: numericValue,
-        enteredBy: measurementForm.enteredBy,
-      })
-
-      const refreshedMeasurements = await getMeasurementsForAdmin(measurementGenerator.id)
-      setMeasurementItems(refreshedMeasurements)
-      const refreshedSelection =
-        refreshedMeasurements.find((item) => item.id === selectedMeasurement.id) ?? null
-      selectMeasurement(refreshedSelection)
-      setMeasurementStatus('Messwert aktualisiert.')
-    } catch (saveIssue) {
-      setMeasurementError(
-        saveIssue instanceof Error ? saveIssue.message : 'Messwert konnte nicht gespeichert werden.',
-      )
-    }
+  function handleCloseGeneratorMeasurementsDialog() {
+    setGeneratorMeasurementsDialogOpen(false)
+    setSelectedMeasurementGenerator(null)
+    setGeneratorMeasurements([])
+    setGeneratorMeasurementsLoading(false)
   }
 
   async function loadAdminUsers() {
@@ -732,14 +674,8 @@ export function AdminPage() {
         role: 'admin',
       })
 
-      const refreshedUser = await findUserProfileForAdmin(foundUser.id)
-
-      if (!refreshedUser) {
-        throw new Error('Der Nutzer konnte nach dem Speichern nicht erneut geladen werden.')
-      }
-
       await loadAdminUsers()
-      setAdminStatus(`${refreshedUser.name} ist jetzt Admin.`)
+      setAdminStatus(`${foundUser.name} ist jetzt Admin.`)
       setAdminDialogOpen(false)
       setAdminEmail('')
     } catch (promoteIssue) {
@@ -1059,309 +995,120 @@ export function AdminPage() {
       </TabPanel>
 
       <TabPanel active={activeTab} value="moderation">
-        <Card sx={{ mb: { xs: 2, md: 3 } }}>
+        <Card>
           <Tabs
             value={moderationTab}
             onChange={handleModerationTabChange}
-            variant="scrollable"
-            scrollButtons="auto"
+            variant="fullWidth"
             sx={{ px: { xs: 1, sm: 2 }, pt: 1 }}
           >
             <Tab value="users" label="Nutzer" />
             <Tab value="generators" label="Brennstoffzellen" />
-            <Tab value="measurements" label="Messwerte" />
           </Tabs>
-        </Card>
+          <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
+            <Stack spacing={2}>
+              {moderationStatus ? <Alert severity="success">{moderationStatus}</Alert> : null}
+              {moderationError ? <Alert severity="error">{moderationError}</Alert> : null}
 
-        <TabPanel active={moderationTab} value="users">
-          <Grid container spacing={{ xs: 2, md: 3 }}>
-            <Grid size={{ xs: 12, lg: 4 }}>
-              <Card sx={{ height: '100%' }}>
-                <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
-                  <Stack component="form" spacing={2} onSubmit={handleUserLookup}>
-                    <Typography variant="h4" sx={{ fontSize: { xs: '1.45rem', sm: '2rem' } }}>
-                      Nutzer laden
-                    </Typography>
-                    <Typography color="text.secondary">
-                      Suche per Dokument-ID oder E-Mail-Adresse.
-                    </Typography>
-                    {userStatus ? <Alert severity="success">{userStatus}</Alert> : null}
-                    {userError ? <Alert severity="error">{userError}</Alert> : null}
-                    <TextField
-                      label="Nutzer-ID oder E-Mail"
-                      value={userLookup}
-                      onChange={(event) => setUserLookup(event.target.value)}
-                      fullWidth
-                    />
-                    <Button type="submit" variant="outlined" startIcon={<SearchIcon />} fullWidth>
-                      Nutzer laden
-                    </Button>
-                  </Stack>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid size={{ xs: 12, lg: 8 }}>
-              <Card sx={{ height: '100%' }}>
-                <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
-                  <Stack component="form" spacing={2} onSubmit={handleUserSave}>
-                    <Typography variant="h4" sx={{ fontSize: { xs: '1.45rem', sm: '2rem' } }}>
-                      Nutzer bearbeiten
-                    </Typography>
-                    <TextField
-                      label="Name"
-                      value={userForm.name}
-                      onChange={(event) =>
-                        setUserForm((current) => ({ ...current, name: event.target.value }))
-                      }
-                      disabled={!loadedUser}
-                      fullWidth
-                    />
-                    <TextField
-                      label="E-Mail"
-                      value={userForm.email}
-                      onChange={(event) =>
-                        setUserForm((current) => ({ ...current, email: event.target.value }))
-                      }
-                      disabled={!loadedUser}
-                      fullWidth
-                    />
-                    <TextField
-                      label="Rolle"
-                      select
-                      value={userForm.role}
-                      onChange={(event) =>
-                        setUserForm((current) => ({
-                          ...current,
-                          role: event.target.value as UserRole,
-                        }))
-                      }
-                      disabled={!loadedUser}
-                      fullWidth
-                      SelectProps={{ native: true }}
-                    >
-                      <option value="user">user</option>
-                      <option value="admin">admin</option>
-                    </TextField>
-                    <TextField
-                      label="Verknüpfte Brennstoffzelle"
-                      value={loadedUser?.generatorId ?? 'Keine'}
-                      disabled
-                      fullWidth
-                    />
-                    <Button
-                      type="submit"
-                      variant="contained"
-                      startIcon={<SaveIcon />}
-                      disabled={!loadedUser}
-                      fullWidth
-                    >
-                      Nutzer speichern
-                    </Button>
-                  </Stack>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
-        </TabPanel>
+              {moderationLoading ? (
+                <Stack alignItems="center" justifyContent="center" sx={{ py: 6 }}>
+                  <Typography color="text.secondary">Einträge werden geladen...</Typography>
+                </Stack>
+              ) : null}
 
-        <TabPanel active={moderationTab} value="generators">
-          <Grid container spacing={{ xs: 2, md: 3 }}>
-            <Grid size={{ xs: 12, lg: 4 }}>
-              <Card sx={{ height: '100%' }}>
-                <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
-                  <Stack component="form" spacing={2} onSubmit={handleGeneratorLookup}>
-                    <Typography variant="h4" sx={{ fontSize: { xs: '1.45rem', sm: '2rem' } }}>
-                      Brennstoffzelle laden
-                    </Typography>
-                    <Typography color="text.secondary">
-                      Suche per Code oder Dokument-ID.
-                    </Typography>
-                    {generatorStatus ? <Alert severity="success">{generatorStatus}</Alert> : null}
-                    {generatorError ? <Alert severity="error">{generatorError}</Alert> : null}
-                    <TextField
-                      label="Code oder ID"
-                      value={generatorLookup}
-                      onChange={(event) => setGeneratorLookup(event.target.value)}
-                      fullWidth
-                    />
-                    <Button type="submit" variant="outlined" startIcon={<SearchIcon />} fullWidth>
-                      Brennstoffzelle laden
-                    </Button>
-                  </Stack>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid size={{ xs: 12, lg: 8 }}>
-              <Card sx={{ height: '100%' }}>
-                <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
-                  <Stack component="form" spacing={2} onSubmit={handleGeneratorSave}>
-                    <Typography variant="h4" sx={{ fontSize: { xs: '1.45rem', sm: '2rem' } }}>
-                      Brennstoffzelle bearbeiten
-                    </Typography>
-                    <TextField
-                      label="Code"
-                      value={generatorForm.code}
-                      onChange={(event) =>
-                        setGeneratorForm((current) => ({
-                          ...current,
-                          code: formatCode(event.target.value),
-                        }))
-                      }
-                      disabled={!loadedGenerator}
-                      fullWidth
-                    />
-                    <TextField
-                      label="Owner UID"
-                      value={generatorForm.ownerUid}
-                      onChange={(event) =>
-                        setGeneratorForm((current) => ({
-                          ...current,
-                          ownerUid: event.target.value,
-                        }))
-                      }
-                      disabled={!loadedGenerator}
-                      fullWidth
-                    />
-                    <TextField
-                      label="Anzeigename"
-                      value={generatorForm.ownerName}
-                      onChange={(event) =>
-                        setGeneratorForm((current) => ({
-                          ...current,
-                          ownerName: event.target.value,
-                        }))
-                      }
-                      disabled={!loadedGenerator}
-                      fullWidth
-                    />
-                    <Button
-                      type="submit"
-                      variant="contained"
-                      startIcon={<SaveIcon />}
-                      disabled={!loadedGenerator}
-                      fullWidth
-                    >
-                      Brennstoffzelle speichern
-                    </Button>
-                  </Stack>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
-        </TabPanel>
+              <TabPanel active={moderationTab} value="users">
+                <List
+                  disablePadding
+                  sx={{
+                    borderRadius: 3,
+                    overflow: 'hidden',
+                    bgcolor: 'background.default',
+                    border: (theme) => `1px solid ${theme.palette.divider}`,
+                  }}
+                >
+                  {moderationUsers.length ? (
+                    moderationUsers.map((user, index) => (
+                      <ListItem
+                        key={user.id}
+                        divider={index < moderationUsers.length - 1}
+                        secondaryAction={
+                          <IconButton edge="end" onClick={(event) => handleUserMenuOpen(event, user)}>
+                            <MoreVertIcon />
+                          </IconButton>
+                        }
+                        sx={{ py: 1.25 }}
+                      >
+                        <ListItemText
+                          primary={user.name}
+                          secondary={
+                            user.generatorId
+                              ? `${user.email} | ${user.role} | ${user.generatorId}`
+                              : `${user.email} | ${user.role}`
+                          }
+                        />
+                      </ListItem>
+                    ))
+                  ) : (
+                    <ListItem sx={{ py: 2 }}>
+                      <ListItemText
+                        primary="Noch keine Nutzer gefunden"
+                        secondary="Registrierte Konten erscheinen hier automatisch."
+                      />
+                    </ListItem>
+                  )}
+                </List>
+              </TabPanel>
 
-        <TabPanel active={moderationTab} value="measurements">
-          <Grid container spacing={{ xs: 2, md: 3 }}>
-            <Grid size={{ xs: 12, lg: 4 }}>
-              <Card sx={{ height: '100%' }}>
-                <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
-                  <Stack component="form" spacing={2} onSubmit={handleMeasurementLookup}>
-                    <Typography variant="h4" sx={{ fontSize: { xs: '1.45rem', sm: '2rem' } }}>
-                      Messreihe laden
-                    </Typography>
-                    <Typography color="text.secondary">
-                      Suche per Brennstoffzellen-Code oder Dokument-ID.
-                    </Typography>
-                    {measurementStatus ? <Alert severity="success">{measurementStatus}</Alert> : null}
-                    {measurementError ? <Alert severity="error">{measurementError}</Alert> : null}
-                    <TextField
-                      label="Code oder ID"
-                      value={measurementLookup}
-                      onChange={(event) => setMeasurementLookup(event.target.value)}
-                      fullWidth
-                    />
-                    <Button type="submit" variant="outlined" startIcon={<SearchIcon />} fullWidth>
-                      Messreihe laden
-                    </Button>
-                    <Divider />
-                    <Stack spacing={1}>
-                      <Typography variant="overline">Auswahl</Typography>
-                      <Typography variant="body2">
-                        {measurementGenerator?.code ?? 'Noch keine Brennstoffzelle geladen'}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {getMeasurementSummary(measurementItems)}
-                      </Typography>
-                    </Stack>
-                    <List
-                      dense
-                      disablePadding
-                      sx={{ borderRadius: 3, overflow: 'hidden', bgcolor: 'background.default' }}
-                    >
-                      {measurementItems.map((item) => (
-                        <ListItemButton
-                          key={item.id}
-                          selected={selectedMeasurementId === item.id}
-                          onClick={() => selectMeasurement(item)}
-                          divider
-                        >
+              <TabPanel active={moderationTab} value="generators">
+                <List
+                  disablePadding
+                  sx={{
+                    borderRadius: 3,
+                    overflow: 'hidden',
+                    bgcolor: 'background.default',
+                    border: (theme) => `1px solid ${theme.palette.divider}`,
+                  }}
+                >
+                  {moderationGenerators.length ? (
+                    moderationGenerators.map((generator, index) => (
+                      <ListItem
+                        key={generator.id}
+                        disablePadding
+                        divider={index < moderationGenerators.length - 1}
+                        secondaryAction={
+                          <IconButton
+                            edge="end"
+                            onClick={(event) => handleGeneratorMenuOpen(event, generator)}
+                          >
+                            <MoreVertIcon />
+                          </IconButton>
+                        }
+                      >
+                        <ListItemButton onClick={() => void handleOpenGeneratorMeasurements(generator)}>
                           <ListItemText
-                            primary={formatMeasurement(item.value)}
-                            secondary={formatTimestamp(item.createdAt)}
+                            primary={generator.ownerName?.trim() || generator.code}
+                            secondary={
+                              generator.ownerName?.trim()
+                                ? `${generator.code} | ${generator.ownerUid}`
+                                : generator.ownerUid
+                            }
                           />
                         </ListItemButton>
-                      ))}
-                    </List>
-                  </Stack>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid size={{ xs: 12, lg: 8 }}>
-              <Card sx={{ height: '100%' }}>
-                <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
-                  <Stack component="form" spacing={2} onSubmit={handleMeasurementSave}>
-                    <Typography variant="h4" sx={{ fontSize: { xs: '1.45rem', sm: '2rem' } }}>
-                      Messwert bearbeiten
-                    </Typography>
-                    <TextField
-                      label="Messwert in Volt"
-                      value={measurementForm.value}
-                      onChange={(event) =>
-                        setMeasurementForm((current) => ({
-                          ...current,
-                          value: event.target.value,
-                        }))
-                      }
-                      disabled={!selectedMeasurement}
-                      fullWidth
-                    />
-                    <TextField
-                      label="Eingetragen von"
-                      value={measurementForm.enteredBy}
-                      onChange={(event) =>
-                        setMeasurementForm((current) => ({
-                          ...current,
-                          enteredBy: event.target.value,
-                        }))
-                      }
-                      disabled={!selectedMeasurement}
-                      fullWidth
-                    />
-                    <TextField
-                      label="Zeitstempel"
-                      value={
-                        selectedMeasurement
-                          ? formatTimestamp(selectedMeasurement.createdAt)
-                          : 'Keine Auswahl'
-                      }
-                      disabled
-                      fullWidth
-                    />
-                    <Button
-                      type="submit"
-                      variant="contained"
-                      startIcon={<SaveIcon />}
-                      disabled={!selectedMeasurement}
-                      fullWidth
-                    >
-                      Messwert speichern
-                    </Button>
-                  </Stack>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
-        </TabPanel>
+                      </ListItem>
+                    ))
+                  ) : (
+                    <ListItem sx={{ py: 2 }}>
+                      <ListItemText
+                        primary="Noch keine Brennstoffzellen gefunden"
+                        secondary="Sobald Brennstoffzellen angelegt sind, erscheinen sie hier."
+                      />
+                    </ListItem>
+                  )}
+                </List>
+              </TabPanel>
+            </Stack>
+          </CardContent>
+        </Card>
       </TabPanel>
 
       <TabPanel active={activeTab} value="admins">
@@ -1429,6 +1176,203 @@ export function AdminPage() {
           </Grid>
         </Grid>
       </TabPanel>
+
+      <Menu
+        anchorEl={userMenuAnchorEl}
+        open={Boolean(userMenuAnchorEl)}
+        onClose={handleCloseUserMenu}
+      >
+        <MenuItem
+          onClick={() => {
+            if (menuUser) {
+              handleOpenUserDialog(menuUser)
+            }
+          }}
+        >
+          Bearbeiten
+        </MenuItem>
+      </Menu>
+
+      <Menu
+        anchorEl={generatorMenuAnchorEl}
+        open={Boolean(generatorMenuAnchorEl)}
+        onClose={handleCloseGeneratorMenu}
+      >
+        <MenuItem
+          onClick={() => {
+            if (menuGenerator) {
+              handleOpenGeneratorDialog(menuGenerator)
+            }
+          }}
+        >
+          Bearbeiten
+        </MenuItem>
+      </Menu>
+
+      <Dialog open={userDialogOpen} onClose={handleCloseUserDialog} fullWidth maxWidth="sm">
+        <DialogTitle>Nutzer bearbeiten</DialogTitle>
+        <Box component="form" onSubmit={handleUserSave}>
+          <DialogContent>
+            <Stack spacing={2}>
+              <TextField
+                label="Name"
+                value={userForm.name}
+                onChange={(event) =>
+                  setUserForm((current) => ({ ...current, name: event.target.value }))
+                }
+                fullWidth
+              />
+              <TextField
+                label="E-Mail"
+                value={userForm.email}
+                onChange={(event) =>
+                  setUserForm((current) => ({ ...current, email: event.target.value }))
+                }
+                fullWidth
+              />
+              <TextField
+                label="Rolle"
+                select
+                value={userForm.role}
+                onChange={(event) =>
+                  setUserForm((current) => ({
+                    ...current,
+                    role: event.target.value as UserRole,
+                  }))
+                }
+                fullWidth
+                SelectProps={{ native: true }}
+              >
+                <option value="user">user</option>
+                <option value="admin">admin</option>
+              </TextField>
+              <TextField
+                label="Verknüpfte Brennstoffzelle"
+                value={editingUser?.generatorId ?? 'Keine'}
+                disabled
+                fullWidth
+              />
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseUserDialog}>Abbrechen</Button>
+            <Button type="submit" variant="contained" startIcon={<SaveIcon />}>
+              Speichern
+            </Button>
+          </DialogActions>
+        </Box>
+      </Dialog>
+
+      <Dialog
+        open={generatorDialogOpen}
+        onClose={handleCloseGeneratorDialog}
+        fullWidth
+        maxWidth="sm"
+      >
+        <Box component="form" onSubmit={handleGeneratorSave}>
+          <DialogTitle>Brennstoffzelle bearbeiten</DialogTitle>
+          <DialogContent>
+            <Stack spacing={2}>
+              <TextField
+                label="Code"
+                value={generatorForm.code}
+                onChange={(event) =>
+                  setGeneratorForm((current) => ({
+                    ...current,
+                    code: formatCode(event.target.value),
+                  }))
+                }
+                fullWidth
+              />
+              <TextField
+                label="Owner UID"
+                value={generatorForm.ownerUid}
+                onChange={(event) =>
+                  setGeneratorForm((current) => ({
+                    ...current,
+                    ownerUid: event.target.value,
+                  }))
+                }
+                fullWidth
+              />
+              <TextField
+                label="Anzeigename"
+                value={generatorForm.ownerName}
+                onChange={(event) =>
+                  setGeneratorForm((current) => ({
+                    ...current,
+                    ownerName: event.target.value,
+                  }))
+                }
+                fullWidth
+              />
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseGeneratorDialog}>Abbrechen</Button>
+            <Button type="submit" variant="contained" startIcon={<SaveIcon />}>
+              Speichern
+            </Button>
+          </DialogActions>
+        </Box>
+      </Dialog>
+
+      <Dialog
+        open={generatorMeasurementsDialogOpen}
+        onClose={handleCloseGeneratorMeasurementsDialog}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>
+          {selectedMeasurementGenerator
+            ? `Messwerte für ${selectedMeasurementGenerator.ownerName?.trim() || selectedMeasurementGenerator.code}`
+            : 'Messwerte'}
+        </DialogTitle>
+        <DialogContent>
+          <Stack spacing={2}>
+            {selectedMeasurementGenerator ? (
+              <Typography color="text.secondary">
+                {selectedMeasurementGenerator.code} | {selectedMeasurementGenerator.ownerUid}
+              </Typography>
+            ) : null}
+
+            {generatorMeasurementsLoading ? (
+              <Typography color="text.secondary">Messwerte werden geladen...</Typography>
+            ) : (
+              <List
+                disablePadding
+                sx={{
+                  borderRadius: 3,
+                  overflow: 'hidden',
+                  bgcolor: 'background.default',
+                  border: (theme) => `1px solid ${theme.palette.divider}`,
+                }}
+              >
+                {generatorMeasurements.length ? (
+                  generatorMeasurements.map((measurement, index) => (
+                    <ListItem key={measurement.id} divider={index < generatorMeasurements.length - 1}>
+                      <ListItemText
+                        primary={formatMeasurement(measurement.value)}
+                        secondary={`${measurement.enteredBy} | ${formatTimestamp(measurement.createdAt)}`}
+                      />
+                    </ListItem>
+                  ))
+                ) : (
+                  <ListItem>
+                    <ListItemText
+                      primary="Noch keine Messwerte"
+                      secondary="Für diese Brennstoffzelle wurden noch keine Werte eingetragen."
+                    />
+                  </ListItem>
+                )}
+              </List>
+            )}
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseGeneratorMeasurementsDialog}>Schließen</Button>
+        </DialogActions>
+      </Dialog>
 
       <QrScannerDialog
         open={scannerOpen}
