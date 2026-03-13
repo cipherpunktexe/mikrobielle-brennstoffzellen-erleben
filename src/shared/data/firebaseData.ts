@@ -73,6 +73,11 @@ export interface AddMeasurementByCodeInput {
   createdAt?: Date
 }
 
+export interface AdminRecentMeasurementItem extends Measurement {
+  generatorCode: string
+  ownerName: string
+}
+
 export function subscribeToAuth(callback: (user: User | null) => void) {
   return onAuthStateChanged(auth, callback)
 }
@@ -568,6 +573,55 @@ export async function getMeasurementsForAdmin(generatorId: string) {
       const leftMs = left.createdAt?.toMillis() ?? 0
       const rightMs = right.createdAt?.toMillis() ?? 0
       return rightMs - leftMs
+    })
+}
+
+export async function getRecentMeasurementsEnteredBy(
+  enteredBy: string,
+  limitCount = 8,
+) {
+  const trimmedEnteredBy = enteredBy.trim()
+
+  if (!trimmedEnteredBy) {
+    return [] as AdminRecentMeasurementItem[]
+  }
+
+  const measurementsSnapshot = await getDocs(
+    query(measurementsCollection, where('enteredBy', '==', trimmedEnteredBy)),
+  )
+  const generatorSnapshot = await getDocs(generatorsCollection)
+  const generatorMap = new Map(
+    generatorSnapshot.docs.map((item) => [
+      item.id,
+      {
+        id: item.id,
+        ...item.data(),
+      } as Generator,
+    ]),
+  )
+
+  return measurementsSnapshot.docs
+    .map(
+      (item) =>
+        ({
+          id: item.id,
+          ...item.data(),
+        }) as Measurement,
+    )
+    .sort((left, right) => {
+      const leftMs = left.createdAt?.toMillis() ?? 0
+      const rightMs = right.createdAt?.toMillis() ?? 0
+      return rightMs - leftMs
+    })
+    .slice(0, limitCount)
+    .map((measurement) => {
+      const generator = generatorMap.get(measurement.generatorId)
+
+      return {
+        ...measurement,
+        generatorCode: generator?.code ?? 'unbekannt',
+        ownerName: generator?.ownerName?.trim() ?? '',
+      } satisfies AdminRecentMeasurementItem
     })
 }
 

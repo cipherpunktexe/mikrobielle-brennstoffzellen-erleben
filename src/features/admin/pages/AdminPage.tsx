@@ -1,6 +1,5 @@
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings'
 import EditNoteIcon from '@mui/icons-material/EditNote'
-import OpenInNewIcon from '@mui/icons-material/OpenInNew'
 import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1'
 import PrintIcon from '@mui/icons-material/Print'
 import QrCode2Icon from '@mui/icons-material/QrCode2'
@@ -31,7 +30,7 @@ import {
   Typography,
 } from '@mui/material'
 import { useEffect, useState, type FormEvent, type ReactNode, type SyntheticEvent } from 'react'
-import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { AuthCard } from '../../../shared/ui/AuthCard'
 import { QrScannerDialog } from '../../../shared/qr/QrScannerDialog'
 import { formatCode, formatMeasurement, formatTimestamp } from '../../../shared/utils/format'
@@ -48,23 +47,23 @@ import {
   getAdminProfiles,
   getGeneratorByCode,
   getMeasurementsForAdmin,
+  getRecentMeasurementsEnteredBy,
   getUserProfile,
   login,
   logout,
   signInWithGoogle,
   subscribeToAuth,
-  subscribeToLeaderboard,
   updateGeneratorAsAdmin,
   updateMeasurementAsAdmin,
   updateUserProfileAsAdmin,
 } from '../../../shared/data/firebaseData'
 import type {
   Generator,
-  LeaderboardEntry,
   Measurement,
   UserProfile,
   UserRole,
 } from '../../../shared/types/domain'
+import type { AdminRecentMeasurementItem } from '../../../shared/data/firebaseData'
 
 type AdminTabValue = 'qr' | 'scan' | 'moderation' | 'admins'
 type ModerationTabValue = 'users' | 'generators' | 'measurements'
@@ -170,7 +169,6 @@ export function AdminPage() {
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [authError, setAuthError] = useState('')
   const [authLoading, setAuthLoading] = useState(false)
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
   const [activeTab, setActiveTab] = useState<AdminTabValue>(routeCode ? 'scan' : 'qr')
   const [moderationTab, setModerationTab] = useState<ModerationTabValue>('users')
 
@@ -181,10 +179,9 @@ export function AdminPage() {
 
   const [scannerOpen, setScannerOpen] = useState(false)
   const [scanCode, setScanCode] = useState(routeCode)
-  const [generator, setGenerator] = useState<Generator | null>(null)
+  const [scanMeasurementCodeLocked, setScanMeasurementCodeLocked] = useState(false)
   const [scanStatus, setScanStatus] = useState('')
   const [scanError, setScanError] = useState('')
-  const [measurementValue, setMeasurementValue] = useState('1.42')
   const [scanMeasurementDialogOpen, setScanMeasurementDialogOpen] = useState(false)
   const [scanMeasurementInput, setScanMeasurementInput] = useState('1.42')
   const [scanMeasurementUnit, setScanMeasurementUnit] = useState<MeasurementUnit>('V')
@@ -193,6 +190,7 @@ export function AdminPage() {
   )
   const [scanMeasurementSaving, setScanMeasurementSaving] = useState(false)
   const [scanMeasurementError, setScanMeasurementError] = useState('')
+  const [recentMeasurements, setRecentMeasurements] = useState<AdminRecentMeasurementItem[]>([])
 
   const [userLookup, setUserLookup] = useState('')
   const [loadedUser, setLoadedUser] = useState<UserProfile | null>(null)
@@ -234,8 +232,6 @@ export function AdminPage() {
     })
   }, [])
 
-  useEffect(() => subscribeToLeaderboard(setLeaderboard), [])
-
   useEffect(() => {
     if (!authUserId) {
       setProfile(null)
@@ -247,7 +243,6 @@ export function AdminPage() {
 
   useEffect(() => {
     if (!routeCode) {
-      setGenerator(null)
       return
     }
 
@@ -255,7 +250,6 @@ export function AdminPage() {
     setScanCode(routeCode)
     setGeneratorLookup(routeCode)
     setMeasurementLookup(routeCode)
-    void loadGeneratorForScan(routeCode)
   }, [routeCode])
 
   useEffect(() => {
@@ -266,12 +260,18 @@ export function AdminPage() {
     void loadAdminUsers()
   }, [activeTab, authUserId])
 
-  const currentLeaderboardEntry = generator
-    ? leaderboard.find((entry) => entry.generatorId === generator.id)
-    : null
-
   const selectedMeasurement =
     measurementItems.find((item) => item.id === selectedMeasurementId) ?? null
+
+  useEffect(() => {
+    const enteredBy = profile?.email?.trim() || authUserId
+
+    if (activeTab !== 'scan' || !enteredBy) {
+      return
+    }
+
+    void loadRecentMeasurements(enteredBy)
+  }, [activeTab, authUserId, profile?.email])
 
   function handleAdminTabChange(_event: SyntheticEvent, value: AdminTabValue) {
     setActiveTab(value)
@@ -279,18 +279,6 @@ export function AdminPage() {
 
   function handleModerationTabChange(_event: SyntheticEvent, value: ModerationTabValue) {
     setModerationTab(value)
-  }
-
-  async function loadGeneratorForScan(code: string) {
-    const normalizedCode = formatCode(code)
-
-    if (!normalizedCode) {
-      setGenerator(null)
-      return
-    }
-
-    const foundGenerator = await getGeneratorByCode(normalizedCode)
-    setGenerator(foundGenerator)
   }
 
   async function handleLogin(event: FormEvent<HTMLFormElement>) {
@@ -351,43 +339,29 @@ export function AdminPage() {
     }
   }
 
-  async function handleLookup() {
-    setScanStatus('')
-    setScanError('')
-
+  async function loadRecentMeasurements(enteredBy: string) {
     try {
-      const normalizedCode = formatCode(scanCode)
-
-      if (!normalizedCode) {
-        throw new Error('Bitte zuerst einen Brennstoffzellen-Code eingeben oder scannen.')
-      }
-
-      const foundGenerator = await getGeneratorByCode(normalizedCode)
-
-      if (!foundGenerator) {
-        throw new Error('Zu diesem Code wurde keine Brennstoffzelle gefunden.')
-      }
-
-      setGenerator(foundGenerator)
-      setScanCode(normalizedCode)
-      navigate(`/admin/generator/${normalizedCode}`)
-      setScanStatus(`Brennstoffzelle ${foundGenerator.code} geladen.`)
-    } catch (lookupIssue) {
-      setScanError(
-        lookupIssue instanceof Error
-          ? lookupIssue.message
-          : 'Brennstoffzelle konnte nicht geladen werden.',
-      )
+      const items = await getRecentMeasurementsEnteredBy(enteredBy)
+      setRecentMeasurements(items)
+    } catch {
+      setRecentMeasurements([])
     }
   }
 
-  function openScanMeasurementDialog(code: string) {
+  function openScanMeasurementDialog(code = '', codeLocked = false) {
     setScanCode(code)
+    setScanMeasurementCodeLocked(codeLocked)
     setScanMeasurementInput('1.42')
     setScanMeasurementUnit('V')
     setScanMeasurementDateTime(getCurrentDateTimeInputValue())
     setScanMeasurementError('')
     setScanMeasurementDialogOpen(true)
+  }
+
+  function handleOpenManualMeasurementDialog() {
+    setScanStatus('')
+    setScanError('')
+    openScanMeasurementDialog(routeCode)
   }
 
   function handleCloseScanMeasurementDialog() {
@@ -396,6 +370,7 @@ export function AdminPage() {
     }
 
     setScanMeasurementDialogOpen(false)
+    setScanMeasurementCodeLocked(false)
     setScanMeasurementError('')
   }
 
@@ -415,40 +390,10 @@ export function AdminPage() {
     setScannerOpen(false)
     setActiveTab('scan')
     setScanCode(code)
-    setGenerator(foundGenerator)
     setScanError('')
     setScanStatus(`QR-Code erkannt: ${code}`)
     navigate(`/admin/generator/${code}`)
-    openScanMeasurementDialog(code)
-  }
-
-  async function handleMeasurementSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setScanStatus('')
-    setScanError('')
-
-    try {
-      const numericValue = Number.parseFloat(measurementValue)
-
-      if (Number.isNaN(numericValue)) {
-        throw new Error('Bitte einen gültigen Messwert eingeben.')
-      }
-
-      const linkedGenerator = await addMeasurementByCode({
-        code: scanCode,
-        value: numericValue,
-        enteredBy: profile?.email ?? authUserId,
-      })
-
-      setGenerator(linkedGenerator)
-      setScanStatus(`Messwert für ${linkedGenerator.code} wurde gespeichert.`)
-    } catch (submitIssue) {
-      setScanError(
-        submitIssue instanceof Error
-          ? submitIssue.message
-          : 'Messwert konnte nicht gespeichert werden.',
-      )
-    }
+    openScanMeasurementDialog(code, true)
   }
 
   async function handleScanMeasurementSubmit(event: FormEvent<HTMLFormElement>) {
@@ -459,6 +404,12 @@ export function AdminPage() {
     setScanError('')
 
     try {
+      const normalizedCode = formatCode(scanCode)
+
+      if (!normalizedCode) {
+        throw new Error('Bitte einen Brennstoffzellen-Code eingeben.')
+      }
+
       const numericValue = Number.parseFloat(scanMeasurementInput)
 
       if (Number.isNaN(numericValue)) {
@@ -472,14 +423,16 @@ export function AdminPage() {
       }
 
       const linkedGenerator = await addMeasurementByCode({
-        code: scanCode,
+        code: normalizedCode,
         value: convertMeasurementToVolts(numericValue, scanMeasurementUnit),
         enteredBy: profile?.email ?? authUserId,
         createdAt: measuredAt,
       })
 
-      setGenerator(linkedGenerator)
+      await loadRecentMeasurements(profile?.email?.trim() || authUserId)
+      setScanCode(normalizedCode)
       setScanMeasurementDialogOpen(false)
+      setScanMeasurementCodeLocked(false)
       setScanStatus(`Messwert für ${linkedGenerator.code} wurde gespeichert.`)
     } catch (submitIssue) {
       setScanMeasurementError(
@@ -964,13 +917,12 @@ export function AdminPage() {
           <Grid size={{ xs: 12, lg: 5 }}>
             <Card sx={{ height: '100%' }}>
               <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
-                <Stack spacing={2}>
+                <Stack spacing={2.5}>
                   <Typography variant="h4" sx={{ fontSize: { xs: '1.45rem', sm: '2rem' } }}>
-                    Code erfassen
+                    Messwerte erfassen
                   </Typography>
                   <Typography color="text.secondary">
-                    Ein QR-Scan öffnet direkt den Dialog zum Eintragen eines Messwerts. Alternativ
-                    kann der Brennstoffzellen-Code auch manuell geladen werden.
+                    Scanne einen QR-Code oder trage einen Messwert manuell ein.
                   </Typography>
                   {scanStatus ? <Alert severity="success">{scanStatus}</Alert> : null}
                   {scanError ? <Alert severity="error">{scanError}</Alert> : null}
@@ -982,19 +934,13 @@ export function AdminPage() {
                   >
                     Scanner öffnen
                   </Button>
-                  <TextField
-                    fullWidth
-                    label="Brennstoffzellen-Code"
-                    value={scanCode}
-                    onChange={(event) => setScanCode(formatCode(event.target.value))}
-                  />
                   <Button
                     variant="outlined"
-                    onClick={() => void handleLookup()}
-                    startIcon={<OpenInNewIcon />}
+                    startIcon={<EditNoteIcon />}
+                    onClick={handleOpenManualMeasurementDialog}
                     fullWidth
                   >
-                    Brennstoffzelle laden
+                    Manuell Messwert hinzufügen
                   </Button>
                 </Stack>
               </CardContent>
@@ -1004,96 +950,49 @@ export function AdminPage() {
           <Grid size={{ xs: 12, lg: 7 }}>
             <Card sx={{ height: '100%' }}>
               <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
-                <Stack component="form" spacing={2} onSubmit={handleMeasurementSubmit}>
+                <Stack spacing={2}>
                   <Typography variant="h4" sx={{ fontSize: { xs: '1.45rem', sm: '2rem' } }}>
-                    Messwert speichern
+                    Letzte eigene Einträge
                   </Typography>
                   <Typography color="text.secondary">
-                    Der Messwert wird für den aktuell geladenen Code gespeichert.
+                    Hier siehst du die zuletzt von dir eingetragenen Messwerte.
                   </Typography>
-                  <TextField
-                    label="Brennstoffzellen-Code"
-                    value={scanCode}
-                    onChange={(event) => setScanCode(formatCode(event.target.value))}
-                    required
-                    fullWidth
-                  />
-                  <TextField
-                    label="Messwert in Volt"
-                    value={measurementValue}
-                    onChange={(event) => setMeasurementValue(event.target.value)}
-                    required
-                    fullWidth
-                  />
-                  <Button type="submit" variant="contained" startIcon={<SaveIcon />} fullWidth>
-                    Messwert speichern
-                  </Button>
-                </Stack>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid size={{ xs: 12 }}>
-            <Card>
-              <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
-                <Stack spacing={2}>
-                  <Stack
-                    direction={{ xs: 'column', md: 'row' }}
-                    justifyContent="space-between"
-                    alignItems={{ xs: 'flex-start', md: 'center' }}
-                    spacing={1}
+                  <List
+                    dense
+                    disablePadding
+                    sx={{
+                      borderRadius: 3,
+                      overflow: 'hidden',
+                      bgcolor: 'background.default',
+                      border: (theme) => `1px solid ${theme.palette.divider}`,
+                    }}
                   >
-                    <div>
-                      <Typography variant="h4" sx={{ fontSize: { xs: '1.45rem', sm: '2rem' } }}>
-                        Aktuelle Auswahl
-                      </Typography>
-                      <Typography color="text.secondary">
-                        Zusammenfassung der geladenen Brennstoffzelle.
-                      </Typography>
-                    </div>
-                    <Button
-                      component={RouterLink}
-                      to="/leaderboard"
-                      variant="text"
-                      endIcon={<OpenInNewIcon />}
-                    >
-                      Leaderboard
-                    </Button>
-                  </Stack>
-
-                  <Grid container spacing={{ xs: 2, md: 3 }}>
-                    <Grid size={{ xs: 12, md: 4 }}>
-                      <Card variant="outlined">
-                        <CardContent>
-                          <Typography variant="overline">Code</Typography>
-                          <Typography variant="h5">{generator?.code ?? 'Noch kein Code'}</Typography>
-                        </CardContent>
-                      </Card>
-                    </Grid>
-                    <Grid size={{ xs: 12, md: 4 }}>
-                      <Card variant="outlined">
-                        <CardContent>
-                          <Typography variant="overline">Nutzername</Typography>
-                          <Typography variant="h5">
-                            {generator?.ownerName?.trim() || 'Noch keine Zuordnung'}
-                          </Typography>
-                        </CardContent>
-                      </Card>
-                    </Grid>
-                    <Grid size={{ xs: 12, md: 4 }}>
-                      <Card variant="outlined">
-                        <CardContent>
-                          <Typography variant="overline">Bester Wert</Typography>
-                          <Typography variant="h5">
-                            {formatMeasurement(currentLeaderboardEntry?.maxValue)}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            {formatTimestamp(currentLeaderboardEntry?.maxMeasuredAt)}
-                          </Typography>
-                        </CardContent>
-                      </Card>
-                    </Grid>
-                  </Grid>
+                    {recentMeasurements.length ? (
+                      recentMeasurements.map((item, index) => (
+                        <ListItem
+                          key={item.id}
+                          divider={index < recentMeasurements.length - 1}
+                          sx={{ py: 1.25 }}
+                        >
+                          <ListItemText
+                            primary={`${item.generatorCode} ? ${formatMeasurement(item.value)}`}
+                            secondary={
+                              item.ownerName
+                                ? `${item.ownerName} ? ${formatTimestamp(item.createdAt)}`
+                                : formatTimestamp(item.createdAt)
+                            }
+                          />
+                        </ListItem>
+                      ))
+                    ) : (
+                      <ListItem sx={{ py: 2 }}>
+                        <ListItemText
+                          primary="Noch keine eigenen Messwerte"
+                          secondary="Sobald du Werte speicherst, erscheinen sie hier."
+                        />
+                      </ListItem>
+                    )}
+                  </List>
                 </Stack>
               </CardContent>
             </Card>
@@ -1516,7 +1415,13 @@ export function AdminPage() {
         <Box component="form" onSubmit={handleScanMeasurementSubmit}>
           <DialogContent>
             <Stack spacing={2}>
-              <TextField label="Brennstoffzellen-Code" value={scanCode} disabled fullWidth />
+              <TextField
+                label="Brennstoffzellen-Code"
+                value={scanCode}
+                onChange={(event) => setScanCode(formatCode(event.target.value))}
+                disabled={scanMeasurementCodeLocked}
+                fullWidth
+              />
               <TextField
                 label="Wert"
                 value={scanMeasurementInput}
