@@ -29,7 +29,11 @@ import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom'
 import { AuthCard } from '../../../shared/ui/AuthCard'
 import { QrScannerDialog } from '../../../shared/qr/QrScannerDialog'
 import { formatCode, formatMeasurement, formatTimestamp } from '../../../shared/utils/format'
-import { extractGeneratorCodeFromQrValue, printQrCards } from '../../../shared/utils/qr'
+import {
+  buildGeneratorQrValue,
+  extractGeneratorCodeFromQrValue,
+  printQrCards,
+} from '../../../shared/utils/qr'
 import {
   addMeasurementByCode,
   findGeneratorForAdmin,
@@ -288,11 +292,9 @@ export function AdminPage() {
         throw new Error('Bitte ein gueltiges Praefix angeben.')
       }
 
-      const origin = window.location.origin
       const cards = createStationCodes(normalizedPrefix, count).map((code) => ({
         code,
-        userUrl: `${origin}/register/${code}`,
-        adminUrl: `${origin}/admin/generator/${code}`,
+        scanValue: buildGeneratorQrValue(code),
       }))
 
       await printQrCards(cards)
@@ -803,16 +805,17 @@ export function AdminPage() {
                   >
                     <Chip label={`Praefix ${formatCode(exportPrefix) || '-'}`} />
                     <Chip label={`${exportCount || '0'} Karten`} />
-                    <Chip label="2 QR-Codes pro Karte" />
+                    <Chip label="1 QR-Code pro Karte" />
                   </Stack>
                   <Divider />
                   <Typography color="text.secondary">
-                    Jede Karte enthaelt einen Nutzer-Link fuer die Verknuepfung und einen
-                    Admin-Link fuer das direkte Scannen und Eintragen von Messwerten.
+                    Jede Karte enthaelt einen neutralen App-QR-Code mit dem Brennstoffzellen-Code.
+                    Im Nutzerbereich startet der Scan die Verknuepfung, im Admin-Bereich laedt der
+                    Scan die Brennstoffzelle fuer Messwerte und Moderation.
                   </Typography>
                   <Typography color="text.secondary">
-                    Die bestehenden Routen bleiben unveraendert: <code>/register/:code</code> und{' '}
-                    <code>/admin/generator/:code</code>.
+                    Bestehende URL-QRs bleiben weiterhin lesbar, neue Karten nutzen aber nur noch
+                    den App-internen QR-Payload.
                   </Typography>
                 </Stack>
               </CardContent>

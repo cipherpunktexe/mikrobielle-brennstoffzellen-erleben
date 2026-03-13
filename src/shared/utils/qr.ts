@@ -3,12 +3,18 @@ import { formatCode } from './format'
 
 export interface QrCardDefinition {
   code: string
-  userUrl: string
-  adminUrl: string
+  scanValue: string
 }
 
-export async function generateQrDataUrl(url: string) {
-  return QRCode.toDataURL(url, {
+const QR_PREFIX = 'mbz:generator:'
+
+export function buildGeneratorQrValue(code: string) {
+  const normalizedCode = formatCode(code)
+  return normalizedCode ? `${QR_PREFIX}${normalizedCode}` : ''
+}
+
+export async function generateQrDataUrl(value: string) {
+  return QRCode.toDataURL(value, {
     margin: 1,
     width: 256,
     color: {
@@ -23,6 +29,10 @@ export function extractGeneratorCodeFromQrValue(value: string, origin = window.l
 
   if (!trimmedValue) {
     return ''
+  }
+
+  if (trimmedValue.startsWith(QR_PREFIX)) {
+    return formatCode(trimmedValue.slice(QR_PREFIX.length))
   }
 
   try {
@@ -50,8 +60,7 @@ export function extractGeneratorCodeFromQrValue(value: string, origin = window.l
 export async function printQrCards(cards: QrCardDefinition[]) {
   const renderedCards = await Promise.all(
     cards.map(async (card) => {
-      const userQr = await generateQrDataUrl(card.userUrl)
-      const adminQr = await generateQrDataUrl(card.adminUrl)
+      const qrDataUrl = await generateQrDataUrl(card.scanValue)
 
       return `
         <article class="card">
@@ -61,14 +70,9 @@ export async function printQrCards(cards: QrCardDefinition[]) {
           </header>
           <section>
             <div>
-              <img src="${userQr}" alt="QR-Code Nutzer ${card.code}" />
-              <strong>Nutzer</strong>
-              <span>${card.userUrl}</span>
-            </div>
-            <div>
-              <img src="${adminQr}" alt="QR-Code Admin ${card.code}" />
-              <strong>Admin</strong>
-              <span>${card.adminUrl}</span>
+              <img src="${qrDataUrl}" alt="QR-Code ${card.code}" />
+              <strong>App-QR-Code</strong>
+              <span>Im Nutzerbereich verknuepfen oder im Admin-Bereich scannen.</span>
             </div>
           </section>
         </article>
@@ -93,11 +97,11 @@ export async function printQrCards(cards: QrCardDefinition[]) {
           header { margin-bottom: 16px; }
           h2 { margin: 0 0 4px; font-family: "Palatino Linotype", serif; }
           p { margin: 0; color: #4d4331; }
-          section { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+          section { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
           section div { border: 1px solid #c4c0b9; border-radius: 14px; padding: 12px; text-align: center; background: #efe9dc; }
           img { width: 100%; max-width: 220px; display: block; margin: 0 auto 8px; }
           strong { display: block; margin-bottom: 6px; }
-          span { font-size: 11px; word-break: break-all; }
+          span { font-size: 11px; }
           @media print { body { padding: 12px; } }
         </style>
       </head>

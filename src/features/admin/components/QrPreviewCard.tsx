@@ -5,18 +5,18 @@ import { generateQrDataUrl } from '../../../shared/utils/qr'
 
 interface QrPreviewCardProps {
   title: string
-  url: string
+  value: string
   helper: string
 }
 
-export function QrPreviewCard({ title, url, helper }: QrPreviewCardProps) {
+export function QrPreviewCard({ title, value, helper }: QrPreviewCardProps) {
   const [dataUrl, setDataUrl] = useState('')
   const [error, setError] = useState('')
 
   useEffect(() => {
     let active = true
 
-    generateQrDataUrl(url)
+    generateQrDataUrl(value)
       .then((nextDataUrl) => {
         if (active) {
           setError('')
@@ -33,7 +33,7 @@ export function QrPreviewCard({ title, url, helper }: QrPreviewCardProps) {
     return () => {
       active = false
     }
-  }, [url])
+  }, [value])
 
   return (
     <Card sx={{ height: '100%' }}>
@@ -64,7 +64,7 @@ export function QrPreviewCard({ title, url, helper }: QrPreviewCardProps) {
             color="text.secondary"
             sx={{ wordBreak: 'break-all', textAlign: 'center' }}
           >
-            {url}
+            {value}
           </Typography>
         </Stack>
       </CardContent>
