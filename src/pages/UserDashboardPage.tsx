@@ -225,19 +225,30 @@ export function UserDashboardPage() {
       <Card>
         <CardContent sx={{ p: { xs: 2.25, sm: 2.5 } }}>
           <Grid container spacing={{ xs: 1.5, sm: 2 }} alignItems="center">
-            <Grid size={{ xs: 12, sm: 5 }}>
+            <Grid size={{ xs: 12, sm: profile?.generatorId ? 5 : 8 }}>
               <Stack spacing={0.5}>
                 <Typography variant="caption" color="text.secondary">
                   Brennstoffzellen-Code
                 </Typography>
-                <Typography variant="h5" sx={{ overflowWrap: 'anywhere' }}>
-                  {generator?.code ?? 'offen'}
-                </Typography>
-                {!profile?.generatorId ? (
-                  <Typography variant="body2" color="text.secondary">
-                    Noch keine Brennstoffzelle verknuepft.
+                {profile?.generatorId ? (
+                  <Typography variant="h5" sx={{ overflowWrap: 'anywhere' }}>
+                    {generator?.code ?? 'offen'}
                   </Typography>
-                ) : null}
+                ) : (
+                  <Button
+                    variant="contained"
+                    startIcon={<QrCodeScannerIcon />}
+                    size="small"
+                    sx={{ alignSelf: 'flex-start' }}
+                    onClick={() => {
+                      setLinkError('')
+                      setLinkStatus('')
+                      setScannerOpen(true)
+                    }}
+                  >
+                    Verknüpfen
+                  </Button>
+                )}
               </Stack>
             </Grid>
             <Grid size={{ xs: 12, sm: 4 }}>
@@ -250,8 +261,8 @@ export function UserDashboardPage() {
                 </Typography>
               </Stack>
             </Grid>
-            <Grid size={{ xs: 12, sm: 3 }}>
-              {profile?.generatorId ? (
+            {profile?.generatorId ? (
+              <Grid size={{ xs: 12, sm: 3 }}>
                 <Button
                   component={RouterLink}
                   to="/leaderboard"
@@ -262,22 +273,8 @@ export function UserDashboardPage() {
                 >
                   Leaderboard
                 </Button>
-              ) : (
-                <Button
-                  variant="contained"
-                  startIcon={<QrCodeScannerIcon />}
-                  size="small"
-                  fullWidth
-                  onClick={() => {
-                    setLinkError('')
-                    setLinkStatus('')
-                    setScannerOpen(true)
-                  }}
-                >
-                  QR-Scanner oeffnen
-                </Button>
-              )}
-            </Grid>
+              </Grid>
+            ) : null}
           </Grid>
         </CardContent>
       </Card>
