@@ -1,5 +1,4 @@
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
-import InsightsIcon from '@mui/icons-material/Insights'
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight'
 import CloseIcon from '@mui/icons-material/Close'
 import { Timestamp } from 'firebase/firestore'
@@ -14,7 +13,6 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  Grid,
   IconButton,
   Stack,
   Table,
@@ -222,18 +220,24 @@ const rankStyles = [
     border: '1px solid rgba(196,151,67,0.24)',
     badgeBg: 'rgba(179,130,37,0.12)',
     badgeColor: '#8F6410',
+    medalBg: 'linear-gradient(180deg, #f6d774, #d5a11d)',
+    podiumBg: 'linear-gradient(180deg, rgba(140,105,36,0.96), rgba(108,79,24,0.96))',
   },
   {
     background: 'rgba(248,242,231,0.88)',
     border: '1px solid rgba(140,147,161,0.24)',
     badgeBg: 'rgba(112,119,134,0.12)',
     badgeColor: '#5E6676',
+    medalBg: 'linear-gradient(180deg, #d7d9de, #9ba1ab)',
+    podiumBg: 'linear-gradient(180deg, rgba(126,114,95,0.94), rgba(92,82,68,0.94))',
   },
   {
     background: 'rgba(248,242,231,0.88)',
     border: '1px solid rgba(160,101,73,0.22)',
     badgeBg: 'rgba(136,84,59,0.1)',
     badgeColor: '#8B553C',
+    medalBg: 'linear-gradient(180deg, #df9b63, #b56a35)',
+    podiumBg: 'linear-gradient(180deg, rgba(138,93,62,0.94), rgba(108,70,45,0.94))',
   },
 ]
 
@@ -312,6 +316,11 @@ export function LeaderboardPage() {
   const visibleEntries = showingSampleEntries ? sampleLeaderboardEntries : leaderboard
   const featuredEntries = visibleEntries.slice(0, 3)
   const leaderboardSections = buildLeaderboardSections(visibleEntries)
+  const podiumEntries = [
+    featuredEntries[1] ? { entry: featuredEntries[1], rank: 2, height: { xs: 190, md: 220 } } : null,
+    featuredEntries[0] ? { entry: featuredEntries[0], rank: 1, height: { xs: 240, md: 290 } } : null,
+    featuredEntries[2] ? { entry: featuredEntries[2], rank: 3, height: { xs: 165, md: 195 } } : null,
+  ].filter((item): item is { entry: LeaderboardEntry; rank: number; height: { xs: number; md: number } } => Boolean(item))
 
   return (
     <Card>
@@ -322,7 +331,10 @@ export function LeaderboardPage() {
             <Typography variant="h2" gutterBottom sx={{ fontSize: { xs: '1.9rem', sm: undefined } }}>
               Aktuelles Ranking
             </Typography>
-            
+            <Typography color="text.secondary" sx={{ maxWidth: 760 }}>
+              Hier werden die maximal gemessenen Werte aller Brennstoffzellen verglichen. Der
+              hoechste Messwert steht oben.
+            </Typography>
           </Box>
 
           {showingSampleEntries ? (
@@ -345,78 +357,169 @@ export function LeaderboardPage() {
             </Box>
           ) : null}
 
-          <Grid container spacing={{ xs: 1.5, md: 2 }}>
-            {featuredEntries.map((entry, index) => {
-              const rankStyle = rankStyles[index] ?? rankStyles[2]
+          {podiumEntries.length > 0 ? (
+            <Box
+              sx={{
+                position: 'relative',
+                overflow: 'hidden',
+                borderRadius: '26px',
+                px: { xs: 1.5, sm: 2.25, md: 3 },
+                pt: { xs: 2, md: 2.5 },
+                pb: { xs: 1.5, md: 2 },
+                border: '1px solid rgba(121,101,66,0.14)',
+                background:
+                  'linear-gradient(180deg, rgba(186,162,120,0.26), rgba(141,120,85,0.18)), rgba(248,242,231,0.72)',
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.36)',
+              }}
+            >
+              <Box
+                sx={{
+                  position: 'absolute',
+                  inset: 0,
+                  opacity: 0.55,
+                  background:
+                    'radial-gradient(circle at 50% 42%, rgba(249,246,239,0.5), transparent 18%), repeating-conic-gradient(from 0deg at 50% 42%, rgba(249,246,239,0.22) 0deg 11deg, rgba(121,101,66,0.02) 11deg 22deg)',
+                  pointerEvents: 'none',
+                }}
+              />
 
-              return (
-                <Grid key={entry.generatorId} size={{ xs: 12, md: 4 }}>
-                  <Card
-                    elevation={0}
-                    sx={{
-                      height: '100%',
-                      borderRadius: '18px',
-                      background: rankStyle.background,
-                      border: rankStyle.border,
-                      boxShadow: '0 8px 18px rgba(36,28,19,0.05)',
-                      cursor: 'pointer',
-                      transition: 'border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease',
-                      '&:hover': {
-                        background: 'rgba(248,242,231,0.96)',
-                        boxShadow: '0 12px 22px rgba(36,28,19,0.07)',
-                        borderColor: 'rgba(121,101,66,0.28)',
-                      },
-                    }}
-                    onClick={() => handleOpenEntry(entry)}
-                  >
-                    <CardContent sx={{ p: { xs: 2, sm: 2.25 } }}>
-                      <Stack spacing={1.5}>
-                        <Stack direction="row" justifyContent="space-between" alignItems="center">
+              <Stack spacing={0.5} sx={{ position: 'relative', mb: { xs: 1.5, md: 2.5 }, textAlign: 'center' }}>
+                <Typography variant="overline" color="text.secondary">
+                  Podium
+                </Typography>
+                <Typography variant="h4" sx={{ fontSize: { xs: '1.5rem', md: '1.9rem' } }}>
+                  Top 3 Brennstoffzellen
+                </Typography>
+              </Stack>
+
+              <Box
+                sx={{
+                  position: 'relative',
+                  display: 'flex',
+                  alignItems: 'flex-end',
+                  justifyContent: 'center',
+                  gap: { xs: 1, sm: 1.5, md: 2 },
+                  minHeight: { xs: 300, md: 380 },
+                }}
+              >
+                {podiumEntries.map(({ entry, rank, height }) => {
+                  const rankStyle = rankStyles[rank - 1] ?? rankStyles[2]
+
+                  return (
+                    <Box
+                      component="button"
+                      type="button"
+                      key={entry.generatorId}
+                      onClick={() => handleOpenEntry(entry)}
+                      onKeyDown={(event) => handleRowKeyDown(event, entry)}
+                      sx={{
+                        flex: 1,
+                        maxWidth: { xs: 180, md: 240 },
+                        minWidth: 0,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'flex-end',
+                        alignItems: 'center',
+                        p: 0,
+                        border: 'none',
+                        background: 'transparent',
+                        textAlign: 'inherit',
+                        cursor: 'pointer',
+                        zIndex: rank === 1 ? 2 : 1,
+                        '&:focus-visible': {
+                          outline: '2px solid rgba(61,177,236,0.75)',
+                          outlineOffset: '4px',
+                          borderRadius: '18px',
+                        },
+                      }}
+                    >
+                      <Typography
+                        sx={{
+                          mb: 1.25,
+                          px: 1,
+                          textAlign: 'center',
+                          fontWeight: 700,
+                          fontSize: { xs: rank === 1 ? '1rem' : '0.92rem', md: rank === 1 ? '1.22rem' : '1rem' },
+                          lineHeight: 1.15,
+                          overflowWrap: 'anywhere',
+                        }}
+                      >
+                        {entry.code}
+                      </Typography>
+
+                      <Box
+                        sx={{
+                          width: '100%',
+                          height,
+                          px: { xs: 1, md: 1.5 },
+                          pt: { xs: 1.25, md: 1.5 },
+                          pb: { xs: 1.5, md: 1.75 },
+                          borderRadius: '18px 18px 0 0',
+                          background: rankStyle.podiumBg,
+                          color: 'rgba(249,246,239,0.96)',
+                          boxShadow:
+                            rank === 1
+                              ? '0 16px 28px rgba(72,48,16,0.2)'
+                              : '0 12px 22px rgba(72,48,16,0.12)',
+                          transition: 'transform 180ms ease, box-shadow 180ms ease, filter 180ms ease',
+                          '&:hover': {
+                            transform: 'translateY(-3px)',
+                            filter: 'brightness(1.03)',
+                            boxShadow: '0 18px 30px rgba(72,48,16,0.18)',
+                          },
+                        }}
+                      >
+                        <Stack
+                          spacing={1.1}
+                          alignItems="center"
+                          justifyContent="flex-start"
+                          sx={{ height: '100%' }}
+                        >
                           <Box
                             sx={{
-                              width: 36,
-                              height: 36,
-                              borderRadius: '10px',
+                              width: { xs: rank === 1 ? 72 : 62, md: rank === 1 ? 86 : 72 },
+                              height: { xs: rank === 1 ? 72 : 62, md: rank === 1 ? 86 : 72 },
+                              borderRadius: '50%',
                               display: 'grid',
                               placeItems: 'center',
-                              fontWeight: 800,
-                              color: rankStyle.badgeColor,
-                              background: rankStyle.badgeBg,
+                              fontWeight: 900,
+                              fontSize: { xs: rank === 1 ? '2rem' : '1.65rem', md: rank === 1 ? '2.4rem' : '2rem' },
+                              color: rank === 2 ? '#50545D' : 'rgba(255,248,236,0.98)',
+                              background: rankStyle.medalBg,
+                              border: '4px solid rgba(249,246,239,0.35)',
+                              boxShadow: 'inset 0 2px 0 rgba(255,255,255,0.35)',
+                              textShadow: '0 1px 0 rgba(0,0,0,0.18)',
                             }}
                           >
-                            #{index + 1}
+                            {rank}
                           </Box>
-                          <InsightsIcon sx={{ color: rankStyle.badgeColor }} />
+
+                          <Box sx={{ mt: 'auto' }}>
+                            <Typography
+                              variant="body2"
+                              sx={{ opacity: 0.82, textTransform: 'uppercase', letterSpacing: '0.06em' }}
+                            >
+                              Maximalwert
+                            </Typography>
+                            <Typography
+                              sx={{
+                                mt: 0.25,
+                                fontWeight: 900,
+                                lineHeight: 1,
+                                fontSize: { xs: rank === 1 ? '1.55rem' : '1.25rem', md: rank === 1 ? '1.95rem' : '1.45rem' },
+                              }}
+                            >
+                              {formatMeasurement(entry.maxValue)}
+                            </Typography>
+                          </Box>
                         </Stack>
-
-                        <Box>
-                          <Typography variant="body2" color="text.secondary" sx={{ mb: 0.75 }}>
-                            Brennstoffzelle
-                          </Typography>
-                          <Typography
-                            variant="h5"
-                            sx={{ overflowWrap: 'anywhere', mb: 1, fontSize: { xs: '1.2rem', sm: '1.3rem' } }}
-                          >
-                            {entry.code}
-                          </Typography>
-                          <Typography
-                            variant="h3"
-                            sx={{ fontSize: { xs: '1.8rem', sm: '2rem' }, lineHeight: 1, letterSpacing: '-0.02em' }}
-                          >
-                            {formatMeasurement(entry.maxValue)}
-                          </Typography>
-                        </Box>
-
-                        <Typography variant="body2" color="text.secondary" sx={{ opacity: 0.85 }}>
-                          Messverlauf oeffnen
-                        </Typography>
-                      </Stack>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              )
-            })}
-          </Grid>
+                      </Box>
+                    </Box>
+                  )
+                })}
+              </Box>
+            </Box>
+          ) : null}
 
           <Stack spacing={1.5}>
             {leaderboardSections.map((section) => (
