@@ -78,7 +78,7 @@ export function QrScannerDialog({ open, onClose, onDetected }: QrScannerDialogPr
     let frameId = 0
     let stream: MediaStream | null = null
     let detectionLocked = false
-    const scannerVideoElement = videoRef.current
+    let mountedVideoElement: HTMLVideoElement | null = null
     const fallbackCanvas = document.createElement('canvas')
     const fallbackContext = fallbackCanvas.getContext('2d', { willReadFrequently: true })
 
@@ -99,10 +99,13 @@ export function QrScannerDialog({ open, onClose, onDetected }: QrScannerDialogPr
           return
         }
 
+        const scannerVideoElement = videoRef.current
+
         if (!scannerVideoElement) {
           throw new Error('Die Kamera konnte nicht vorbereitet werden.')
         }
 
+        mountedVideoElement = scannerVideoElement
         scannerVideoElement.srcObject = stream
         scannerVideoElement.setAttribute('playsinline', 'true')
         await scannerVideoElement.play()
@@ -196,6 +199,8 @@ export function QrScannerDialog({ open, onClose, onDetected }: QrScannerDialogPr
       if (stream) {
         stream.getTracks().forEach((track) => track.stop())
       }
+
+      const scannerVideoElement = mountedVideoElement
 
       if (scannerVideoElement) {
         scannerVideoElement.pause()
