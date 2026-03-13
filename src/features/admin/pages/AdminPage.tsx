@@ -134,7 +134,7 @@ function getMeasurementSummary(measurements: Measurement[]) {
     return 'Noch keine Messwerte'
   }
 
-  return `${measurements.length} Eintraege`
+  return `${measurements.length} Einträge`
 }
 
 function getCurrentDateTimeInputValue() {
@@ -322,7 +322,7 @@ export function AdminPage() {
       const normalizedPrefix = formatCode(exportPrefix)
 
       if (!normalizedPrefix) {
-        throw new Error('Bitte ein gueltiges Praefix angeben.')
+        throw new Error('Bitte ein gültiges Präfix angeben.')
       }
 
       const cards = createStationCodes(normalizedPrefix, count).map((code) => ({
@@ -331,7 +331,7 @@ export function AdminPage() {
       }))
 
       await printQrCards(cards)
-      setExportStatus('Druckansicht fuer die QR-Codes wurde geoeffnet.')
+      setExportStatus('Druckansicht für die QR-Codes wurde geöffnet.')
     } catch (exportIssue) {
       setExportError(exportIssue instanceof Error ? exportIssue.message : 'Export fehlgeschlagen.')
     }
@@ -389,7 +389,7 @@ export function AdminPage() {
     const code = extractGeneratorCodeFromQrValue(value)
 
     if (!code) {
-      throw new Error('Der QR-Code enthaelt keinen gueltigen Brennstoffzellen-Code.')
+      throw new Error('Der QR-Code enthält keinen gültigen Brennstoffzellen-Code.')
     }
 
     const foundGenerator = await getGeneratorByCode(code)
@@ -417,7 +417,7 @@ export function AdminPage() {
       const numericValue = Number.parseFloat(measurementValue)
 
       if (Number.isNaN(numericValue)) {
-        throw new Error('Bitte einen gueltigen Messwert eingeben.')
+        throw new Error('Bitte einen gültigen Messwert eingeben.')
       }
 
       const linkedGenerator = await addMeasurementByCode({
@@ -427,7 +427,7 @@ export function AdminPage() {
       })
 
       setGenerator(linkedGenerator)
-      setScanStatus(`Messwert fuer ${linkedGenerator.code} wurde gespeichert.`)
+      setScanStatus(`Messwert für ${linkedGenerator.code} wurde gespeichert.`)
     } catch (submitIssue) {
       setScanError(
         submitIssue instanceof Error
@@ -448,13 +448,13 @@ export function AdminPage() {
       const numericValue = Number.parseFloat(scanMeasurementInput)
 
       if (Number.isNaN(numericValue)) {
-        throw new Error('Bitte einen gueltigen Messwert eingeben.')
+        throw new Error('Bitte einen gültigen Messwert eingeben.')
       }
 
       const measuredAt = new Date(scanMeasurementDateTime)
 
       if (Number.isNaN(measuredAt.getTime())) {
-        throw new Error('Bitte ein gueltiges Datum und eine gueltige Uhrzeit angeben.')
+        throw new Error('Bitte ein gültiges Datum und eine gültige Uhrzeit angeben.')
       }
 
       const linkedGenerator = await addMeasurementByCode({
@@ -466,7 +466,7 @@ export function AdminPage() {
 
       setGenerator(linkedGenerator)
       setScanMeasurementDialogOpen(false)
-      setScanStatus(`Messwert fuer ${linkedGenerator.code} wurde gespeichert.`)
+      setScanStatus(`Messwert für ${linkedGenerator.code} wurde gespeichert.`)
     } catch (submitIssue) {
       setScanMeasurementError(
         submitIssue instanceof Error
@@ -623,7 +623,7 @@ export function AdminPage() {
       const foundGenerator = await findGeneratorForAdmin(measurementLookup)
 
       if (!foundGenerator) {
-        throw new Error('Keine Brennstoffzelle fuer diese Messwerte gefunden.')
+        throw new Error('Keine Brennstoffzelle für diese Messwerte gefunden.')
       }
 
       const measurements = await getMeasurementsForAdmin(foundGenerator.id)
@@ -637,7 +637,7 @@ export function AdminPage() {
         return
       }
 
-      setMeasurementStatus(`Messwerte fuer ${foundGenerator.code} geladen.`)
+      setMeasurementStatus(`Messwerte für ${foundGenerator.code} geladen.`)
     } catch (lookupIssue) {
       setMeasurementGenerator(null)
       setMeasurementItems([])
@@ -664,7 +664,7 @@ export function AdminPage() {
       const numericValue = Number.parseFloat(measurementForm.value)
 
       if (Number.isNaN(numericValue)) {
-        throw new Error('Bitte einen gueltigen Messwert eingeben.')
+        throw new Error('Bitte einen gültigen Messwert eingeben.')
       }
 
       await updateMeasurementAsAdmin(selectedMeasurement.id, {
@@ -745,7 +745,7 @@ export function AdminPage() {
         <Grid size={{ xs: 12, md: 6 }}>
           <AuthCard
             title="Admin-Login"
-            description="Admins melden sich ueber Firebase Authentication an und verwalten danach QR-Codes, Scans und Moderation an einer Stelle."
+            description="Admins melden sich über Firebase Authentication an und verwalten danach QR-Codes, Scans und Moderation an einer Stelle."
             values={formValues}
             submitLabel="Als Admin anmelden"
             googleLabel="Mit Google anmelden"
@@ -769,7 +769,7 @@ export function AdminPage() {
                   Die Admin-Seite ist jetzt in drei Bereiche getrennt: QR erstellen, Scannen und Moderieren.
                 </Typography>
                 <Typography color="text.secondary">
-                  Voraussetzung ist ein Firestore-User mit <code>role: "admin"</code> fuer das angemeldete Konto.
+                  Voraussetzung ist ein Firestore-User mit <code>role: "admin"</code> für das angemeldete Konto.
                 </Typography>
               </Stack>
             </CardContent>
@@ -863,7 +863,7 @@ export function AdminPage() {
                   {exportStatus ? <Alert severity="success">{exportStatus}</Alert> : null}
                   {exportError ? <Alert severity="error">{exportError}</Alert> : null}
                   <TextField
-                    label="Praefix"
+                    label="Präfix"
                     value={exportPrefix}
                     onChange={(event) => setExportPrefix(event.target.value)}
                     helperText='Ergebnisformat: "station-001", "station-002", ...'
@@ -882,7 +882,7 @@ export function AdminPage() {
                     startIcon={<PrintIcon />}
                     fullWidth
                   >
-                    Druckansicht oeffnen
+                    Druckansicht öffnen
                   </Button>
                 </Stack>
               </CardContent>
@@ -902,15 +902,15 @@ export function AdminPage() {
                     flexWrap="wrap"
                     useFlexGap
                   >
-                    <Chip label={`Praefix ${formatCode(exportPrefix) || '-'}`} />
+                    <Chip label={`Präfix ${formatCode(exportPrefix) || '-'}`} />
                     <Chip label={`${exportCount || '0'} Karten`} />
                     <Chip label="1 QR-Code pro Karte" />
                   </Stack>
                   <Divider />
                   <Typography color="text.secondary">
-                    Jede Karte enthaelt einen neutralen App-QR-Code mit dem Brennstoffzellen-Code.
-                    Im Nutzerbereich startet der Scan die Verknuepfung, im Admin-Bereich laedt der
-                    Scan die Brennstoffzelle fuer Messwerte und Moderation.
+                    Jede Karte enthält einen neutralen App-QR-Code mit dem Brennstoffzellen-Code.
+                    Im Nutzerbereich startet der Scan die Verknüpfung, im Admin-Bereich lädt der
+                    Scan die Brennstoffzelle für Messwerte und Moderation.
                   </Typography>
                   <Typography color="text.secondary">
                     Bestehende URL-QRs bleiben weiterhin lesbar, neue Karten nutzen aber nur noch
@@ -933,7 +933,7 @@ export function AdminPage() {
                     Code erfassen
                   </Typography>
                   <Typography color="text.secondary">
-                    Ein QR-Scan oeffnet direkt den Dialog zum Eintragen eines Messwerts. Alternativ
+                    Ein QR-Scan öffnet direkt den Dialog zum Eintragen eines Messwerts. Alternativ
                     kann der Brennstoffzellen-Code auch manuell geladen werden.
                   </Typography>
                   {scanStatus ? <Alert severity="success">{scanStatus}</Alert> : null}
@@ -944,7 +944,7 @@ export function AdminPage() {
                     onClick={() => setScannerOpen(true)}
                     fullWidth
                   >
-                    Scanner oeffnen
+                    Scanner öffnen
                   </Button>
                   <TextField
                     fullWidth
@@ -973,7 +973,7 @@ export function AdminPage() {
                     Messwert speichern
                   </Typography>
                   <Typography color="text.secondary">
-                    Der Messwert wird fuer den aktuell geladenen Code gespeichert.
+                    Der Messwert wird für den aktuell geladenen Code gespeichert.
                   </Typography>
                   <TextField
                     label="Brennstoffzellen-Code"
@@ -1150,7 +1150,7 @@ export function AdminPage() {
                       <option value="admin">admin</option>
                     </TextField>
                     <TextField
-                      label="Verknuepfte Brennstoffzelle"
+                      label="Verknüpfte Brennstoffzelle"
                       value={loadedUser?.generatorId ?? 'Keine'}
                       disabled
                       fullWidth
@@ -1425,7 +1425,7 @@ export function AdminPage() {
                     fullWidth
                   />
                   <TextField
-                    label="Verknuepfte Brennstoffzelle"
+                    label="Verknüpfte Brennstoffzelle"
                     value={adminCandidate?.generatorId ?? 'Keine'}
                     disabled
                     fullWidth

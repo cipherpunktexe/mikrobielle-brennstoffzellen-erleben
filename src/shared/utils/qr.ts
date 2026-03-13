@@ -72,7 +72,7 @@ export async function printQrCards(cards: QrCardDefinition[]) {
             <div>
               <img src="${qrDataUrl}" alt="QR-Code ${card.code}" />
               <strong>App-QR-Code</strong>
-              <span>Im Nutzerbereich verknuepfen oder im Admin-Bereich scannen.</span>
+              <span>Im Nutzerbereich verknüpfen oder im Admin-Bereich scannen.</span>
             </div>
           </section>
         </article>

@@ -375,7 +375,7 @@ export function LeaderboardPage() {
                       {section.title}
                     </Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
-                      Plaetze {section.startRank}-{section.endRank}
+                      Plätze {section.startRank}-{section.endRank}
                     </Typography>
                   </Stack>
                 </AccordionSummary>
@@ -458,7 +458,7 @@ export function LeaderboardPage() {
         <DialogTitle sx={{ pr: 6 }}>
           {selectedEntry ? `Messverlauf: ${selectedEntry.displayName}` : 'Messverlauf'}
           <IconButton
-            aria-label="Dialog schliessen"
+            aria-label="Dialog schließen"
             onClick={handleCloseDialog}
             sx={{ position: 'absolute', right: 12, top: 12 }}
           >

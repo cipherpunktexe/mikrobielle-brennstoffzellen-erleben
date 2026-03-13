@@ -71,11 +71,11 @@ describe('LeaderboardPage', () => {
     renderWithProviders(<LeaderboardPage />)
 
     expect(await screen.findByText('Top 5')).toBeInTheDocument()
-    expect(screen.getByText('Plaetze 4-5')).toBeInTheDocument()
+    expect(screen.getByText('Plätze 4-5')).toBeInTheDocument()
     expect(screen.getByText('Top 10')).toBeInTheDocument()
-    expect(screen.getByText('Plaetze 6-10')).toBeInTheDocument()
+    expect(screen.getByText('Plätze 6-10')).toBeInTheDocument()
     expect(screen.getByText('Top 12')).toBeInTheDocument()
-    expect(screen.getByText('Plaetze 11-12')).toBeInTheDocument()
+    expect(screen.getByText('Plätze 11-12')).toBeInTheDocument()
   })
 
   test('opens a chart dialog when a leaderboard entry is clicked', async () => {

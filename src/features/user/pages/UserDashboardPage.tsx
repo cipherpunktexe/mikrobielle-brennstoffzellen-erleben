@@ -159,17 +159,17 @@ export function UserDashboardPage() {
       const code = extractGeneratorCodeFromQrValue(value)
 
       if (!code) {
-        throw new Error('Der gescannte QR-Code enthaelt keinen gueltigen Link zur Brennstoffzelle.')
+        throw new Error('Der gescannte QR-Code enthält keinen gültigen Link zur Brennstoffzelle.')
       }
 
       const linkedGenerator = await linkCurrentUserToGeneratorByCode(code)
-      setLinkStatus(`Brennstoffzelle ${linkedGenerator.code} wurde erfolgreich verknuepft.`)
+      setLinkStatus(`Brennstoffzelle ${linkedGenerator.code} wurde erfolgreich verknüpft.`)
       setScannerOpen(false)
     } catch (linkingError) {
       setLinkError(
         linkingError instanceof Error
           ? linkingError.message
-          : 'Die Brennstoffzelle konnte nicht verknuepft werden.',
+          : 'Die Brennstoffzelle konnte nicht verknüpft werden.',
       )
     }
   }
@@ -288,7 +288,7 @@ export function UserDashboardPage() {
           </Typography>
         </Box>
         <IconButton
-          aria-label="Optionen fuer Anzeigenamen"
+          aria-label="Optionen für Anzeigenamen"
           onClick={handleOpenProfileMenu}
           sx={{ alignSelf: 'flex-start' }}
         >

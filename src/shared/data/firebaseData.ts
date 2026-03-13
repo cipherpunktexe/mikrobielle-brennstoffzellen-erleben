@@ -146,7 +146,7 @@ export async function linkCurrentUserToGeneratorByCode(code: string) {
   const normalizedCode = formatCode(code)
 
   if (!normalizedCode) {
-    throw new Error('Der gescannte QR-Code enthaelt keinen gueltigen Brennstoffzellen-Code.')
+    throw new Error('Der gescannte QR-Code enthält keinen gültigen Brennstoffzellen-Code.')
   }
 
   const userRef = doc(usersCollection, currentUser.uid)
@@ -161,7 +161,7 @@ export async function linkCurrentUserToGeneratorByCode(code: string) {
     profile.name?.trim() || currentUser.displayName?.trim() || currentUser.email?.split('@')[0] || normalizedCode
 
   if (profile.generatorId) {
-    throw new Error('Dieses Konto ist bereits mit einer Brennstoffzelle verknuepft.')
+    throw new Error('Dieses Konto ist bereits mit einer Brennstoffzelle verknüpft.')
   }
 
   const generatorQuery = query(generatorsCollection, where('code', '==', normalizedCode))
@@ -172,7 +172,7 @@ export async function linkCurrentUserToGeneratorByCode(code: string) {
     const existingData = existingGenerator.data() as Generator
 
     if (existingData.ownerUid && existingData.ownerUid !== currentUser.uid) {
-      throw new Error('Dieser QR-Code ist bereits mit einem anderen Konto verknuepft.')
+      throw new Error('Dieser QR-Code ist bereits mit einem anderen Konto verknüpft.')
     }
 
     await updateDoc(doc(generatorsCollection, existingGenerator.id), {
@@ -317,7 +317,7 @@ export async function updateUserProfileAsAdmin(
   const trimmedEmail = input.email.trim().toLowerCase()
 
   if (!trimmedName || !trimmedEmail) {
-    throw new Error('Name und E-Mail muessen ausgefuellt sein.')
+    throw new Error('Name und E-Mail müssen ausgefüllt sein.')
   }
 
   await updateDoc(doc(usersCollection, userId), {
@@ -500,7 +500,7 @@ export async function updateGeneratorAsAdmin(
   const trimmedOwnerName = input.ownerName.trim()
 
   if (!normalizedCode || !trimmedOwnerUid) {
-    throw new Error('Code und Owner UID muessen ausgefuellt sein.')
+    throw new Error('Code und Owner UID müssen ausgefüllt sein.')
   }
 
   await updateDoc(doc(generatorsCollection, generatorId), {
@@ -538,7 +538,7 @@ export async function updateMeasurementAsAdmin(
   const trimmedEnteredBy = input.enteredBy.trim()
 
   if (Number.isNaN(input.value) || !trimmedEnteredBy) {
-    throw new Error('Messwert und Eingetragen-von muessen gueltig sein.')
+    throw new Error('Messwert und Eingetragen-von müssen gültig sein.')
   }
 
   await updateDoc(doc(measurementsCollection, measurementId), {

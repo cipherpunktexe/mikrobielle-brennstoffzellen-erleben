@@ -41,7 +41,7 @@ interface QrScannerDialogProps {
 function getScannerErrorMessage(error: unknown) {
   if (error instanceof DOMException) {
     if (error.name === 'NotAllowedError') {
-      return 'Der Kamerazugriff wurde blockiert. Bitte erlaube den Zugriff und oeffne den Scanner erneut.'
+      return 'Der Kamerazugriff wurde blockiert. Bitte erlaube den Zugriff und öffne den Scanner erneut.'
     }
 
     if (error.name === 'NotFoundError') {
@@ -68,14 +68,14 @@ export function QrScannerDialog({ open, onClose, onDetected }: QrScannerDialogPr
     }
 
     if (!navigator.mediaDevices?.getUserMedia) {
-      setError('Dieser Browser unterstuetzt keinen Kamerazugriff.')
+      setError('Dieser Browser unterstützt keinen Kamerazugriff.')
       return
     }
 
     const BarcodeDetectorApi = window.BarcodeDetector
 
     if (!BarcodeDetectorApi) {
-      setError('Dieser Browser unterstuetzt keinen eingebauten QR-Scanner.')
+      setError('Dieser Browser unterstützt keinen eingebauten QR-Scanner.')
       return
     }
 
@@ -183,7 +183,7 @@ export function QrScannerDialog({ open, onClose, onDetected }: QrScannerDialogPr
       <DialogContent>
         <Stack spacing={2}>
           <Typography color="text.secondary">
-            Richte die Kamera auf den QR-Code deiner Brennstoffzelle. Nach dem Scan startet die Verknuepfung automatisch.
+            Richte die Kamera auf den QR-Code deiner Brennstoffzelle. Nach dem Scan startet die Verknüpfung automatisch.
           </Typography>
 
           <Box
