@@ -25,7 +25,7 @@ import { getUserProfile, logout, subscribeToAuth } from '../services/firebaseDat
 import type { UserProfile } from '../types/domain'
 
 const navigationItems = [
-  { label: 'Landingpage', to: '/', icon: <SpaIcon fontSize="small" /> },
+  { label: 'Projekt', to: '/', icon: <SpaIcon fontSize="small" /> },
   { label: 'Deine Brennstoffzelle', to: '/user', icon: <QrCode2Icon fontSize="small" /> },
   { label: 'Leaderboard', to: '/leaderboard', icon: <EmojiEventsIcon fontSize="small" /> },
 ]
