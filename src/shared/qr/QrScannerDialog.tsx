@@ -1,4 +1,5 @@
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner'
+import jsQR from 'jsqr'
 import {
   Alert,
   Box,
@@ -73,31 +74,19 @@ export function QrScannerDialog({ open, onClose, onDetected }: QrScannerDialogPr
     }
 
     const BarcodeDetectorApi = window.BarcodeDetector
-
-    if (!BarcodeDetectorApi) {
-      setError('Dieser Browser unterstützt keinen eingebauten QR-Scanner.')
-      return
-    }
-
     let active = true
     let frameId = 0
     let stream: MediaStream | null = null
     let detectionLocked = false
     const scannerVideoElement = videoRef.current
+    const fallbackCanvas = document.createElement('canvas')
+    const fallbackContext = fallbackCanvas.getContext('2d', { willReadFrequently: true })
 
     const startScanner = async () => {
       setInitializing(true)
       setError('')
 
       try {
-        const supportedFormats = BarcodeDetectorApi.getSupportedFormats
-          ? await BarcodeDetectorApi.getSupportedFormats()
-          : ['qr_code']
-
-        if (!supportedFormats.includes('qr_code')) {
-          throw new Error('Dieser Browser kann keine QR-Codes erkennen.')
-        }
-
         stream = await navigator.mediaDevices.getUserMedia({
           audio: false,
           video: {
@@ -118,7 +107,17 @@ export function QrScannerDialog({ open, onClose, onDetected }: QrScannerDialogPr
         scannerVideoElement.setAttribute('playsinline', 'true')
         await scannerVideoElement.play()
 
-        const detector = new BarcodeDetectorApi({ formats: ['qr_code'] })
+        let detector: BarcodeDetectorInstance | null = null
+
+        if (BarcodeDetectorApi) {
+          const supportedFormats = BarcodeDetectorApi.getSupportedFormats
+            ? await BarcodeDetectorApi.getSupportedFormats()
+            : ['qr_code']
+
+          if (supportedFormats.includes('qr_code')) {
+            detector = new BarcodeDetectorApi({ formats: ['qr_code'] })
+          }
+        }
 
         const scanFrame = async () => {
           if (!active || detectionLocked) {
@@ -134,8 +133,36 @@ export function QrScannerDialog({ open, onClose, onDetected }: QrScannerDialogPr
               return
             }
 
-            const detectedCodes = await detector.detect(scannerVideoElement)
-            const rawValue = detectedCodes.find((item) => item.rawValue?.trim())?.rawValue?.trim()
+            let rawValue = ''
+
+            if (detector) {
+              const detectedCodes = await detector.detect(scannerVideoElement)
+              rawValue = detectedCodes.find((item) => item.rawValue?.trim())?.rawValue?.trim() ?? ''
+            } else {
+              if (!fallbackContext) {
+                throw new Error('Die Kamera konnte nicht vorbereitet werden.')
+              }
+
+              const width = scannerVideoElement.videoWidth
+              const height = scannerVideoElement.videoHeight
+
+              if (!width || !height) {
+                frameId = window.requestAnimationFrame(() => void scanFrame())
+                return
+              }
+
+              if (fallbackCanvas.width !== width || fallbackCanvas.height !== height) {
+                fallbackCanvas.width = width
+                fallbackCanvas.height = height
+              }
+
+              fallbackContext.drawImage(scannerVideoElement, 0, 0, width, height)
+              const imageData = fallbackContext.getImageData(0, 0, width, height)
+              const decodedCode = jsQR(imageData.data, imageData.width, imageData.height, {
+                inversionAttempts: 'attemptBoth',
+              })
+              rawValue = decodedCode?.data?.trim() ?? ''
+            }
 
             if (rawValue) {
               detectionLocked = true
@@ -211,7 +238,11 @@ export function QrScannerDialog({ open, onClose, onDetected }: QrScannerDialogPr
               }}
             />
             {initializing ? (
-              <Stack spacing={1} alignItems="center" sx={{ position: 'absolute', inset: 0, justifyContent: 'center' }}>
+              <Stack
+                spacing={1}
+                alignItems="center"
+                sx={{ position: 'absolute', inset: 0, justifyContent: 'center' }}
+              >
                 <CircularProgress color="inherit" />
                 <Typography variant="body2" color="common.white">
                   Kamera wird gestartet...
@@ -241,7 +272,7 @@ export function QrScannerDialog({ open, onClose, onDetected }: QrScannerDialogPr
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Schliessen</Button>
+        <Button onClick={onClose}>Schließen</Button>
       </DialogActions>
     </Dialog>
   )
