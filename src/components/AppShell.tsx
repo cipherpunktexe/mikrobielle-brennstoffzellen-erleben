@@ -269,6 +269,24 @@ export function AppShell() {
             >
               <Button
                 component={RouterLink}
+                to="/"
+                color="inherit"
+                variant="text"
+                size={isMobileViewport ? 'small' : 'medium'}
+                fullWidth={false}
+                sx={{
+                  justifyContent: 'center',
+                  minHeight: { xs: 30, sm: 36 },
+                  px: { xs: 0, sm: 2 },
+                  py: { xs: 0.25, sm: 0.5 },
+                  minWidth: 0,
+                  fontSize: { xs: '0.82rem', sm: undefined },
+                }}
+              >
+                Über uns
+              </Button>
+              <Button
+                component={RouterLink}
                 to="/impressum"
                 color="inherit"
                 variant="text"
