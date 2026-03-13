@@ -20,27 +20,6 @@ export function LandingPage() {
         }}
       >
         <CardContent sx={{ p: { xs: 2.5, sm: 3, md: 5 } }}>
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'center',
-              mb: { xs: 2.5, md: 3.5 },
-            }}
-          >
-            <Box
-              component="img"
-              src="/app-logo.png"
-              alt="Projektlogo"
-              sx={{
-                width: '100%',
-                maxWidth: { xs: 320, sm: 420, md: 520 },
-                maxHeight: { xs: 220, sm: 280, md: 340 },
-                objectFit: 'contain',
-                display: 'block',
-                filter: 'drop-shadow(0 18px 30px rgba(0,0,0,0.18))',
-              }}
-            />
-          </Box>
           <Grid container spacing={{ xs: 2.5, md: 4 }} alignItems="center">
             <Grid size={{ xs: 12, md: 7 }}>
               <Stack spacing={{ xs: 2, sm: 3 }}>
@@ -68,6 +47,39 @@ export function LandingPage() {
                   Zum Leaderboard
                 </Button>
               </Stack>
+            </Grid>
+            <Grid size={{ xs: 12, md: 5 }}>
+              <Card
+                elevation={0}
+                sx={{
+                  borderRadius: { xs: '22px', sm: '28px' },
+                  background: 'rgba(255,248,231,0.96)',
+                  border: '1px solid rgba(255,248,231,0.35)',
+                  boxShadow: '0 20px 42px rgba(19, 15, 9, 0.18)',
+                }}
+              >
+                <CardContent
+                  sx={{
+                    p: { xs: 2.5, sm: 3.5 },
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Box
+                    component="img"
+                    src="/app-logo.png"
+                    alt="Projektlogo"
+                    sx={{
+                      width: '100%',
+                      maxWidth: { xs: 320, sm: 380, md: 420 },
+                      maxHeight: { xs: 220, sm: 260, md: 320 },
+                      objectFit: 'contain',
+                      display: 'block',
+                    }}
+                  />
+                </CardContent>
+              </Card>
             </Grid>
           </Grid>
         </CardContent>
