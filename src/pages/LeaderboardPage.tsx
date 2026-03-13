@@ -248,19 +248,22 @@ interface LeaderboardSection {
   entries: LeaderboardEntry[]
 }
 
-function buildLeaderboardSections(entries: LeaderboardEntry[]): LeaderboardSection[] {
+function buildLeaderboardSections(entries: LeaderboardEntry[], startingRank = 1): LeaderboardSection[] {
   if (entries.length === 0) {
     return []
   }
 
-  const thresholds = [5, 10, 25, 50, 100].filter((threshold) => threshold < entries.length)
-  const sectionLimits = [...thresholds, entries.length]
-  let previousEnd = 0
+  const totalCount = entries.length + startingRank - 1
+  const thresholds = [5, 10, 25, 50, 100].filter(
+    (threshold) => threshold >= startingRank && threshold < totalCount,
+  )
+  const sectionLimits = [...thresholds, totalCount]
+  let previousEnd = startingRank - 1
 
   return sectionLimits.map((limit) => {
     const startRank = previousEnd + 1
     const endRank = limit
-    const sectionEntries = entries.slice(previousEnd, limit)
+    const sectionEntries = entries.slice(startRank - startingRank, endRank - startingRank + 1)
     previousEnd = limit
 
     return {
@@ -315,7 +318,8 @@ export function LeaderboardPage() {
   const showingSampleEntries = leaderboard.length === 0
   const visibleEntries = showingSampleEntries ? sampleLeaderboardEntries : leaderboard
   const featuredEntries = visibleEntries.slice(0, 3)
-  const leaderboardSections = buildLeaderboardSections(visibleEntries)
+  const remainingEntries = visibleEntries.slice(3)
+  const leaderboardSections = buildLeaderboardSections(remainingEntries, 4)
   const podiumEntries = [
     featuredEntries[1] ? { entry: featuredEntries[1], rank: 2, height: { xs: 190, md: 220 } } : null,
     featuredEntries[0] ? { entry: featuredEntries[0], rank: 1, height: { xs: 240, md: 290 } } : null,

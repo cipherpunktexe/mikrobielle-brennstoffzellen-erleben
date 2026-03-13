@@ -52,9 +52,10 @@ describe('LeaderboardPage', () => {
         'Aktuell werden Beispiel-Brennstoffzellen angezeigt, bis echte Messwerte vorhanden sind.',
       ),
     ).toBeInTheDocument()
-    expect((await screen.findAllByText('beispiel-001')).length).toBeGreaterThan(0)
+    expect((await screen.findAllByText('beispiel-001')).length).toBe(1)
     expect((await screen.findAllByText('1.82 V')).length).toBeGreaterThan(0)
     expect(screen.getByText('Top 5')).toBeInTheDocument()
+    expect(screen.getByText('Plaetze 4-5')).toBeInTheDocument()
     expect(screen.queryByText('Top 10')).not.toBeInTheDocument()
   })
 
@@ -76,7 +77,7 @@ describe('LeaderboardPage', () => {
     renderWithProviders(<LeaderboardPage />)
 
     expect(await screen.findByText('Top 5')).toBeInTheDocument()
-    expect(screen.getByText('Plaetze 1-5')).toBeInTheDocument()
+    expect(screen.getByText('Plaetze 4-5')).toBeInTheDocument()
     expect(screen.getByText('Top 10')).toBeInTheDocument()
     expect(screen.getByText('Plaetze 6-10')).toBeInTheDocument()
     expect(screen.getByText('Top 12')).toBeInTheDocument()
