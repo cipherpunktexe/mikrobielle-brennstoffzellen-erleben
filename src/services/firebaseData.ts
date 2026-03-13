@@ -220,6 +220,43 @@ export async function logout() {
   await signOut(auth)
 }
 
+export async function updateCurrentUserDisplayName(name: string) {
+  const currentUser = auth.currentUser
+
+  if (!currentUser) {
+    throw new Error('Bitte zuerst anmelden.')
+  }
+
+  const trimmedName = name.trim()
+
+  if (!trimmedName) {
+    throw new Error('Bitte einen Anzeigenamen eingeben.')
+  }
+
+  const userRef = doc(usersCollection, currentUser.uid)
+  const userSnapshot = await getDoc(userRef)
+
+  if (!userSnapshot.exists()) {
+    throw new Error('Zum angemeldeten Konto wurde kein Nutzerprofil gefunden.')
+  }
+
+  const profile = {
+    id: userSnapshot.id,
+    ...userSnapshot.data(),
+  } as UserProfile
+
+  await updateDoc(userRef, {
+    name: trimmedName,
+  })
+
+  if (profile.generatorId) {
+    await updateDoc(doc(generatorsCollection, profile.generatorId), {
+      ownerName: trimmedName,
+      updatedAt: serverTimestamp(),
+    })
+  }
+}
+
 export async function getUserProfile(uid: string) {
   const snapshot = await getDoc(doc(usersCollection, uid))
 

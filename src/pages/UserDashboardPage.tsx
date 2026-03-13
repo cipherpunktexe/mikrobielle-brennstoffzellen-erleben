@@ -1,4 +1,5 @@
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
+import MoreVertIcon from '@mui/icons-material/MoreVert'
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner'
 import ShowChartIcon from '@mui/icons-material/ShowChart'
 import ViewListIcon from '@mui/icons-material/ViewList'
@@ -9,24 +10,32 @@ import {
   Card,
   CardContent,
   CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Divider,
   Grid,
+  IconButton,
   List,
   ListItem,
   ListItemText,
+  Menu,
+  MenuItem,
   Stack,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableRow,
+  TextField,
   ToggleButton,
   ToggleButtonGroup,
   Typography,
   useMediaQuery,
   useTheme,
 } from '@mui/material'
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent, type MouseEvent } from 'react'
 import { Link as RouterLink } from 'react-router-dom'
 import { AuthCard } from '../components/AuthCard'
 import { MeasurementChart } from '../components/MeasurementChart'
@@ -42,6 +51,7 @@ import {
   subscribeToLeaderboard,
   subscribeToMeasurements,
   subscribeToUserProfile,
+  updateCurrentUserDisplayName,
 } from '../services/firebaseData'
 import type { Generator, LeaderboardEntry, Measurement, UserProfile } from '../types/domain'
 
@@ -62,6 +72,12 @@ export function UserDashboardPage() {
   const [linkError, setLinkError] = useState('')
   const [scannerOpen, setScannerOpen] = useState(false)
   const [measurementViewMode, setMeasurementViewMode] = useState<MeasurementViewMode>('list')
+  const [profileMenuAnchor, setProfileMenuAnchor] = useState<null | HTMLElement>(null)
+  const [nameDialogOpen, setNameDialogOpen] = useState(false)
+  const [displayNameInput, setDisplayNameInput] = useState('')
+  const [displayNameLoading, setDisplayNameLoading] = useState(false)
+  const [displayNameError, setDisplayNameError] = useState('')
+  const [displayNameStatus, setDisplayNameStatus] = useState('')
   const [formValues, setFormValues] = useState({
     email: '',
     password: '',
@@ -153,9 +169,55 @@ export function UserDashboardPage() {
     }
   }
 
+  function handleOpenProfileMenu(event: MouseEvent<HTMLElement>) {
+    setProfileMenuAnchor(event.currentTarget)
+  }
+
+  function handleCloseProfileMenu() {
+    setProfileMenuAnchor(null)
+  }
+
+  function handleOpenNameDialog() {
+    handleCloseProfileMenu()
+    setDisplayNameInput(profile?.name ?? '')
+    setDisplayNameError('')
+    setNameDialogOpen(true)
+  }
+
+  function handleCloseNameDialog() {
+    if (displayNameLoading) {
+      return
+    }
+
+    setNameDialogOpen(false)
+    setDisplayNameError('')
+  }
+
+  async function handleDisplayNameSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setDisplayNameLoading(true)
+    setDisplayNameError('')
+    setDisplayNameStatus('')
+
+    try {
+      await updateCurrentUserDisplayName(displayNameInput)
+      setDisplayNameStatus('Anzeigename aktualisiert.')
+      setNameDialogOpen(false)
+    } catch (updateError) {
+      setDisplayNameError(
+        updateError instanceof Error
+          ? updateError.message
+          : 'Der Anzeigename konnte nicht aktualisiert werden.',
+      )
+    } finally {
+      setDisplayNameLoading(false)
+    }
+  }
+
   const ranking = generator
     ? leaderboard.findIndex((entry) => entry.generatorId === generator.id) + 1
     : 0
+  const profileMenuOpen = Boolean(profileMenuAnchor)
 
   if (loadingAuth) {
     return (
@@ -214,11 +276,22 @@ export function UserDashboardPage() {
 
   return (
     <Stack spacing={{ xs: 2, md: 2.5 }}>
-      <Box>
-        <Typography variant="h2" sx={{ fontSize: { xs: '1.75rem', sm: '2.2rem' } }}>
-          {`Willkommen, ${profile?.name ?? ''}!`.trim()}
-        </Typography>
-      </Box>
+      <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={2}>
+        <Box sx={{ minWidth: 0 }}>
+          <Typography variant="h2" sx={{ fontSize: { xs: '1.75rem', sm: '2.2rem' } }}>
+            {`Willkommen, ${profile?.name ?? ''}!`.trim()}
+          </Typography>
+        </Box>
+        <IconButton
+          aria-label="Optionen fuer Anzeigenamen"
+          onClick={handleOpenProfileMenu}
+          sx={{ alignSelf: 'flex-start' }}
+        >
+          <MoreVertIcon />
+        </IconButton>
+      </Stack>
+
+      {displayNameStatus ? <Alert severity="success">{displayNameStatus}</Alert> : null}
 
       {profile?.role === 'admin' ? (
         <Alert severity="info">
@@ -391,6 +464,42 @@ export function UserDashboardPage() {
         onClose={() => setScannerOpen(false)}
         onDetected={handleQrDetected}
       />
+
+      <Menu
+        anchorEl={profileMenuAnchor}
+        open={profileMenuOpen}
+        onClose={handleCloseProfileMenu}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <MenuItem onClick={handleOpenNameDialog}>Anzeigenamen aendern</MenuItem>
+      </Menu>
+
+      <Dialog open={nameDialogOpen} onClose={handleCloseNameDialog} fullWidth maxWidth="xs">
+        <DialogTitle>Anzeigenamen aendern</DialogTitle>
+        <Box component="form" onSubmit={handleDisplayNameSubmit}>
+          <DialogContent>
+            <Stack spacing={2}>
+              <TextField
+                label="Anzeigename"
+                value={displayNameInput}
+                onChange={(event) => setDisplayNameInput(event.target.value)}
+                autoFocus
+                fullWidth
+              />
+              {displayNameError ? <Alert severity="error">{displayNameError}</Alert> : null}
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseNameDialog} disabled={displayNameLoading}>
+              Abbrechen
+            </Button>
+            <Button type="submit" variant="contained" disabled={displayNameLoading}>
+              Speichern
+            </Button>
+          </DialogActions>
+        </Box>
+      </Dialog>
     </Stack>
   )
 }
