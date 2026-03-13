@@ -1,4 +1,5 @@
-import { Stack, Typography } from '@mui/material'
+import { Box, Stack, Typography } from '@mui/material'
+import { alpha } from '@mui/material/styles'
 import { LineChart } from '../../../shared/charts/LineChart'
 import { formatMeasurement, formatTimestamp } from '../../../shared/utils/format'
 import type { Measurement } from '../../../shared/types/domain'
@@ -21,6 +22,20 @@ function formatShortTimestamp(measurement: Measurement) {
   }).format(date)
 }
 
+function getTrendLabel(currentValue: number, previousValue?: number) {
+  if (previousValue === undefined) {
+    return 'Startwert'
+  }
+
+  const delta = currentValue - previousValue
+
+  if (Math.abs(delta) < 0.0001) {
+    return 'Unverändert'
+  }
+
+  return delta > 0 ? 'Steigend' : 'Fallend'
+}
+
 export function MeasurementChart({
   measurements,
   latestLabel = 'Neuester Messwert',
@@ -30,9 +45,66 @@ export function MeasurementChart({
     const rightMs = right.createdAt?.toMillis() ?? 0
     return leftMs - rightMs
   })
+  const latestMeasurement = orderedMeasurements.at(-1)
+  const previousMeasurement = orderedMeasurements.at(-2)
+  const values = orderedMeasurements.map((measurement) => measurement.value)
+  const maxValue = Math.max(...values)
+  const minValue = Math.min(...values)
+
+  const metricCards = [
+    {
+      label: latestLabel,
+      value: formatMeasurement(latestMeasurement?.value),
+      tone: '#3DB1EC',
+    },
+    {
+      label: 'Maximalwert',
+      value: formatMeasurement(maxValue),
+      tone: '#7AD12C',
+    },
+    {
+      label: 'Trend',
+      value: getTrendLabel(latestMeasurement?.value ?? 0, previousMeasurement?.value),
+      tone: '#F7C948',
+    },
+    {
+      label: 'Spannweite',
+      value: `${formatMeasurement(minValue)} bis ${formatMeasurement(maxValue)}`,
+      tone: '#796542',
+    },
+  ]
 
   return (
-    <Stack spacing={1.5}>
+    <Stack spacing={2}>
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        spacing={1.25}
+        useFlexGap
+        flexWrap="wrap"
+      >
+        {metricCards.map((card) => (
+          <Box
+            key={card.label}
+            sx={{
+              flex: '1 1 150px',
+              minWidth: 0,
+              borderRadius: '18px',
+              border: `1px solid ${alpha(card.tone, 0.2)}`,
+              background: `linear-gradient(180deg, ${alpha('#FFF9EF', 0.96)}, ${alpha(card.tone, 0.08)})`,
+              px: 1.5,
+              py: 1.35,
+            }}
+          >
+            <Typography variant="caption" color="text.secondary">
+              {card.label}
+            </Typography>
+            <Typography variant="h6" sx={{ mt: 0.35, lineHeight: 1.15 }}>
+              {card.value}
+            </Typography>
+          </Box>
+        ))}
+      </Stack>
+
       <LineChart
         data={orderedMeasurements.map((measurement) => ({
           id: measurement.id,
@@ -45,9 +117,15 @@ export function MeasurementChart({
         valueLabelTitle="Wert"
         valueFormatter={formatMeasurement}
       />
-      <Typography variant="body2" color="text.secondary">
-        {latestLabel}: {formatMeasurement(orderedMeasurements.at(-1)?.value)}
-      </Typography>
+
+      <Stack spacing={0.4}>
+        <Typography variant="body2" color="text.secondary">
+          {latestLabel}: {formatMeasurement(latestMeasurement?.value)}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Letzter Zeitpunkt: {formatTimestamp(latestMeasurement?.createdAt)}
+        </Typography>
+      </Stack>
     </Stack>
   )
 }
