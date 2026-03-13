@@ -53,8 +53,8 @@ export function LandingPage() {
                 elevation={0}
                 sx={{
                   borderRadius: { xs: '22px', sm: '28px' },
-                  background: 'rgba(255,248,231,0.96)',
-                  border: '1px solid rgba(255,248,231,0.35)',
+                  background: 'rgba(248,242,231,0.74)',
+                  border: '1px solid rgba(121,101,66,0.18)',
                   boxShadow: '0 20px 42px rgba(19, 15, 9, 0.18)',
                 }}
               >
