@@ -58,6 +58,121 @@ const CARD_HEADER_MM = 12
 const CARD_FOOTER_MM = 10
 const MIN_QR_SIZE_MM = 18
 const MAX_QR_SIZE_MM = 120
+const QR_CANVAS_SIZE = 720
+const QR_QUIET_ZONE_MODULES = 4
+
+function hashToThreeDigitHex(input: string) {
+  let hash = 0
+
+  for (const character of input) {
+    hash = (hash * 31 + character.charCodeAt(0)) & 0xfff
+  }
+
+  return hash.toString(16).toUpperCase().padStart(3, '0')
+}
+
+function getQrCenterHex(value: string) {
+  const code = extractGeneratorCodeFromQrValue(value, 'https://mbz.local')
+  return hashToThreeDigitHex(code || value.trim() || '000')
+}
+
+export function getQrBadgeHex(code: string) {
+  return hashToThreeDigitHex(formatCode(code) || code.trim() || '000')
+}
+
+function isFinderZone(row: number, col: number, size: number) {
+  const finderSize = 7
+  const topLeft = row < finderSize && col < finderSize
+  const topRight = row < finderSize && col >= size - finderSize
+  const bottomLeft = row >= size - finderSize && col < finderSize
+  return topLeft || topRight || bottomLeft
+}
+
+function drawRoundedRect(
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number,
+) {
+  context.beginPath()
+  context.moveTo(x + radius, y)
+  context.arcTo(x + width, y, x + width, y + height, radius)
+  context.arcTo(x + width, y + height, x, y + height, radius)
+  context.arcTo(x, y + height, x, y, radius)
+  context.arcTo(x, y, x + width, y, radius)
+  context.closePath()
+}
+
+function renderFancyQrToCanvas(value: string) {
+  const qr = QRCode.create(value, {
+    errorCorrectionLevel: 'H',
+  })
+  const canvas = document.createElement('canvas')
+  const context = canvas.getContext('2d')
+
+  if (!context) {
+    throw new Error('QR-Code konnte nicht gezeichnet werden.')
+  }
+
+  const badgeHex = getQrCenterHex(value)
+  const totalModules = qr.modules.size + QR_QUIET_ZONE_MODULES * 2
+  const moduleSize = QR_CANVAS_SIZE / totalModules
+  const qrOffset = QR_QUIET_ZONE_MODULES * moduleSize
+
+  canvas.width = QR_CANVAS_SIZE
+  canvas.height = QR_CANVAS_SIZE
+
+  context.fillStyle = '#F8F2E7'
+  context.fillRect(0, 0, canvas.width, canvas.height)
+
+  context.fillStyle = '#EFE6D4'
+  drawRoundedRect(context, 18, 18, canvas.width - 36, canvas.height - 36, 40)
+  context.fill()
+
+  for (let row = 0; row < qr.modules.size; row += 1) {
+    for (let col = 0; col < qr.modules.size; col += 1) {
+      if (!qr.modules.get(row, col)) {
+        continue
+      }
+
+      const x = qrOffset + col * moduleSize
+      const y = qrOffset + row * moduleSize
+      const isFinder = isFinderZone(row, col, qr.modules.size)
+
+      context.fillStyle = isFinder ? '#7CB342' : '#241C13'
+      drawRoundedRect(
+        context,
+        x + moduleSize * 0.12,
+        y + moduleSize * 0.12,
+        moduleSize * 0.76,
+        moduleSize * 0.76,
+        Math.max(2, moduleSize * 0.22),
+      )
+      context.fill()
+    }
+  }
+
+  const badgeSize = canvas.width * 0.2
+  const badgeX = (canvas.width - badgeSize) / 2
+  const badgeY = (canvas.height - badgeSize) / 2
+
+  context.fillStyle = '#FFF9EF'
+  context.strokeStyle = '#1F7A8C'
+  context.lineWidth = 10
+  drawRoundedRect(context, badgeX, badgeY, badgeSize, badgeSize, 26)
+  context.fill()
+  context.stroke()
+
+  context.fillStyle = '#241C13'
+  context.font = 'bold 54px "Trebuchet MS", sans-serif'
+  context.textAlign = 'center'
+  context.textBaseline = 'middle'
+  context.fillText(badgeHex, canvas.width / 2, canvas.height / 2 + 2)
+
+  return canvas
+}
 
 export function buildGeneratorQrValue(code: string) {
   const normalizedCode = formatCode(code)
@@ -65,14 +180,7 @@ export function buildGeneratorQrValue(code: string) {
 }
 
 export async function generateQrDataUrl(value: string) {
-  return QRCode.toDataURL(value, {
-    margin: 1,
-    width: 512,
-    color: {
-      dark: '#241C13',
-      light: '#F8F2E7',
-    },
-  })
+  return renderFancyQrToCanvas(value).toDataURL('image/png')
 }
 
 export function extractGeneratorCodeFromQrValue(value: string, origin = window.location.origin) {
