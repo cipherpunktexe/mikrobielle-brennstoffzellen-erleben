@@ -1,8 +1,12 @@
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight'
 import CloseIcon from '@mui/icons-material/Close'
 import { Timestamp } from 'firebase/firestore'
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Box,
   Button,
   Card,
@@ -284,6 +288,7 @@ export function LeaderboardPage() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[] | null>(null)
   const [selectedEntry, setSelectedEntry] = useState<LeaderboardEntry | null>(null)
   const [selectedMeasurements, setSelectedMeasurements] = useState<Measurement[] | null>(null)
+  const [expandedSection, setExpandedSection] = useState<string | false>(false)
 
   useEffect(() => subscribeToLeaderboard(setLeaderboard), [])
 
@@ -521,98 +526,121 @@ export function LeaderboardPage() {
 
           <Stack spacing={1.5}>
             {leaderboardSections.map((section) => (
-              <Box
+              <Accordion
                 key={section.title}
+                expanded={expandedSection === section.title}
+                onChange={(_, isExpanded) => {
+                  setExpandedSection(isExpanded ? section.title : false)
+                }}
+                disableGutters
+                slotProps={{ transition: { unmountOnExit: true } }}
                 sx={{
-                  overflowX: 'auto',
                   mx: { xs: -0.5, sm: 0 },
                   border: '1px solid rgba(121,101,66,0.12)',
                   borderRadius: '18px',
                   bgcolor: 'rgba(248,242,231,0.34)',
+                  boxShadow: 'none',
+                  '&::before': {
+                    display: 'none',
+                  },
                 }}
               >
-                <Stack
-                  direction="row"
-                  justifyContent="space-between"
-                  alignItems="baseline"
-                  spacing={1}
-                  sx={{ px: { xs: 1.5, sm: 2 }, pt: 1.75, pb: 1 }}
+                <AccordionSummary
+                  expandIcon={<ExpandMoreIcon />}
+                  sx={{
+                    minHeight: 0,
+                    px: { xs: 1.5, sm: 2 },
+                    py: 0.25,
+                    '& .MuiAccordionSummary-content': {
+                      my: 1.2,
+                    },
+                  }}
                 >
-                  <Typography variant="h6" sx={{ fontSize: { xs: '1rem', sm: '1.08rem' }, lineHeight: 1.2 }}>
-                    {section.title}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
-                    Plaetze {section.startRank}-{section.endRank}
-                  </Typography>
-                </Stack>
+                  <Stack
+                    direction="row"
+                    justifyContent="space-between"
+                    alignItems="center"
+                    spacing={1}
+                    sx={{ width: '100%', minWidth: 0 }}
+                  >
+                    <Typography sx={{ fontWeight: 700, fontSize: { xs: '0.98rem', sm: '1.02rem' } }}>
+                      {section.title}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
+                      Plaetze {section.startRank}-{section.endRank}
+                    </Typography>
+                  </Stack>
+                </AccordionSummary>
 
-                <Table sx={{ minWidth: 520 }}>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell sx={{ color: 'text.secondary', fontWeight: 700 }}>Platz</TableCell>
-                      <TableCell sx={{ color: 'text.secondary', fontWeight: 700 }}>Nutzer</TableCell>
-                      <TableCell align="right" sx={{ color: 'text.secondary', fontWeight: 700 }}>
-                        Maximalwert
-                      </TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {section.entries.map((entry, entryIndex) => {
-                      const rank = section.startRank + entryIndex
+                <AccordionDetails sx={{ px: 0, pb: 0, overflowX: 'auto' }}>
+                  <Table sx={{ minWidth: 520 }}>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell sx={{ color: 'text.secondary', fontWeight: 700 }}>Platz</TableCell>
+                        <TableCell sx={{ color: 'text.secondary', fontWeight: 700 }}>Nutzer</TableCell>
+                        <TableCell align="right" sx={{ color: 'text.secondary', fontWeight: 700 }}>
+                          Maximalwert
+                        </TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {section.entries.map((entry, entryIndex) => {
+                        const rank = section.startRank + entryIndex
 
-                      return (
-                        <TableRow
-                          key={entry.generatorId}
-                          hover
-                          onClick={() => handleOpenEntry(entry)}
-                          tabIndex={0}
-                          onKeyDown={(event) => handleRowKeyDown(event, entry)}
-                          sx={{
-                            cursor: 'pointer',
-                            transition: 'background-color 160ms ease',
-                            '&:hover': {
-                              bgcolor: 'rgba(121,101,66,0.05)',
-                            },
-                            '&:focus-visible': {
-                              outline: '2px solid rgba(61,177,236,0.6)',
-                              outlineOffset: '-2px',
-                              bgcolor: 'rgba(61,177,236,0.08)',
-                            },
-                          }}
-                        >
-                          <TableCell>
-                            <Chip
-                              label={`#${rank}`}
-                              size="small"
-                              sx={{
-                                minWidth: 52,
-                                fontWeight: 700,
-                                color: 'text.primary',
-                                bgcolor:
-                                  rank <= 3 ? 'rgba(121,101,66,0.08)' : 'rgba(121,101,66,0.06)',
-                              }}
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Stack direction="row" alignItems="center" spacing={1}>
-                              <Typography sx={{ fontWeight: 600 }}>{entry.displayName}</Typography>
-                              <KeyboardArrowRightIcon
-                                fontSize="small"
-                                sx={{ color: 'text.secondary', opacity: 0.8 }}
+                        return (
+                          <TableRow
+                            key={entry.generatorId}
+                            hover
+                            onClick={() => handleOpenEntry(entry)}
+                            tabIndex={0}
+                            onKeyDown={(event) => handleRowKeyDown(event, entry)}
+                            sx={{
+                              cursor: 'pointer',
+                              transition: 'background-color 160ms ease',
+                              '&:hover': {
+                                bgcolor: 'rgba(121,101,66,0.05)',
+                              },
+                              '&:focus-visible': {
+                                outline: '2px solid rgba(61,177,236,0.6)',
+                                outlineOffset: '-2px',
+                                bgcolor: 'rgba(61,177,236,0.08)',
+                              },
+                            }}
+                          >
+                            <TableCell>
+                              <Chip
+                                label={`#${rank}`}
+                                size="small"
+                                sx={{
+                                  minWidth: 52,
+                                  fontWeight: 700,
+                                  color: 'text.primary',
+                                  bgcolor:
+                                    rank <= 3 ? 'rgba(121,101,66,0.08)' : 'rgba(121,101,66,0.06)',
+                                }}
                               />
-                            </Stack>
-                          </TableCell>
-                          <TableCell align="right">
-                            <Typography sx={{ fontWeight: 800, fontSize: '1.05rem' }}>
-                              {formatMeasurement(entry.maxValue)}
-                            </Typography>
-                          </TableCell>
-                        </TableRow>
-                      )
-                    })}
-                  </TableBody>
-                </Table>
-              </Box>
+                            </TableCell>
+                            <TableCell>
+                              <Stack direction="row" alignItems="center" spacing={1}>
+                                <Typography sx={{ fontWeight: 600 }}>{entry.displayName}</Typography>
+                                <KeyboardArrowRightIcon
+                                  fontSize="small"
+                                  sx={{ color: 'text.secondary', opacity: 0.8 }}
+                                />
+                              </Stack>
+                            </TableCell>
+                            <TableCell align="right">
+                              <Typography sx={{ fontWeight: 800, fontSize: '1.05rem' }}>
+                                {formatMeasurement(entry.maxValue)}
+                              </Typography>
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })}
+                    </TableBody>
+                  </Table>
+                </AccordionDetails>
+              </Accordion>
             ))}
           </Stack>
         </Stack>
