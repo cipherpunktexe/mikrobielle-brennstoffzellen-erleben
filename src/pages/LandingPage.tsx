@@ -64,6 +64,7 @@ export function LandingPage() {
                     display: 'flex',
                     justifyContent: 'center',
                     alignItems: 'center',
+                    minHeight: { xs: 280, sm: 320, md: 360 },
                   }}
                 >
                   <Box
@@ -71,9 +72,9 @@ export function LandingPage() {
                     src="/app-logo.png"
                     alt="Projektlogo"
                     sx={{
-                      width: '100%',
-                      maxWidth: { xs: 320, sm: 380, md: 420 },
-                      maxHeight: { xs: 220, sm: 260, md: 320 },
+                      width: 'auto',
+                      height: { xs: 220, sm: 250, md: 290 },
+                      maxWidth: '100%',
                       objectFit: 'contain',
                       display: 'block',
                     }}
