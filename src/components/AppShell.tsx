@@ -1,8 +1,8 @@
-import CompostIcon from '@mui/icons-material/Compost'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
 import LogoutIcon from '@mui/icons-material/Logout'
 import QrCode2Icon from '@mui/icons-material/QrCode2'
 import ScienceIcon from '@mui/icons-material/Science'
+import SpaIcon from '@mui/icons-material/Spa'
 import {
   AppBar,
   Avatar,
@@ -25,7 +25,7 @@ import { getUserProfile, logout, subscribeToAuth } from '../services/firebaseDat
 import type { UserProfile } from '../types/domain'
 
 const navigationItems = [
-  { label: 'Landingpage', to: '/', icon: <CompostIcon fontSize="small" /> },
+  { label: 'Landingpage', to: '/', icon: <SpaIcon fontSize="small" /> },
   { label: 'Deine Brennstoffzelle', to: '/user', icon: <QrCode2Icon fontSize="small" /> },
   { label: 'Leaderboard', to: '/leaderboard', icon: <EmojiEventsIcon fontSize="small" /> },
 ]
@@ -101,14 +101,23 @@ export function AppShell() {
                   width: 52,
                   height: 52,
                   borderRadius: '14px',
-                  display: 'grid',
-                  placeItems: 'center',
+                  overflow: 'hidden',
                   background: 'rgba(249,246,239,0.14)',
                   border: '1px solid rgba(255,248,231,0.22)',
                   flexShrink: 0,
                 }}
               >
-                <CompostIcon sx={{ color: 'primary.contrastText' }} />
+                <Box
+                  component="img"
+                  src="/app-logo.png"
+                  alt="App-Logo"
+                  sx={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    display: 'block',
+                  }}
+                />
               </Box>
               <Box component={RouterLink} to="/" sx={{ textDecoration: 'none', color: 'inherit', minWidth: 0 }}>
                 <Typography
