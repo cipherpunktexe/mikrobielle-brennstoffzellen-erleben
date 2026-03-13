@@ -20,6 +20,27 @@ export function LandingPage() {
         }}
       >
         <CardContent sx={{ p: { xs: 2.5, sm: 3, md: 5 } }}>
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'center',
+              mb: { xs: 2.5, md: 3.5 },
+            }}
+          >
+            <Box
+              component="img"
+              src="/app-logo.png"
+              alt="Projektlogo"
+              sx={{
+                width: '100%',
+                maxWidth: { xs: 320, sm: 420, md: 520 },
+                maxHeight: { xs: 220, sm: 280, md: 340 },
+                objectFit: 'contain',
+                display: 'block',
+                filter: 'drop-shadow(0 18px 30px rgba(0,0,0,0.18))',
+              }}
+            />
+          </Box>
           <Grid container spacing={{ xs: 2.5, md: 4 }} alignItems="center">
             <Grid size={{ xs: 12, md: 7 }}>
               <Stack spacing={{ xs: 2, sm: 3 }}>
