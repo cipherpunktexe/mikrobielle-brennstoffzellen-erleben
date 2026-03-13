@@ -96,31 +96,6 @@ export function AppShell() {
         <Container maxWidth="lg">
           <Toolbar disableGutters sx={{ minHeight: { xs: 88, sm: 96 }, gap: 2 }}>
             <Stack direction="row" spacing={1.5} alignItems="center" sx={{ flexGrow: 1, minWidth: 0 }}>
-              <Box
-                sx={{
-                  width: { xs: 64, sm: 76 },
-                  height: { xs: 64, sm: 76 },
-                  borderRadius: { xs: '16px', sm: '20px' },
-                  overflow: 'hidden',
-                  background: 'rgba(249,246,239,0.14)',
-                  border: '1px solid rgba(255,248,231,0.22)',
-                  flexShrink: 0,
-                }}
-              >
-                <Box
-                  component="img"
-                  src="/app-logo.png"
-                  alt="App-Logo"
-                  sx={{
-                    width: { xs: 52, sm: 60 },
-                    height: { xs: 52, sm: 60 },
-                    objectFit: 'contain',
-                    display: 'block',
-                    mx: 'auto',
-                    my: { xs: 0.75, sm: 1 },
-                  }}
-                />
-              </Box>
               <Box component={RouterLink} to="/" sx={{ textDecoration: 'none', color: 'inherit', minWidth: 0 }}>
                 <Typography
                   variant="h6"
