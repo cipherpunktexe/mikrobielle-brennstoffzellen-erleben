@@ -186,6 +186,8 @@ export function AdminPage() {
   const [moderationLoading, setModerationLoading] = useState(false)
   const [moderationStatus, setModerationStatus] = useState('')
   const [moderationError, setModerationError] = useState('')
+  const [userSearch, setUserSearch] = useState('')
+  const [generatorSearch, setGeneratorSearch] = useState('')
   const [userMenuAnchorEl, setUserMenuAnchorEl] = useState<HTMLElement | null>(null)
   const [generatorMenuAnchorEl, setGeneratorMenuAnchorEl] = useState<HTMLElement | null>(null)
   const [menuUser, setMenuUser] = useState<UserProfile | null>(null)
@@ -466,6 +468,29 @@ export function AdminPage() {
       setModerationLoading(false)
     }
   }
+
+  const normalizedUserSearch = userSearch.trim().toLocaleLowerCase('de-DE')
+  const normalizedGeneratorSearch = generatorSearch.trim().toLocaleLowerCase('de-DE')
+  const filteredModerationUsers = moderationUsers.filter((user) => {
+    if (!normalizedUserSearch) {
+      return true
+    }
+
+    const haystack = [user.name, user.email, user.role, user.generatorId ?? '']
+      .join(' ')
+      .toLocaleLowerCase('de-DE')
+    return haystack.includes(normalizedUserSearch)
+  })
+  const filteredModerationGenerators = moderationGenerators.filter((generator) => {
+    if (!normalizedGeneratorSearch) {
+      return true
+    }
+
+    const haystack = [generator.ownerName ?? '', generator.code, generator.ownerUid]
+      .join(' ')
+      .toLocaleLowerCase('de-DE')
+    return haystack.includes(normalizedGeneratorSearch)
+  })
 
   function handleUserMenuOpen(event: MouseEvent<HTMLElement>, user: UserProfile) {
     event.stopPropagation()
@@ -950,94 +975,124 @@ export function AdminPage() {
               ) : null}
 
               <TabPanel active={moderationTab} value="users">
-                <List
-                  disablePadding
-                  sx={{
-                    borderRadius: 3,
-                    overflow: 'hidden',
-                    bgcolor: 'background.default',
-                    border: (theme) => `1px solid ${theme.palette.divider}`,
-                  }}
-                >
-                  {moderationUsers.length ? (
-                    moderationUsers.map((user, index) => (
-                      <ListItem
-                        key={user.id}
-                        divider={index < moderationUsers.length - 1}
-                        secondaryAction={
-                          <IconButton edge="end" onClick={(event) => handleUserMenuOpen(event, user)}>
-                            <MoreVertIcon />
-                          </IconButton>
-                        }
-                        sx={{ py: 1.25 }}
-                      >
+                <Stack spacing={2}>
+                  <TextField
+                    label="Nutzer suchen"
+                    value={userSearch}
+                    onChange={(event) => setUserSearch(event.target.value)}
+                    placeholder="Name, E-Mail oder Rolle"
+                    fullWidth
+                  />
+                  <List
+                    disablePadding
+                    sx={{
+                      borderRadius: 3,
+                      overflow: 'hidden',
+                      bgcolor: 'background.default',
+                      border: (theme) => `1px solid ${theme.palette.divider}`,
+                    }}
+                  >
+                    {filteredModerationUsers.length ? (
+                      filteredModerationUsers.map((user, index) => (
+                        <ListItem
+                          key={user.id}
+                          divider={index < filteredModerationUsers.length - 1}
+                          secondaryAction={
+                            <IconButton edge="end" onClick={(event) => handleUserMenuOpen(event, user)}>
+                              <MoreVertIcon />
+                            </IconButton>
+                          }
+                          sx={{ py: 1.25 }}
+                        >
+                          <ListItemText
+                            primary={user.name}
+                            secondary={
+                              user.generatorId
+                                ? `${user.email} | ${user.role} | ${user.generatorId}`
+                                : `${user.email} | ${user.role}`
+                            }
+                          />
+                        </ListItem>
+                      ))
+                    ) : (
+                      <ListItem sx={{ py: 2 }}>
                         <ListItemText
-                          primary={user.name}
+                          primary={moderationUsers.length ? 'Keine Treffer' : 'Noch keine Nutzer gefunden'}
                           secondary={
-                            user.generatorId
-                              ? `${user.email} | ${user.role} | ${user.generatorId}`
-                              : `${user.email} | ${user.role}`
+                            moderationUsers.length
+                              ? 'Passe den Suchbegriff an, um weitere Nutzer zu sehen.'
+                              : 'Registrierte Konten erscheinen hier automatisch.'
                           }
                         />
                       </ListItem>
-                    ))
-                  ) : (
-                    <ListItem sx={{ py: 2 }}>
-                      <ListItemText
-                        primary="Noch keine Nutzer gefunden"
-                        secondary="Registrierte Konten erscheinen hier automatisch."
-                      />
-                    </ListItem>
-                  )}
-                </List>
+                    )}
+                  </List>
+                </Stack>
               </TabPanel>
 
               <TabPanel active={moderationTab} value="generators">
-                <List
-                  disablePadding
-                  sx={{
-                    borderRadius: 3,
-                    overflow: 'hidden',
-                    bgcolor: 'background.default',
-                    border: (theme) => `1px solid ${theme.palette.divider}`,
-                  }}
-                >
-                  {moderationGenerators.length ? (
-                    moderationGenerators.map((generator, index) => (
-                      <ListItem
-                        key={generator.id}
-                        disablePadding
-                        divider={index < moderationGenerators.length - 1}
-                        secondaryAction={
-                          <IconButton
-                            edge="end"
-                            onClick={(event) => handleGeneratorMenuOpen(event, generator)}
-                          >
-                            <MoreVertIcon />
-                          </IconButton>
-                        }
-                      >
-                        <ListItemButton onClick={() => void handleOpenGeneratorMeasurements(generator)}>
-                          <ListItemText
-                            primary={generator.ownerName?.trim() || generator.code}
-                            secondary={
-                              generator.ownerName?.trim()
-                                ? `${generator.code} | ${generator.ownerUid}`
-                                : generator.ownerUid
-                            }
-                          />
-                        </ListItemButton>
+                <Stack spacing={2}>
+                  <TextField
+                    label="Brennstoffzellen suchen"
+                    value={generatorSearch}
+                    onChange={(event) => setGeneratorSearch(event.target.value)}
+                    placeholder="Code, Anzeigename oder Owner UID"
+                    fullWidth
+                  />
+                  <List
+                    disablePadding
+                    sx={{
+                      borderRadius: 3,
+                      overflow: 'hidden',
+                      bgcolor: 'background.default',
+                      border: (theme) => `1px solid ${theme.palette.divider}`,
+                    }}
+                  >
+                    {filteredModerationGenerators.length ? (
+                      filteredModerationGenerators.map((generator, index) => (
+                        <ListItem
+                          key={generator.id}
+                          disablePadding
+                          divider={index < filteredModerationGenerators.length - 1}
+                          secondaryAction={
+                            <IconButton
+                              edge="end"
+                              onClick={(event) => handleGeneratorMenuOpen(event, generator)}
+                            >
+                              <MoreVertIcon />
+                            </IconButton>
+                          }
+                        >
+                          <ListItemButton onClick={() => void handleOpenGeneratorMeasurements(generator)}>
+                            <ListItemText
+                              primary={generator.ownerName?.trim() || generator.code}
+                              secondary={
+                                generator.ownerName?.trim()
+                                  ? `${generator.code} | ${generator.ownerUid}`
+                                  : generator.ownerUid
+                              }
+                            />
+                          </ListItemButton>
+                        </ListItem>
+                      ))
+                    ) : (
+                      <ListItem sx={{ py: 2 }}>
+                        <ListItemText
+                          primary={
+                            moderationGenerators.length
+                              ? 'Keine Treffer'
+                              : 'Noch keine Brennstoffzellen gefunden'
+                          }
+                          secondary={
+                            moderationGenerators.length
+                              ? 'Passe den Suchbegriff an, um weitere Brennstoffzellen zu sehen.'
+                              : 'Sobald Brennstoffzellen angelegt sind, erscheinen sie hier.'
+                          }
+                        />
                       </ListItem>
-                    ))
-                  ) : (
-                    <ListItem sx={{ py: 2 }}>
-                      <ListItemText
-                        primary="Noch keine Brennstoffzellen gefunden"
-                        secondary="Sobald Brennstoffzellen angelegt sind, erscheinen sie hier."
-                      />
-                    </ListItem>
-                  )}
-                </List>
+                    )}
+                  </List>
+                </Stack>
               </TabPanel>
             </Stack>
           </CardContent>
