@@ -136,7 +136,7 @@ describe('LeaderboardPage', () => {
 
     await user.click((await screen.findAllByText('Julia'))[0])
 
-    expect(await screen.findByText('Messverlauf fuer Julia')).toBeInTheDocument()
+    expect(await screen.findByText('Messverlauf: Julia')).toBeInTheDocument()
     expect(screen.getByLabelText('Diagramm der Messwerthistorie')).toBeInTheDocument()
     expect(screen.getByText('Aktueller Messwert: 1.42 V')).toBeInTheDocument()
   })

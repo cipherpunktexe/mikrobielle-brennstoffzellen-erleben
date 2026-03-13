@@ -340,9 +340,8 @@ export function LeaderboardPage() {
             <Typography variant="h2" gutterBottom sx={{ fontSize: { xs: '1.9rem', sm: undefined } }}>
               Aktuelles Ranking
             </Typography>
-            <Typography color="text.secondary" sx={{ maxWidth: 760 }}>
-              Hier werden die maximal gemessenen Werte aller Brennstoffzellen verglichen. Der
-              hoechste Messwert steht oben.
+            <Typography color="text.secondary">
+              Ranking nach hoechstem Messwert.
             </Typography>
           </Box>
 
@@ -392,12 +391,9 @@ export function LeaderboardPage() {
                 }}
               />
 
-              <Stack spacing={0.5} sx={{ position: 'relative', mb: { xs: 1.5, md: 2.5 }, textAlign: 'center' }}>
-                <Typography variant="overline" color="text.secondary">
-                  Podium
-                </Typography>
+              <Stack sx={{ position: 'relative', mb: { xs: 1.5, md: 2.5 }, textAlign: 'center' }}>
                 <Typography variant="h4" sx={{ fontSize: { xs: '1.5rem', md: '1.9rem' } }}>
-                  Top 3 Brennstoffzellen
+                  Top 3
                 </Typography>
               </Stack>
 
@@ -505,14 +501,7 @@ export function LeaderboardPage() {
 
                           <Box sx={{ mt: 'auto' }}>
                             <Typography
-                              variant="body2"
-                              sx={{ opacity: 0.82, textTransform: 'uppercase', letterSpacing: '0.06em' }}
-                            >
-                              Maximalwert
-                            </Typography>
-                            <Typography
                               sx={{
-                                mt: 0.25,
                                 fontWeight: 900,
                                 lineHeight: 1,
                                 fontSize: { xs: rank === 1 ? '1.55rem' : '1.25rem', md: rank === 1 ? '1.95rem' : '1.45rem' },
@@ -542,11 +531,17 @@ export function LeaderboardPage() {
                   bgcolor: 'rgba(248,242,231,0.34)',
                 }}
               >
-                <Stack spacing={0.5} sx={{ px: { xs: 1.5, sm: 2 }, pt: 1.75, pb: 1 }}>
-                  <Typography variant="h6" sx={{ fontSize: { xs: '1rem', sm: '1.08rem' } }}>
+                <Stack
+                  direction="row"
+                  justifyContent="space-between"
+                  alignItems="baseline"
+                  spacing={1}
+                  sx={{ px: { xs: 1.5, sm: 2 }, pt: 1.75, pb: 1 }}
+                >
+                  <Typography variant="h6" sx={{ fontSize: { xs: '1rem', sm: '1.08rem' }, lineHeight: 1.2 }}>
                     {section.title}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
                     Plaetze {section.startRank}-{section.endRank}
                   </Typography>
                 </Stack>
@@ -555,7 +550,7 @@ export function LeaderboardPage() {
                   <TableHead>
                     <TableRow>
                       <TableCell sx={{ color: 'text.secondary', fontWeight: 700 }}>Platz</TableCell>
-                      <TableCell sx={{ color: 'text.secondary', fontWeight: 700 }}>Brennstoffzelle</TableCell>
+                      <TableCell sx={{ color: 'text.secondary', fontWeight: 700 }}>Nutzer</TableCell>
                       <TableCell align="right" sx={{ color: 'text.secondary', fontWeight: 700 }}>
                         Maximalwert
                       </TableCell>
@@ -600,14 +595,7 @@ export function LeaderboardPage() {
                           </TableCell>
                           <TableCell>
                             <Stack direction="row" alignItems="center" spacing={1}>
-                              <Typography sx={{ fontWeight: 600 }}>{entry.code}</Typography>
-                              <Typography
-                                variant="caption"
-                                color="text.secondary"
-                                sx={{ display: { xs: 'none', sm: 'block' } }}
-                              >
-                                {entry.code}
-                              </Typography>
+                              <Typography sx={{ fontWeight: 600 }}>{entry.displayName}</Typography>
                               <KeyboardArrowRightIcon
                                 fontSize="small"
                                 sx={{ color: 'text.secondary', opacity: 0.8 }}
@@ -627,16 +615,12 @@ export function LeaderboardPage() {
               </Box>
             ))}
           </Stack>
-
-          <Typography variant="body2" color="text.secondary">
-            Tipp: Klicke auf eine Brennstoffzelle, um den Messverlauf im Diagramm zu oeffnen.
-          </Typography>
         </Stack>
       </CardContent>
 
       <Dialog open={Boolean(selectedEntry)} onClose={handleCloseDialog} fullWidth maxWidth="md">
         <DialogTitle sx={{ pr: 6 }}>
-          {selectedEntry ? `Messverlauf fuer ${selectedEntry.displayName}` : 'Messverlauf'}
+          {selectedEntry ? `Messverlauf: ${selectedEntry.displayName}` : 'Messverlauf'}
           <IconButton
             aria-label="Dialog schliessen"
             onClick={handleCloseDialog}
