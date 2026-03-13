@@ -1,5 +1,7 @@
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner'
+import ShowChartIcon from '@mui/icons-material/ShowChart'
+import ViewListIcon from '@mui/icons-material/ViewList'
 import {
   Alert,
   Box,
@@ -18,6 +20,8 @@ import {
   TableCell,
   TableHead,
   TableRow,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
   useMediaQuery,
   useTheme,
@@ -40,6 +44,135 @@ import {
 } from '../services/firebaseData'
 import type { Generator, LeaderboardEntry, Measurement, UserProfile } from '../types/domain'
 
+type MeasurementViewMode = 'chart' | 'list'
+
+function MeasurementChart({ measurements }: { measurements: Measurement[] }) {
+  const orderedMeasurements = [...measurements].reverse()
+  const width = 640
+  const height = 260
+  const padding = { top: 24, right: 20, bottom: 44, left: 58 }
+  const plotWidth = width - padding.left - padding.right
+  const plotHeight = height - padding.top - padding.bottom
+  const values = orderedMeasurements.map((measurement) => measurement.value)
+  const minValue = Math.min(...values)
+  const maxValue = Math.max(...values)
+  const valueRange = maxValue - minValue || 1
+  const yTicks = [maxValue, minValue + valueRange / 2, minValue]
+
+  const points = orderedMeasurements.map((measurement, index) => {
+    const x =
+      orderedMeasurements.length === 1
+        ? padding.left + plotWidth / 2
+        : padding.left + (index / (orderedMeasurements.length - 1)) * plotWidth
+    const y = padding.top + ((maxValue - measurement.value) / valueRange) * plotHeight
+
+    return { x, y, measurement }
+  })
+
+  const linePoints = points.map((point) => `${point.x},${point.y}`).join(' ')
+  const areaPoints = [
+    `${padding.left},${padding.top + plotHeight}`,
+    ...points.map((point) => `${point.x},${point.y}`),
+    `${padding.left + plotWidth},${padding.top + plotHeight}`,
+  ].join(' ')
+  const labelIndexes = Array.from(
+    new Set([0, Math.floor((orderedMeasurements.length - 1) / 2), orderedMeasurements.length - 1]),
+  )
+
+  return (
+    <Stack spacing={1.5}>
+      <Box
+        sx={{
+          border: '1px solid rgba(121,101,66,0.16)',
+          borderRadius: '16px',
+          bgcolor: 'rgba(248,242,231,0.42)',
+          p: { xs: 1, sm: 1.5 },
+        }}
+      >
+        <Box
+          component="svg"
+          viewBox={`0 0 ${width} ${height}`}
+          role="img"
+          aria-label="Diagramm der Messwerthistorie"
+          sx={{ width: '100%', height: 'auto', display: 'block' }}
+        >
+          {yTicks.map((tick) => {
+            const y = padding.top + ((maxValue - tick) / valueRange) * plotHeight
+
+            return (
+              <g key={tick}>
+                <line
+                  x1={padding.left}
+                  y1={y}
+                  x2={padding.left + plotWidth}
+                  y2={y}
+                  stroke="rgba(121,101,66,0.16)"
+                  strokeDasharray="6 6"
+                />
+                <text
+                  x={padding.left - 10}
+                  y={y + 4}
+                  textAnchor="end"
+                  fontSize="12"
+                  fill="#6A5A41"
+                >
+                  {formatMeasurement(tick)}
+                </text>
+              </g>
+            )
+          })}
+
+          <polygon points={areaPoints} fill="rgba(61,177,236,0.18)" />
+          <polyline
+            points={linePoints}
+            fill="none"
+            stroke="#3DB1EC"
+            strokeWidth="4"
+            strokeLinejoin="round"
+            strokeLinecap="round"
+          />
+
+          {points.map((point) => (
+            <circle
+              key={point.measurement.id}
+              cx={point.x}
+              cy={point.y}
+              r="5"
+              fill="#7AD12C"
+              stroke="#241C13"
+              strokeWidth="2"
+            />
+          ))}
+
+          {labelIndexes.map((index) => {
+            const point = points[index]
+
+            if (!point) {
+              return null
+            }
+
+            return (
+              <text
+                key={point.measurement.id}
+                x={point.x}
+                y={height - 14}
+                textAnchor="middle"
+                fontSize="12"
+                fill="#6A5A41"
+              >
+                {formatTimestamp(point.measurement.createdAt)}
+              </text>
+            )
+          })}
+        </Box>
+      </Box>
+      <Typography variant="body2" color="text.secondary">
+        Neuester Messwert: {formatMeasurement(orderedMeasurements.at(-1)?.value)}
+      </Typography>
+    </Stack>
+  )
+}
+
 export function UserDashboardPage() {
   const theme = useTheme()
   const isMobileViewport = useMediaQuery(theme.breakpoints.down('sm'))
@@ -54,6 +187,7 @@ export function UserDashboardPage() {
   const [linkStatus, setLinkStatus] = useState('')
   const [linkError, setLinkError] = useState('')
   const [scannerOpen, setScannerOpen] = useState(false)
+  const [measurementViewMode, setMeasurementViewMode] = useState<MeasurementViewMode>('list')
   const [formValues, setFormValues] = useState({
     email: '',
     password: '',
@@ -282,11 +416,40 @@ export function UserDashboardPage() {
       <Card>
         <CardContent sx={{ p: { xs: 2.25, sm: 2.5 } }}>
           <Stack spacing={1.5}>
-            <Typography variant="h5">Messwerthistorie</Typography>
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              justifyContent="space-between"
+              alignItems={{ xs: 'stretch', sm: 'center' }}
+              spacing={1.5}
+            >
+              <Typography variant="h5">Messwerthistorie</Typography>
+              <ToggleButtonGroup
+                value={measurementViewMode}
+                exclusive
+                size="small"
+                onChange={(_, nextMode: MeasurementViewMode | null) => {
+                  if (nextMode) {
+                    setMeasurementViewMode(nextMode)
+                  }
+                }}
+                sx={{ alignSelf: { xs: 'stretch', sm: 'auto' } }}
+              >
+                <ToggleButton value="chart" aria-label="Diagramm anzeigen">
+                  <ShowChartIcon fontSize="small" sx={{ mr: 0.75 }} />
+                  Diagramm
+                </ToggleButton>
+                <ToggleButton value="list" aria-label="Liste anzeigen">
+                  <ViewListIcon fontSize="small" sx={{ mr: 0.75 }} />
+                  Liste
+                </ToggleButton>
+              </ToggleButtonGroup>
+            </Stack>
             {measurements.length === 0 ? (
               <Typography color="text.secondary">
                 Für diese Brennstoffzelle liegen noch keine Messwerte vor.
               </Typography>
+            ) : measurementViewMode === 'chart' ? (
+              <MeasurementChart measurements={measurements} />
             ) : isMobileViewport ? (
               <Stack
                 divider={<Divider flexItem />}
