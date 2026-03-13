@@ -4,6 +4,7 @@ import {
   doc,
   getDoc,
   getDocs,
+  limit,
   onSnapshot,
   query,
   serverTimestamp,
@@ -27,6 +28,7 @@ import type {
   LeaderboardEntry,
   Measurement,
   UserProfile,
+  UserRole,
 } from '../types/domain'
 
 const usersCollection = collection(db, 'users')
@@ -44,6 +46,23 @@ export interface RegisterUserInput {
 export interface LoginInput {
   email: string
   password: string
+}
+
+export interface AdminUserProfileUpdateInput {
+  name: string
+  email: string
+  role: UserRole
+}
+
+export interface AdminGeneratorUpdateInput {
+  code: string
+  ownerUid: string
+  ownerName: string
+}
+
+export interface AdminMeasurementUpdateInput {
+  value: number
+  enteredBy: string
 }
 
 export function subscribeToAuth(callback: (user: User | null) => void) {
@@ -214,6 +233,55 @@ export async function getUserProfile(uid: string) {
   } as UserProfile
 }
 
+export async function findUserProfileForAdmin(identifier: string) {
+  const trimmedIdentifier = identifier.trim()
+
+  if (!trimmedIdentifier) {
+    return null
+  }
+
+  const directSnapshot = await getDoc(doc(usersCollection, trimmedIdentifier))
+
+  if (directSnapshot.exists()) {
+    return {
+      id: directSnapshot.id,
+      ...directSnapshot.data(),
+    } as UserProfile
+  }
+
+  const emailSnapshot = await getDocs(
+    query(usersCollection, where('email', '==', trimmedIdentifier.toLowerCase()), limit(1)),
+  )
+  const match = emailSnapshot.docs[0]
+
+  if (!match) {
+    return null
+  }
+
+  return {
+    id: match.id,
+    ...match.data(),
+  } as UserProfile
+}
+
+export async function updateUserProfileAsAdmin(
+  userId: string,
+  input: AdminUserProfileUpdateInput,
+) {
+  const trimmedName = input.name.trim()
+  const trimmedEmail = input.email.trim().toLowerCase()
+
+  if (!trimmedName || !trimmedEmail) {
+    throw new Error('Name und E-Mail muessen ausgefuellt sein.')
+  }
+
+  await updateDoc(doc(usersCollection, userId), {
+    name: trimmedName,
+    email: trimmedEmail,
+    role: input.role,
+  })
+}
+
 export function subscribeToUserProfile(
   uid: string,
   callback: (profile: UserProfile | null) => void,
@@ -357,6 +425,81 @@ export async function getGeneratorByCode(code: string) {
     id: match.id,
     ...match.data(),
   } as Generator
+}
+
+export async function findGeneratorForAdmin(identifier: string) {
+  const trimmedIdentifier = identifier.trim()
+
+  if (!trimmedIdentifier) {
+    return null
+  }
+
+  const directSnapshot = await getDoc(doc(generatorsCollection, trimmedIdentifier))
+
+  if (directSnapshot.exists()) {
+    return {
+      id: directSnapshot.id,
+      ...directSnapshot.data(),
+    } as Generator
+  }
+
+  return getGeneratorByCode(trimmedIdentifier)
+}
+
+export async function updateGeneratorAsAdmin(
+  generatorId: string,
+  input: AdminGeneratorUpdateInput,
+) {
+  const normalizedCode = formatCode(input.code)
+  const trimmedOwnerUid = input.ownerUid.trim()
+  const trimmedOwnerName = input.ownerName.trim()
+
+  if (!normalizedCode || !trimmedOwnerUid) {
+    throw new Error('Code und Owner UID muessen ausgefuellt sein.')
+  }
+
+  await updateDoc(doc(generatorsCollection, generatorId), {
+    code: normalizedCode,
+    ownerUid: trimmedOwnerUid,
+    ownerName: trimmedOwnerName,
+    updatedAt: serverTimestamp(),
+  })
+}
+
+export async function getMeasurementsForAdmin(generatorId: string) {
+  const measurementsSnapshot = await getDocs(
+    query(measurementsCollection, where('generatorId', '==', generatorId)),
+  )
+
+  return measurementsSnapshot.docs
+    .map(
+      (item) =>
+        ({
+          id: item.id,
+          ...item.data(),
+        }) as Measurement,
+    )
+    .sort((left, right) => {
+      const leftMs = left.createdAt?.toMillis() ?? 0
+      const rightMs = right.createdAt?.toMillis() ?? 0
+      return rightMs - leftMs
+    })
+}
+
+export async function updateMeasurementAsAdmin(
+  measurementId: string,
+  input: AdminMeasurementUpdateInput,
+) {
+  const trimmedEnteredBy = input.enteredBy.trim()
+
+  if (Number.isNaN(input.value) || !trimmedEnteredBy) {
+    throw new Error('Messwert und Eingetragen-von muessen gueltig sein.')
+  }
+
+  await updateDoc(doc(measurementsCollection, measurementId), {
+    value: input.value,
+    enteredBy: trimmedEnteredBy,
+  })
 }
 
 export async function addMeasurementByCode(code: string, value: number, enteredBy: string) {

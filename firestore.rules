@@ -44,10 +44,19 @@ service cloud.firestore {
         && request.resource.data.ownerUid == request.auth.uid
         && request.resource.data.code is string;
 
-      allow update: if (isAdmin() || (isSignedIn() && resource.data.ownerUid == request.auth.uid))
+      allow update: if (
+        isAdmin()
+        && request.resource.data.ownerUid is string
+        && request.resource.data.code is string
+        && request.resource.data.createdAt == resource.data.createdAt
+        && (!('ownerName' in request.resource.data) || request.resource.data.ownerName is string)
+      ) || (
+        isSignedIn()
+        && resource.data.ownerUid == request.auth.uid
         && request.resource.data.ownerUid == resource.data.ownerUid
         && request.resource.data.code == resource.data.code
-        && request.resource.data.createdAt == resource.data.createdAt;
+        && request.resource.data.createdAt == resource.data.createdAt
+      );
 
       allow delete: if false;
     }
@@ -61,7 +70,13 @@ service cloud.firestore {
         && request.resource.data.enteredBy is string
         && exists(/databases/$(database)/documents/generators/$(request.resource.data.generatorId));
 
-      allow update, delete: if false;
+      allow update: if isAdmin()
+        && request.resource.data.generatorId == resource.data.generatorId
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.value is number
+        && request.resource.data.enteredBy is string;
+
+      allow delete: if false;
     }
   }
 }
