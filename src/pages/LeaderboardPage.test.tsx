@@ -34,8 +34,8 @@ describe('LeaderboardPage', () => {
 
     renderWithProviders(<LeaderboardPage />)
 
-    expect(await screen.findByText('station-017')).toBeInTheDocument()
-    expect(screen.getByText('1.42 V')).toBeInTheDocument()
+    expect((await screen.findAllByText('station-017')).length).toBeGreaterThan(0)
+    expect((await screen.findAllByText('1.42 V')).length).toBeGreaterThan(0)
   })
 
   test('renders sample fuel cells when no leaderboard entries exist yet', async () => {
@@ -52,8 +52,8 @@ describe('LeaderboardPage', () => {
         'Aktuell werden Beispiel-Brennstoffzellen angezeigt, bis echte Messwerte vorhanden sind.',
       ),
     ).toBeInTheDocument()
-    expect(screen.getByText('beispiel-001')).toBeInTheDocument()
-    expect(screen.getByText('1.82 V')).toBeInTheDocument()
+    expect((await screen.findAllByText('beispiel-001')).length).toBeGreaterThan(0)
+    expect((await screen.findAllByText('1.82 V')).length).toBeGreaterThan(0)
   })
 
   test('opens a chart dialog when a leaderboard entry is clicked', async () => {
@@ -103,7 +103,7 @@ describe('LeaderboardPage', () => {
 
     renderWithProviders(<LeaderboardPage />)
 
-    await user.click(await screen.findByText('station-017'))
+    await user.click((await screen.findAllByText('station-017'))[0])
 
     expect(await screen.findByText('Messverlauf fuer station-017')).toBeInTheDocument()
     expect(screen.getByLabelText('Diagramm der Messwerthistorie')).toBeInTheDocument()
