@@ -92,13 +92,13 @@ const serviceItems: ServiceItem[] = [
   {
     title: 'Cloud Firestore',
     description:
-      'Wird zur Speicherung von Nutzerprofilen, Generatoren und Messwerten genutzt.',
+      'Wird zur Speicherung von Nutzerprofilen, Brennstoffzellen und Messwerten genutzt.',
     dataItems: [
       'Name',
       'E-Mail-Adresse',
       'Rolle',
-      'Generator-Zuordnung',
-      'Generatorcode',
+      'Brennstoffzellen-Zuordnung',
+      'Brennstoffzellen-Code',
       'Messwerte und Zeitstempel',
     ],
     provider: 'Google / Firebase',
@@ -163,7 +163,7 @@ export function DatenschutzPage() {
         <Subsection title="Welche Daten werden verarbeitet?">
           <Typography variant="body2">
             Im Rahmen der Nutzung der App werden insbesondere Registrierungs-, Login-,
-            Rollen-, Generator- und Messwertdaten verarbeitet. Zusätzlich fallen beim
+            Rollen-, Brennstoffzellen- und Messwertdaten verarbeitet. Zusätzlich fallen beim
             Aufruf der Web-App technische Zugriffsdaten an.
           </Typography>
         </Subsection>
@@ -171,7 +171,7 @@ export function DatenschutzPage() {
         <Subsection title="Wofür werden die Daten genutzt?">
           <Typography variant="body2">
             Die Daten werden genutzt, um Nutzerkonten anzulegen, Anmeldungen zu
-            ermöglichen, Generatoren Nutzern zuzuordnen, Messwerte zu speichern und das
+            ermöglichen, Brennstoffzellen Nutzern zuzuordnen, Messwerte zu speichern und das
             Leaderboard bereitzustellen.
           </Typography>
         </Subsection>

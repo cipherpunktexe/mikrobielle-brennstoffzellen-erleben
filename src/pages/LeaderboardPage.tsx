@@ -14,7 +14,7 @@ import {
   Typography,
 } from '@mui/material'
 import { useEffect, useState } from 'react'
-import { formatMeasurement, formatTimestamp } from '../lib/format'
+import { formatMeasurement } from '../lib/format'
 import { subscribeToLeaderboard } from '../services/firebaseData'
 import type { LeaderboardEntry } from '../types/domain'
 
@@ -41,7 +41,7 @@ export function LeaderboardPage() {
               Aktuelles Ranking
             </Typography>
             <Typography color="text.secondary">
-              Hier werden die zuletzt gespeicherten Messwerte aller Generatoren verglichen.
+              Hier werden die zuletzt gespeicherten Messwerte aller Brennstoffzellen verglichen.
               Die höchste aktuelle Spannung steht oben.
             </Typography>
           </div>
@@ -51,15 +51,14 @@ export function LeaderboardPage() {
               <TableHead>
                 <TableRow>
                   <TableCell>Platz</TableCell>
-                  <TableCell>Generator</TableCell>
+                  <TableCell>Brennstoffzelle</TableCell>
                   <TableCell align="right">Messwert</TableCell>
-                  <TableCell>Zeitpunkt</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {leaderboard.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={4}>Noch keine Messwerte vorhanden.</TableCell>
+                    <TableCell colSpan={3}>Noch keine Messwerte vorhanden.</TableCell>
                   </TableRow>
                 ) : (
                   leaderboard.map((entry, index) => (
@@ -67,7 +66,6 @@ export function LeaderboardPage() {
                       <TableCell>{index + 1}</TableCell>
                       <TableCell>{entry.code}</TableCell>
                       <TableCell align="right">{formatMeasurement(entry.latestValue)}</TableCell>
-                      <TableCell>{formatTimestamp(entry.measuredAt)}</TableCell>
                     </TableRow>
                   ))
                 )}

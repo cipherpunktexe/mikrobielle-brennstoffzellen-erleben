@@ -189,7 +189,7 @@ export function AdminPage() {
         <Grid size={{ xs: 12, md: 6 }}>
           <AuthCard
             title="Admin-Login"
-            description="Admins melden sich über Firebase Authentication an und arbeiten dann mit QR-Codes, Generatoren und Messwerten."
+            description="Admins melden sich über Firebase Authentication an und arbeiten dann mit QR-Codes, Brennstoffzellen und Messwerten."
             values={formValues}
             submitLabel="Als Admin anmelden"
             googleLabel="Mit Google anmelden"
@@ -211,7 +211,7 @@ export function AdminPage() {
                 </Typography>
                 <Typography color="text.secondary">
                   `/admin` dient zum QR-Export. `/admin/generator/:code` ist die direkte
-                  Messwertmaske für einen Generatorcode.
+                  Messwertmaske für einen Brennstoffzellen-Code.
                 </Typography>
                 <Typography color="text.secondary">
                   Voraussetzung ist ein Firestore-User mit `role: "admin"` für das
@@ -332,7 +332,7 @@ export function AdminPage() {
             <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
               <Stack spacing={2}>
                 <Typography variant="h4" sx={{ fontSize: { xs: '1.45rem', sm: '2rem' } }}>
-                  Generator aufrufen
+                  Brennstoffzelle aufrufen
                 </Typography>
                 <Typography color="text.secondary">
                   Admins können einen QR-Link direkt öffnen oder einen Stationscode manuell eingeben.
@@ -368,7 +368,7 @@ export function AdminPage() {
                   Messwert eintragen
                 </Typography>
                 <TextField
-                  label="Generatorcode"
+                  label="Brennstoffzellen-Code"
                   value={scanCode}
                   onChange={(event) => setScanCode(formatCode(event.target.value))}
                   required

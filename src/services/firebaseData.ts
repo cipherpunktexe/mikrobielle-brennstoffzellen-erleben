@@ -80,7 +80,7 @@ export async function registerUserWithGenerator(input: RegisterUserInput) {
   const existingGenerator = await getDocs(generatorQuery)
 
   if (!existingGenerator.empty) {
-    throw new Error('Dieser QR-Code ist bereits mit einem Generator verknüpft.')
+    throw new Error('Dieser QR-Code ist bereits mit einer Brennstoffzelle verknüpft.')
   }
 
   const credentials = await createUserWithEmailAndPassword(
@@ -118,7 +118,7 @@ export async function linkCurrentUserToGeneratorByCode(code: string) {
   const normalizedCode = formatCode(code)
 
   if (!normalizedCode) {
-    throw new Error('Der gescannte QR-Code enthaelt keinen gueltigen Generatorcode.')
+    throw new Error('Der gescannte QR-Code enthaelt keinen gueltigen Brennstoffzellen-Code.')
   }
 
   const userRef = doc(usersCollection, currentUser.uid)
@@ -337,7 +337,7 @@ export async function addMeasurementByCode(code: string, value: number, enteredB
   const generator = await getGeneratorByCode(code)
 
   if (!generator) {
-    throw new Error('Für diesen QR-Code wurde noch kein Generator angelegt.')
+    throw new Error('Für diesen QR-Code wurde noch keine Brennstoffzelle angelegt.')
   }
 
   await addDoc(measurementsCollection, {

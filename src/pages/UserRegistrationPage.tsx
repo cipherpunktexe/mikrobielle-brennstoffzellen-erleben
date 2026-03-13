@@ -39,7 +39,7 @@ export function UserRegistrationPage() {
         ...formValues,
         code: scannedCode,
       })
-      setSuccess('Account und Generator wurden erfolgreich angelegt.')
+      setSuccess('Account und Brennstoffzelle wurden erfolgreich angelegt.')
       navigate('/user')
     } catch (submitError) {
       const message =
@@ -64,7 +64,7 @@ export function UserRegistrationPage() {
                   Registrierung für {scannedCode || 'unbekannten QR-Code'}
                 </Typography>
                 <Typography color="text.secondary">
-                  Mit diesem QR-Link wird der Generator erst bei der Registrierung
+                  Mit diesem QR-Link wird die Brennstoffzelle erst bei der Registrierung
                   erstellt und direkt mit dem neuen Nutzerkonto verknüpft.
                 </Typography>
               </div>
@@ -114,7 +114,7 @@ export function UserRegistrationPage() {
                 >
                   {loading
                     ? 'Registrierung läuft...'
-                    : 'Account erstellen und Generator verknüpfen'}
+                    : 'Account erstellen und Brennstoffzelle verknüpfen'}
                 </Button>
               </Stack>
             </Stack>
@@ -132,7 +132,7 @@ export function UserRegistrationPage() {
                   1. Firebase Authentication erstellt den User.
                 </Typography>
                 <Typography color="text.secondary">
-                  2. In `generators` entsteht ein neuer Eintrag mit dem QR-Code.
+                  2. In `generators` entsteht ein neuer Brennstoffzellen-Eintrag mit dem QR-Code.
                 </Typography>
                 <Typography color="text.secondary">
                   3. In `users` wird der Firestore-User mit `generatorId` gespeichert.

@@ -163,7 +163,7 @@ export function UserDashboardPage() {
         <Grid size={{ xs: 12, md: 6 }}>
           <AuthCard
             title="User-Login"
-            description="Nutzer melden sich an und sehen danach Generator, Platzierung und Messwerthistorie."
+            description="Nutzer melden sich an und sehen danach Brennstoffzelle, Platzierung und Messwerthistorie."
             values={formValues}
             submitLabel="Einloggen"
             googleLabel="Mit Google anmelden"
@@ -182,12 +182,12 @@ export function UserDashboardPage() {
               <Stack spacing={1.5}>
                 <Typography variant="h5">Deine Brennstoffzelle</Typography>
                 <Typography color="text.secondary">
-                  Nach dem Login siehst du deinen Generatorcode, deine aktuelle Platzierung
+                  Nach dem Login siehst du deinen Brennstoffzellen-Code, deine aktuelle Platzierung
                   und die letzten Messwerte.
                 </Typography>
                 <List dense disablePadding>
                   <ListItem disableGutters>
-                    <ListItemText primary="Generatorcode" secondary="Automatisch mit dem Konto verknüpft." />
+                    <ListItemText primary="Brennstoffzellen-Code" secondary="Automatisch mit dem Konto verknüpft." />
                   </ListItem>
                   <ListItem disableGutters>
                     <ListItemText primary="Platzierung" secondary="Live aus dem Leaderboard berechnet." />
@@ -228,7 +228,7 @@ export function UserDashboardPage() {
             <Grid size={{ xs: 12, sm: 5 }}>
               <Stack spacing={0.5}>
                 <Typography variant="caption" color="text.secondary">
-                  Generatorcode
+                  Brennstoffzellen-Code
                 </Typography>
                 <Typography variant="h5" sx={{ overflowWrap: 'anywhere' }}>
                   {generator?.code ?? 'offen'}
@@ -288,7 +288,7 @@ export function UserDashboardPage() {
             <Typography variant="h5">Messwerthistorie</Typography>
             {measurements.length === 0 ? (
               <Typography color="text.secondary">
-                Für diesen Generator liegen noch keine Messwerte vor.
+                Für diese Brennstoffzelle liegen noch keine Messwerte vor.
               </Typography>
             ) : isMobileViewport ? (
               <Stack
