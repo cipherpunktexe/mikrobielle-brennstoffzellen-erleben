@@ -1,4 +1,5 @@
 import {
+  Timestamp,
   addDoc,
   collection,
   doc,
@@ -63,6 +64,13 @@ export interface AdminGeneratorUpdateInput {
 export interface AdminMeasurementUpdateInput {
   value: number
   enteredBy: string
+}
+
+export interface AddMeasurementByCodeInput {
+  code: string
+  value: number
+  enteredBy: string
+  createdAt?: Date
 }
 
 export function subscribeToAuth(callback: (user: User | null) => void) {
@@ -539,8 +547,8 @@ export async function updateMeasurementAsAdmin(
   })
 }
 
-export async function addMeasurementByCode(code: string, value: number, enteredBy: string) {
-  const generator = await getGeneratorByCode(code)
+export async function addMeasurementByCode(input: AddMeasurementByCodeInput) {
+  const generator = await getGeneratorByCode(input.code)
 
   if (!generator) {
     throw new Error('Für diesen QR-Code wurde noch keine Brennstoffzelle angelegt.')
@@ -548,9 +556,9 @@ export async function addMeasurementByCode(code: string, value: number, enteredB
 
   await addDoc(measurementsCollection, {
     generatorId: generator.id,
-    value,
-    enteredBy,
-    createdAt: serverTimestamp(),
+    value: input.value,
+    enteredBy: input.enteredBy,
+    createdAt: input.createdAt ? Timestamp.fromDate(input.createdAt) : serverTimestamp(),
   })
 
   await updateDoc(doc(generatorsCollection, generator.id), {

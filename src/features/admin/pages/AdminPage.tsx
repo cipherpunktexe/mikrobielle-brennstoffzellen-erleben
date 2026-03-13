@@ -14,6 +14,10 @@ import {
   CardContent,
   Chip,
   Divider,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Grid,
   List,
   ListItemButton,
@@ -60,6 +64,7 @@ import type {
 
 type AdminTabValue = 'qr' | 'scan' | 'moderation' | 'admins'
 type ModerationTabValue = 'users' | 'generators' | 'measurements'
+type MeasurementUnit = 'uV' | 'mV' | 'V' | 'kV'
 
 interface UserFormState {
   name: string
@@ -132,6 +137,26 @@ function getMeasurementSummary(measurements: Measurement[]) {
   return `${measurements.length} Eintraege`
 }
 
+function getCurrentDateTimeInputValue() {
+  const now = new Date()
+  const offsetMs = now.getTimezoneOffset() * 60_000
+  return new Date(now.getTime() - offsetMs).toISOString().slice(0, 16)
+}
+
+function convertMeasurementToVolts(value: number, unit: MeasurementUnit) {
+  switch (unit) {
+    case 'uV':
+      return value / 1_000_000
+    case 'mV':
+      return value / 1_000
+    case 'kV':
+      return value * 1_000
+    case 'V':
+    default:
+      return value
+  }
+}
+
 export function AdminPage() {
   const navigate = useNavigate()
   const params = useParams()
@@ -156,6 +181,14 @@ export function AdminPage() {
   const [scanStatus, setScanStatus] = useState('')
   const [scanError, setScanError] = useState('')
   const [measurementValue, setMeasurementValue] = useState('1.42')
+  const [scanMeasurementDialogOpen, setScanMeasurementDialogOpen] = useState(false)
+  const [scanMeasurementInput, setScanMeasurementInput] = useState('1.42')
+  const [scanMeasurementUnit, setScanMeasurementUnit] = useState<MeasurementUnit>('V')
+  const [scanMeasurementDateTime, setScanMeasurementDateTime] = useState(
+    getCurrentDateTimeInputValue,
+  )
+  const [scanMeasurementSaving, setScanMeasurementSaving] = useState(false)
+  const [scanMeasurementError, setScanMeasurementError] = useState('')
 
   const [userLookup, setUserLookup] = useState('')
   const [loadedUser, setLoadedUser] = useState<UserProfile | null>(null)
@@ -334,6 +367,24 @@ export function AdminPage() {
     }
   }
 
+  function openScanMeasurementDialog(code: string) {
+    setScanCode(code)
+    setScanMeasurementInput('1.42')
+    setScanMeasurementUnit('V')
+    setScanMeasurementDateTime(getCurrentDateTimeInputValue())
+    setScanMeasurementError('')
+    setScanMeasurementDialogOpen(true)
+  }
+
+  function handleCloseScanMeasurementDialog() {
+    if (scanMeasurementSaving) {
+      return
+    }
+
+    setScanMeasurementDialogOpen(false)
+    setScanMeasurementError('')
+  }
+
   async function handleDetectedQrValue(value: string) {
     const code = extractGeneratorCodeFromQrValue(value)
 
@@ -341,13 +392,20 @@ export function AdminPage() {
       throw new Error('Der QR-Code enthaelt keinen gueltigen Brennstoffzellen-Code.')
     }
 
+    const foundGenerator = await getGeneratorByCode(code)
+
+    if (!foundGenerator) {
+      throw new Error('Zu diesem Code wurde keine Brennstoffzelle gefunden.')
+    }
+
     setScannerOpen(false)
     setActiveTab('scan')
     setScanCode(code)
+    setGenerator(foundGenerator)
     setScanError('')
     setScanStatus(`QR-Code erkannt: ${code}`)
     navigate(`/admin/generator/${code}`)
-    await loadGeneratorForScan(code)
+    openScanMeasurementDialog(code)
   }
 
   async function handleMeasurementSubmit(event: FormEvent<HTMLFormElement>) {
@@ -362,11 +420,11 @@ export function AdminPage() {
         throw new Error('Bitte einen gueltigen Messwert eingeben.')
       }
 
-      const linkedGenerator = await addMeasurementByCode(
-        scanCode,
-        numericValue,
-        profile?.email ?? authUserId,
-      )
+      const linkedGenerator = await addMeasurementByCode({
+        code: scanCode,
+        value: numericValue,
+        enteredBy: profile?.email ?? authUserId,
+      })
 
       setGenerator(linkedGenerator)
       setScanStatus(`Messwert fuer ${linkedGenerator.code} wurde gespeichert.`)
@@ -376,6 +434,47 @@ export function AdminPage() {
           ? submitIssue.message
           : 'Messwert konnte nicht gespeichert werden.',
       )
+    }
+  }
+
+  async function handleScanMeasurementSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setScanMeasurementSaving(true)
+    setScanMeasurementError('')
+    setScanStatus('')
+    setScanError('')
+
+    try {
+      const numericValue = Number.parseFloat(scanMeasurementInput)
+
+      if (Number.isNaN(numericValue)) {
+        throw new Error('Bitte einen gueltigen Messwert eingeben.')
+      }
+
+      const measuredAt = new Date(scanMeasurementDateTime)
+
+      if (Number.isNaN(measuredAt.getTime())) {
+        throw new Error('Bitte ein gueltiges Datum und eine gueltige Uhrzeit angeben.')
+      }
+
+      const linkedGenerator = await addMeasurementByCode({
+        code: scanCode,
+        value: convertMeasurementToVolts(numericValue, scanMeasurementUnit),
+        enteredBy: profile?.email ?? authUserId,
+        createdAt: measuredAt,
+      })
+
+      setGenerator(linkedGenerator)
+      setScanMeasurementDialogOpen(false)
+      setScanStatus(`Messwert fuer ${linkedGenerator.code} wurde gespeichert.`)
+    } catch (submitIssue) {
+      setScanMeasurementError(
+        submitIssue instanceof Error
+          ? submitIssue.message
+          : 'Messwert konnte nicht gespeichert werden.',
+      )
+    } finally {
+      setScanMeasurementSaving(false)
     }
   }
 
@@ -834,7 +933,8 @@ export function AdminPage() {
                     Code erfassen
                   </Typography>
                   <Typography color="text.secondary">
-                    Entweder einen QR-Code scannen oder den Brennstoffzellen-Code direkt eingeben.
+                    Ein QR-Scan oeffnet direkt den Dialog zum Eintragen eines Messwerts. Alternativ
+                    kann der Brennstoffzellen-Code auch manuell geladen werden.
                   </Typography>
                   {scanStatus ? <Alert severity="success">{scanStatus}</Alert> : null}
                   {scanError ? <Alert severity="error">{scanError}</Alert> : null}
@@ -1354,6 +1454,59 @@ export function AdminPage() {
         onClose={() => setScannerOpen(false)}
         onDetected={handleDetectedQrValue}
       />
+
+      <Dialog
+        open={scanMeasurementDialogOpen}
+        onClose={handleCloseScanMeasurementDialog}
+        fullWidth
+        maxWidth="xs"
+      >
+        <DialogTitle>Messwert eintragen</DialogTitle>
+        <Box component="form" onSubmit={handleScanMeasurementSubmit}>
+          <DialogContent>
+            <Stack spacing={2}>
+              <TextField label="Brennstoffzellen-Code" value={scanCode} disabled fullWidth />
+              <TextField
+                label="Wert"
+                value={scanMeasurementInput}
+                onChange={(event) => setScanMeasurementInput(event.target.value)}
+                autoFocus
+                fullWidth
+              />
+              <TextField
+                label="Einheit"
+                select
+                value={scanMeasurementUnit}
+                onChange={(event) => setScanMeasurementUnit(event.target.value as MeasurementUnit)}
+                fullWidth
+                SelectProps={{ native: true }}
+              >
+                <option value="uV">uV</option>
+                <option value="mV">mV</option>
+                <option value="V">V</option>
+                <option value="kV">kV</option>
+              </TextField>
+              <TextField
+                label="Datum und Uhrzeit"
+                type="datetime-local"
+                value={scanMeasurementDateTime}
+                onChange={(event) => setScanMeasurementDateTime(event.target.value)}
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+              />
+              {scanMeasurementError ? <Alert severity="error">{scanMeasurementError}</Alert> : null}
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseScanMeasurementDialog} disabled={scanMeasurementSaving}>
+              Abbrechen
+            </Button>
+            <Button type="submit" variant="contained" disabled={scanMeasurementSaving}>
+              Speichern
+            </Button>
+          </DialogActions>
+        </Box>
+      </Dialog>
     </Stack>
   )
 }
