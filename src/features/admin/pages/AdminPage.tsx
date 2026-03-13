@@ -1,7 +1,6 @@
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings'
 import EditNoteIcon from '@mui/icons-material/EditNote'
 import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1'
-import PrintIcon from '@mui/icons-material/Print'
 import QrCode2Icon from '@mui/icons-material/QrCode2'
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner'
 import SaveIcon from '@mui/icons-material/Save'
@@ -36,9 +35,11 @@ import { QrScannerDialog } from '../../../shared/qr/QrScannerDialog'
 import { formatCode, formatMeasurement, formatTimestamp } from '../../../shared/utils/format'
 import {
   buildGeneratorQrValue,
+  downloadQrPdf,
   extractGeneratorCodeFromQrValue,
-  printQrCards,
+  getQrPdfLayoutPreview,
 } from '../../../shared/utils/qr'
+import type { QrPdfLayoutMode } from '../../../shared/utils/qr'
 import {
   addMeasurementByCode,
   findGeneratorForAdmin,
@@ -174,6 +175,9 @@ export function AdminPage() {
 
   const [exportPrefix, setExportPrefix] = useState('station')
   const [exportCount, setExportCount] = useState('12')
+  const [exportLayoutMode, setExportLayoutMode] = useState<QrPdfLayoutMode>('cardsPerPage')
+  const [exportCardsPerPage, setExportCardsPerPage] = useState('12')
+  const [exportQrSize, setExportQrSize] = useState('42')
   const [exportStatus, setExportStatus] = useState('')
   const [exportError, setExportError] = useState('')
 
@@ -262,6 +266,20 @@ export function AdminPage() {
 
   const selectedMeasurement =
     measurementItems.find((item) => item.id === selectedMeasurementId) ?? null
+  const parsedExportCount = Number.parseInt(exportCount, 10)
+  let exportLayoutPreview: ReturnType<typeof getQrPdfLayoutPreview> | null = null
+
+  if (Number.isFinite(parsedExportCount) && parsedExportCount > 0) {
+    try {
+      exportLayoutPreview = getQrPdfLayoutPreview(parsedExportCount, {
+        mode: exportLayoutMode,
+        cardsPerPage: Number.parseInt(exportCardsPerPage, 10),
+        qrSizeMm: Number.parseFloat(exportQrSize),
+      })
+    } catch {
+      exportLayoutPreview = null
+    }
+  }
 
   useEffect(() => {
     const enteredBy = profile?.email?.trim() || authUserId
@@ -316,6 +334,8 @@ export function AdminPage() {
 
     try {
       const count = Number.parseInt(exportCount, 10)
+      const cardsPerPage = Number.parseInt(exportCardsPerPage, 10)
+      const qrSizeMm = Number.parseFloat(exportQrSize)
 
       if (!Number.isFinite(count) || count < 1 || count > 200) {
         throw new Error('Bitte eine Anzahl zwischen 1 und 200 angeben.')
@@ -332,8 +352,13 @@ export function AdminPage() {
         scanValue: buildGeneratorQrValue(code),
       }))
 
-      await printQrCards(cards)
-      setExportStatus('Druckansicht für die QR-Codes wurde geöffnet.')
+      await downloadQrPdf(cards, {
+        mode: exportLayoutMode,
+        cardsPerPage,
+        qrSizeMm,
+        fileName: `${normalizedPrefix}-qr-codes.pdf`,
+      })
+      setExportStatus(`PDF mit ${count} QR-Codes wurde erstellt.`)
     } catch (exportIssue) {
       setExportError(exportIssue instanceof Error ? exportIssue.message : 'Export fehlgeschlagen.')
     }
@@ -847,12 +872,12 @@ export function AdminPage() {
                     QR-Codes exportieren
                   </Typography>
                   <Typography color="text.secondary">
-                    Nutzer- und Admin-QR-Codes werden als druckfertige Karten erzeugt.
+                    Erzeuge ein A4-PDF mit automatisch optimiertem QR-Layout.
                   </Typography>
                   {exportStatus ? <Alert severity="success">{exportStatus}</Alert> : null}
                   {exportError ? <Alert severity="error">{exportError}</Alert> : null}
                   <TextField
-                    label="Präfix"
+                    label="Pr?fix"
                     value={exportPrefix}
                     onChange={(event) => setExportPrefix(event.target.value)}
                     helperText='Ergebnisformat: "station-001", "station-002", ...'
@@ -865,13 +890,43 @@ export function AdminPage() {
                     onChange={(event) => setExportCount(event.target.value)}
                     fullWidth
                   />
+                  <TextField
+                    label="Layout-Modus"
+                    select
+                    value={exportLayoutMode}
+                    onChange={(event) => setExportLayoutMode(event.target.value as QrPdfLayoutMode)}
+                    fullWidth
+                    SelectProps={{ native: true }}
+                  >
+                    <option value="cardsPerPage">Karten pro Seite</option>
+                    <option value="qrSize">QR-Größe in mm</option>
+                  </TextField>
+                  {exportLayoutMode === 'cardsPerPage' ? (
+                    <TextField
+                      label="Karten pro Seite"
+                      type="number"
+                      value={exportCardsPerPage}
+                      onChange={(event) => setExportCardsPerPage(event.target.value)}
+                      helperText="Das Layout nutzt den Platz auf A4 automatisch bestmöglich aus."
+                      fullWidth
+                    />
+                  ) : (
+                    <TextField
+                      label="QR-Größe in mm"
+                      type="number"
+                      value={exportQrSize}
+                      onChange={(event) => setExportQrSize(event.target.value)}
+                      helperText="Die Anzahl pro Seite wird aus der QR-Größe automatisch berechnet."
+                      fullWidth
+                    />
+                  )}
                   <Button
                     variant="contained"
                     onClick={() => void handleExport()}
-                    startIcon={<PrintIcon />}
+                    startIcon={<SaveIcon />}
                     fullWidth
                   >
-                    Druckansicht öffnen
+                    PDF herunterladen
                   </Button>
                 </Stack>
               </CardContent>
@@ -883,7 +938,7 @@ export function AdminPage() {
               <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
                 <Stack spacing={2.5}>
                   <Typography variant="h4" sx={{ fontSize: { xs: '1.45rem', sm: '2rem' } }}>
-                    Ausgabe
+                    Layout-Vorschau
                   </Typography>
                   <Stack
                     direction={{ xs: 'column', sm: 'row' }}
@@ -893,17 +948,20 @@ export function AdminPage() {
                   >
                     <Chip label={`Präfix ${formatCode(exportPrefix) || '-'}`} />
                     <Chip label={`${exportCount || '0'} Karten`} />
-                    <Chip label="1 QR-Code pro Karte" />
+                    {exportLayoutPreview ? <Chip label={`${exportLayoutPreview.columns} x ${exportLayoutPreview.rows}`} /> : null}
+                    {exportLayoutPreview ? <Chip label={`${exportLayoutPreview.cardsPerPage} pro Seite`} /> : null}
+                    {exportLayoutPreview ? <Chip label={`QR ${exportLayoutPreview.qrSizeMm.toFixed(0)} mm`} /> : null}
+                    {exportLayoutPreview ? <Chip label={exportLayoutPreview.orientation === 'landscape' ? 'A4 quer' : 'A4 hoch'} /> : null}
+                    {exportLayoutPreview ? <Chip label={`${exportLayoutPreview.pageCount} Seiten`} /> : null}
                   </Stack>
                   <Divider />
                   <Typography color="text.secondary">
-                    Jede Karte enthält einen neutralen App-QR-Code mit dem Brennstoffzellen-Code.
-                    Im Nutzerbereich startet der Scan die Verknüpfung, im Admin-Bereich lädt der
-                    Scan die Brennstoffzelle für Messwerte und Moderation.
+                    Das PDF wird automatisch so auf A4 verteilt, dass die QR-Codes bei der gewählten
+                    Vorgabe möglichst groß bleiben und der Platz effizient genutzt wird.
                   </Typography>
                   <Typography color="text.secondary">
-                    Bestehende URL-QRs bleiben weiterhin lesbar, neue Karten nutzen aber nur noch
-                    den App-internen QR-Payload.
+                    Neue Karten enthalten den App-internen QR-Payload und können direkt aus dem PDF
+                    gedruckt werden.
                   </Typography>
                 </Stack>
               </CardContent>
