@@ -237,6 +237,37 @@ const rankStyles = [
   },
 ]
 
+interface LeaderboardSection {
+  title: string
+  startRank: number
+  endRank: number
+  entries: LeaderboardEntry[]
+}
+
+function buildLeaderboardSections(entries: LeaderboardEntry[]): LeaderboardSection[] {
+  if (entries.length === 0) {
+    return []
+  }
+
+  const thresholds = [5, 10, 25, 50, 100].filter((threshold) => threshold < entries.length)
+  const sectionLimits = [...thresholds, entries.length]
+  let previousEnd = 0
+
+  return sectionLimits.map((limit) => {
+    const startRank = previousEnd + 1
+    const endRank = limit
+    const sectionEntries = entries.slice(previousEnd, limit)
+    previousEnd = limit
+
+    return {
+      title: `Top ${limit}`,
+      startRank,
+      endRank,
+      entries: sectionEntries,
+    }
+  })
+}
+
 export function LeaderboardPage() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[] | null>(null)
   const [selectedEntry, setSelectedEntry] = useState<LeaderboardEntry | null>(null)
@@ -280,6 +311,7 @@ export function LeaderboardPage() {
   const showingSampleEntries = leaderboard.length === 0
   const visibleEntries = showingSampleEntries ? sampleLeaderboardEntries : leaderboard
   const featuredEntries = visibleEntries.slice(0, 3)
+  const leaderboardSections = buildLeaderboardSections(visibleEntries)
 
   return (
     <Card>
@@ -290,10 +322,7 @@ export function LeaderboardPage() {
             <Typography variant="h2" gutterBottom sx={{ fontSize: { xs: '1.9rem', sm: undefined } }}>
               Aktuelles Ranking
             </Typography>
-            <Typography color="text.secondary" sx={{ maxWidth: 760 }}>
-              Hier werden die maximal gemessenen Werte aller Brennstoffzellen verglichen. Der
-              hoechste Messwert steht oben.
-            </Typography>
+            
           </Box>
 
           {showingSampleEntries ? (
@@ -389,78 +418,96 @@ export function LeaderboardPage() {
             })}
           </Grid>
 
-          <Box
-            sx={{
-              overflowX: 'auto',
-              mx: { xs: -0.5, sm: 0 },
-              border: '1px solid rgba(121,101,66,0.12)',
-              borderRadius: '18px',
-              bgcolor: 'rgba(248,242,231,0.34)',
-            }}
-          >
-            <Table sx={{ minWidth: 520 }}>
-              <TableHead>
-                <TableRow>
-                  <TableCell sx={{ color: 'text.secondary', fontWeight: 700 }}>Platz</TableCell>
-                  <TableCell sx={{ color: 'text.secondary', fontWeight: 700 }}>Brennstoffzelle</TableCell>
-                  <TableCell align="right" sx={{ color: 'text.secondary', fontWeight: 700 }}>
-                    Maximalwert
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {visibleEntries.map((entry, index) => (
-                  <TableRow
-                    key={entry.generatorId}
-                    hover
-                    onClick={() => handleOpenEntry(entry)}
-                    tabIndex={0}
-                    onKeyDown={(event) => handleRowKeyDown(event, entry)}
-                    sx={{
-                      cursor: 'pointer',
-                      transition: 'background-color 160ms ease',
-                      '&:hover': {
-                        bgcolor: 'rgba(121,101,66,0.05)',
-                      },
-                      '&:focus-visible': {
-                        outline: '2px solid rgba(61,177,236,0.6)',
-                        outlineOffset: '-2px',
-                        bgcolor: 'rgba(61,177,236,0.08)',
-                      },
-                    }}
-                  >
-                    <TableCell>
-                      <Chip
-                        label={`#${index + 1}`}
-                        size="small"
-                        sx={{
-                          minWidth: 52,
-                          fontWeight: 700,
-                          color: 'text.primary',
-                          bgcolor:
-                            index < 3 ? 'rgba(121,101,66,0.08)' : 'rgba(121,101,66,0.06)',
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Stack direction="row" alignItems="center" spacing={1}>
-                        <Typography sx={{ fontWeight: 600 }}>{entry.code}</Typography>
-                        <KeyboardArrowRightIcon
-                          fontSize="small"
-                          sx={{ color: 'text.secondary', opacity: 0.8 }}
-                        />
-                      </Stack>
-                    </TableCell>
-                    <TableCell align="right">
-                      <Typography sx={{ fontWeight: 800, fontSize: '1.05rem' }}>
-                        {formatMeasurement(entry.maxValue)}
-                      </Typography>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </Box>
+          <Stack spacing={1.5}>
+            {leaderboardSections.map((section) => (
+              <Box
+                key={section.title}
+                sx={{
+                  overflowX: 'auto',
+                  mx: { xs: -0.5, sm: 0 },
+                  border: '1px solid rgba(121,101,66,0.12)',
+                  borderRadius: '18px',
+                  bgcolor: 'rgba(248,242,231,0.34)',
+                }}
+              >
+                <Stack spacing={0.5} sx={{ px: { xs: 1.5, sm: 2 }, pt: 1.75, pb: 1 }}>
+                  <Typography variant="h6" sx={{ fontSize: { xs: '1rem', sm: '1.08rem' } }}>
+                    {section.title}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Plaetze {section.startRank}-{section.endRank}
+                  </Typography>
+                </Stack>
+
+                <Table sx={{ minWidth: 520 }}>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell sx={{ color: 'text.secondary', fontWeight: 700 }}>Platz</TableCell>
+                      <TableCell sx={{ color: 'text.secondary', fontWeight: 700 }}>Brennstoffzelle</TableCell>
+                      <TableCell align="right" sx={{ color: 'text.secondary', fontWeight: 700 }}>
+                        Maximalwert
+                      </TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {section.entries.map((entry, entryIndex) => {
+                      const rank = section.startRank + entryIndex
+
+                      return (
+                        <TableRow
+                          key={entry.generatorId}
+                          hover
+                          onClick={() => handleOpenEntry(entry)}
+                          tabIndex={0}
+                          onKeyDown={(event) => handleRowKeyDown(event, entry)}
+                          sx={{
+                            cursor: 'pointer',
+                            transition: 'background-color 160ms ease',
+                            '&:hover': {
+                              bgcolor: 'rgba(121,101,66,0.05)',
+                            },
+                            '&:focus-visible': {
+                              outline: '2px solid rgba(61,177,236,0.6)',
+                              outlineOffset: '-2px',
+                              bgcolor: 'rgba(61,177,236,0.08)',
+                            },
+                          }}
+                        >
+                          <TableCell>
+                            <Chip
+                              label={`#${rank}`}
+                              size="small"
+                              sx={{
+                                minWidth: 52,
+                                fontWeight: 700,
+                                color: 'text.primary',
+                                bgcolor:
+                                  rank <= 3 ? 'rgba(121,101,66,0.08)' : 'rgba(121,101,66,0.06)',
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Stack direction="row" alignItems="center" spacing={1}>
+                              <Typography sx={{ fontWeight: 600 }}>{entry.code}</Typography>
+                              <KeyboardArrowRightIcon
+                                fontSize="small"
+                                sx={{ color: 'text.secondary', opacity: 0.8 }}
+                              />
+                            </Stack>
+                          </TableCell>
+                          <TableCell align="right">
+                            <Typography sx={{ fontWeight: 800, fontSize: '1.05rem' }}>
+                              {formatMeasurement(entry.maxValue)}
+                            </Typography>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
+                  </TableBody>
+                </Table>
+              </Box>
+            ))}
+          </Stack>
 
           <Typography variant="body2" color="text.secondary">
             Tipp: Klicke auf eine Brennstoffzelle, um den Messverlauf im Diagramm zu oeffnen.

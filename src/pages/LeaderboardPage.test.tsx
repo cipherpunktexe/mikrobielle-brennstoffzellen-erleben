@@ -54,6 +54,33 @@ describe('LeaderboardPage', () => {
     ).toBeInTheDocument()
     expect((await screen.findAllByText('beispiel-001')).length).toBeGreaterThan(0)
     expect((await screen.findAllByText('1.82 V')).length).toBeGreaterThan(0)
+    expect(screen.getByText('Top 5')).toBeInTheDocument()
+    expect(screen.queryByText('Top 10')).not.toBeInTheDocument()
+  })
+
+  test('splits larger rankings into progressive leaderboard sections', async () => {
+    subscribeToMeasurementsMock.mockImplementation(() => vi.fn())
+    subscribeToLeaderboardMock.mockImplementation((callback: (entries: unknown[]) => void) => {
+      callback(
+        Array.from({ length: 12 }, (_, index) => ({
+          generatorId: `gen-${index + 1}`,
+          code: `station-${String(index + 1).padStart(3, '0')}`,
+          maxValue: 2 - index * 0.05,
+          maxMeasuredAt: null,
+        })),
+      )
+
+      return vi.fn()
+    })
+
+    renderWithProviders(<LeaderboardPage />)
+
+    expect(await screen.findByText('Top 5')).toBeInTheDocument()
+    expect(screen.getByText('Plaetze 1-5')).toBeInTheDocument()
+    expect(screen.getByText('Top 10')).toBeInTheDocument()
+    expect(screen.getByText('Plaetze 6-10')).toBeInTheDocument()
+    expect(screen.getByText('Top 12')).toBeInTheDocument()
+    expect(screen.getByText('Plaetze 11-12')).toBeInTheDocument()
   })
 
   test('opens a chart dialog when a leaderboard entry is clicked', async () => {
