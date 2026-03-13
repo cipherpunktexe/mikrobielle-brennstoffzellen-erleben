@@ -94,10 +94,7 @@ export function LandingPage() {
               <Typography variant="h2" gutterBottom sx={{ fontSize: { xs: '1.85rem', sm: undefined } }}>
                 Projektpräsentation
               </Typography>
-              <Typography color="text.secondary">
-                Hier ist die eingebettete Canva-Präsentation zum Projekt
-                &quot;Mikrobielle Brennstoffzellen erleben&quot; zu sehen.
-              </Typography>
+              
             </div>
 
             <Box

@@ -3,7 +3,7 @@ import { CssBaseline, ThemeProvider } from '@mui/material'
 import { render, type RenderOptions } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import type { ReactElement, ReactNode } from 'react'
-import { theme } from '../theme'
+import { theme } from '../../app/theme'
 
 interface WrapperProps {
   children: ReactNode

@@ -21,8 +21,8 @@ import {
 } from '@mui/material'
 import { useEffect, useState, type MouseEvent } from 'react'
 import { Link as RouterLink, Outlet, useLocation } from 'react-router-dom'
-import { getUserProfile, logout, subscribeToAuth } from '../services/firebaseData'
-import type { UserProfile } from '../types/domain'
+import { getUserProfile, logout, subscribeToAuth } from '../../shared/data/firebaseData'
+import type { UserProfile } from '../../shared/types/domain'
 
 const navigationItems = [
   { label: 'Projekt', to: '/', icon: <SpaIcon fontSize="small" /> },

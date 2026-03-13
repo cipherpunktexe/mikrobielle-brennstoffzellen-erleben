@@ -21,8 +21,8 @@ import {
   signOut,
   type User,
 } from 'firebase/auth'
-import { auth, db } from '../firebase'
-import { formatCode } from '../lib/format'
+import { auth, db } from '../../app/firebase'
+import { formatCode } from '../utils/format'
 import type {
   Generator,
   LeaderboardEntry,

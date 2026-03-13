@@ -26,10 +26,13 @@ import {
   Typography,
 } from '@mui/material'
 import { useEffect, useState, type KeyboardEvent } from 'react'
-import { MeasurementChart } from '../components/MeasurementChart'
-import { formatMeasurement } from '../lib/format'
-import { subscribeToLeaderboard, subscribeToMeasurements } from '../services/firebaseData'
-import type { LeaderboardEntry, Measurement } from '../types/domain'
+import { MeasurementChart } from '../../measurements/components/MeasurementChart'
+import { formatMeasurement } from '../../../shared/utils/format'
+import {
+  subscribeToLeaderboard,
+  subscribeToMeasurements,
+} from '../../../shared/data/firebaseData'
+import type { LeaderboardEntry, Measurement } from '../../../shared/types/domain'
 
 const rankStyles = [
   {

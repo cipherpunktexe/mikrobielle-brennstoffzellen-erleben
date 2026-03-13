@@ -2,14 +2,14 @@ import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 import { LeaderboardPage } from './LeaderboardPage'
-import { renderWithProviders } from '../test/renderWithProviders'
+import { renderWithProviders } from '../../../shared/testing/renderWithProviders'
 
 const { subscribeToLeaderboardMock, subscribeToMeasurementsMock } = vi.hoisted(() => ({
   subscribeToLeaderboardMock: vi.fn(),
   subscribeToMeasurementsMock: vi.fn(),
 }))
 
-vi.mock('../services/firebaseData', () => ({
+vi.mock('../../../shared/data/firebaseData', () => ({
   subscribeToLeaderboard: subscribeToLeaderboardMock,
   subscribeToMeasurements: subscribeToMeasurementsMock,
 }))

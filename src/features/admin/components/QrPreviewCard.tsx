@@ -1,7 +1,7 @@
 import QrCode2Icon from '@mui/icons-material/QrCode2'
 import { Alert, Card, CardContent, Stack, Typography } from '@mui/material'
 import { useEffect, useState } from 'react'
-import { generateQrDataUrl } from '../lib/qr'
+import { generateQrDataUrl } from '../../../shared/utils/qr'
 
 interface QrPreviewCardProps {
   title: string

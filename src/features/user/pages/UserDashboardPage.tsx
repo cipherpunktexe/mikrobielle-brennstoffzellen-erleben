@@ -37,11 +37,11 @@ import {
 } from '@mui/material'
 import { useEffect, useState, type FormEvent, type MouseEvent } from 'react'
 import { Link as RouterLink } from 'react-router-dom'
-import { AuthCard } from '../components/AuthCard'
-import { MeasurementChart } from '../components/MeasurementChart'
-import { QrScannerDialog } from '../components/QrScannerDialog'
-import { formatMeasurement, formatTimestamp } from '../lib/format'
-import { extractGeneratorCodeFromQrValue } from '../lib/qr'
+import { MeasurementChart } from '../../measurements/components/MeasurementChart'
+import { AuthCard } from '../../../shared/ui/AuthCard'
+import { QrScannerDialog } from '../../../shared/qr/QrScannerDialog'
+import { formatMeasurement, formatTimestamp } from '../../../shared/utils/format'
+import { extractGeneratorCodeFromQrValue } from '../../../shared/utils/qr'
 import {
   linkCurrentUserToGeneratorByCode,
   login,
@@ -52,8 +52,13 @@ import {
   subscribeToMeasurements,
   subscribeToUserProfile,
   updateCurrentUserDisplayName,
-} from '../services/firebaseData'
-import type { Generator, LeaderboardEntry, Measurement, UserProfile } from '../types/domain'
+} from '../../../shared/data/firebaseData'
+import type {
+  Generator,
+  LeaderboardEntry,
+  Measurement,
+  UserProfile,
+} from '../../../shared/types/domain'
 
 type MeasurementViewMode = 'chart' | 'list'
 

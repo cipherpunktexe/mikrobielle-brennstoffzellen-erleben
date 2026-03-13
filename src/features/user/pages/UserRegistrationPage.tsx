@@ -12,8 +12,8 @@ import {
 } from '@mui/material'
 import { type FormEvent, useState } from 'react'
 import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom'
-import { formatCode } from '../lib/format'
-import { registerUserWithGenerator } from '../services/firebaseData'
+import { formatCode } from '../../../shared/utils/format'
+import { registerUserWithGenerator } from '../../../shared/data/firebaseData'
 
 export function UserRegistrationPage() {
   const navigate = useNavigate()

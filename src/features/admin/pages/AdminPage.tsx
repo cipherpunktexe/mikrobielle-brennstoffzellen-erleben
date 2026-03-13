@@ -26,10 +26,10 @@ import {
 } from '@mui/material'
 import { useEffect, useState, type FormEvent, type ReactNode, type SyntheticEvent } from 'react'
 import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom'
-import { AuthCard } from '../components/AuthCard'
-import { QrScannerDialog } from '../components/QrScannerDialog'
-import { formatCode, formatMeasurement, formatTimestamp } from '../lib/format'
-import { extractGeneratorCodeFromQrValue, printQrCards } from '../lib/qr'
+import { AuthCard } from '../../../shared/ui/AuthCard'
+import { QrScannerDialog } from '../../../shared/qr/QrScannerDialog'
+import { formatCode, formatMeasurement, formatTimestamp } from '../../../shared/utils/format'
+import { extractGeneratorCodeFromQrValue, printQrCards } from '../../../shared/utils/qr'
 import {
   addMeasurementByCode,
   findGeneratorForAdmin,
@@ -45,8 +45,14 @@ import {
   updateGeneratorAsAdmin,
   updateMeasurementAsAdmin,
   updateUserProfileAsAdmin,
-} from '../services/firebaseData'
-import type { Generator, LeaderboardEntry, Measurement, UserProfile, UserRole } from '../types/domain'
+} from '../../../shared/data/firebaseData'
+import type {
+  Generator,
+  LeaderboardEntry,
+  Measurement,
+  UserProfile,
+  UserRole,
+} from '../../../shared/types/domain'
 
 type AdminTabValue = 'qr' | 'scan' | 'moderation' | 'admins'
 type ModerationTabValue = 'users' | 'generators' | 'measurements'
