@@ -1,4 +1,5 @@
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
+import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner'
 import {
   Alert,
   Box,
@@ -24,8 +25,11 @@ import {
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link as RouterLink } from 'react-router-dom'
 import { AuthCard } from '../components/AuthCard'
+import { QrScannerDialog } from '../components/QrScannerDialog'
 import { formatMeasurement, formatTimestamp } from '../lib/format'
+import { extractGeneratorCodeFromQrValue } from '../lib/qr'
 import {
+  linkCurrentUserToGeneratorByCode,
   login,
   signInWithGoogle,
   subscribeToAuth,
@@ -47,6 +51,9 @@ export function UserDashboardPage() {
   const [loadingAuth, setLoadingAuth] = useState(true)
   const [authLoading, setAuthLoading] = useState(false)
   const [authError, setAuthError] = useState('')
+  const [linkStatus, setLinkStatus] = useState('')
+  const [linkError, setLinkError] = useState('')
+  const [scannerOpen, setScannerOpen] = useState(false)
   const [formValues, setFormValues] = useState({
     email: '',
     password: '',
@@ -112,6 +119,29 @@ export function UserDashboardPage() {
       )
     } finally {
       setAuthLoading(false)
+    }
+  }
+
+  async function handleQrDetected(value: string) {
+    setLinkError('')
+    setLinkStatus('')
+
+    try {
+      const code = extractGeneratorCodeFromQrValue(value)
+
+      if (!code) {
+        throw new Error('Der gescannte QR-Code enthaelt keinen gueltigen Link zur Brennstoffzelle.')
+      }
+
+      const linkedGenerator = await linkCurrentUserToGeneratorByCode(code)
+      setLinkStatus(`Brennstoffzelle ${linkedGenerator.code} wurde erfolgreich verknuepft.`)
+      setScannerOpen(false)
+    } catch (linkingError) {
+      setLinkError(
+        linkingError instanceof Error
+          ? linkingError.message
+          : 'Die Brennstoffzelle konnte nicht verknuepft werden.',
+      )
     }
   }
 
@@ -189,6 +219,9 @@ export function UserDashboardPage() {
         </Alert>
       ) : null}
 
+      {linkStatus ? <Alert severity="success">{linkStatus}</Alert> : null}
+      {linkError ? <Alert severity="error">{linkError}</Alert> : null}
+
       <Card>
         <CardContent sx={{ p: { xs: 2.25, sm: 2.5 } }}>
           <Grid container spacing={{ xs: 1.5, sm: 2 }} alignItems="center">
@@ -200,6 +233,11 @@ export function UserDashboardPage() {
                 <Typography variant="h5" sx={{ overflowWrap: 'anywhere' }}>
                   {generator?.code ?? 'offen'}
                 </Typography>
+                {!profile?.generatorId ? (
+                  <Typography variant="body2" color="text.secondary">
+                    Noch keine Brennstoffzelle verknuepft.
+                  </Typography>
+                ) : null}
               </Stack>
             </Grid>
             <Grid size={{ xs: 12, sm: 4 }}>
@@ -213,16 +251,32 @@ export function UserDashboardPage() {
               </Stack>
             </Grid>
             <Grid size={{ xs: 12, sm: 3 }}>
-              <Button
-                component={RouterLink}
-                to="/leaderboard"
-                variant="outlined"
-                endIcon={<ArrowForwardIcon />}
-                size="small"
-                fullWidth
-              >
-                Leaderboard
-              </Button>
+              {profile?.generatorId ? (
+                <Button
+                  component={RouterLink}
+                  to="/leaderboard"
+                  variant="outlined"
+                  endIcon={<ArrowForwardIcon />}
+                  size="small"
+                  fullWidth
+                >
+                  Leaderboard
+                </Button>
+              ) : (
+                <Button
+                  variant="contained"
+                  startIcon={<QrCodeScannerIcon />}
+                  size="small"
+                  fullWidth
+                  onClick={() => {
+                    setLinkError('')
+                    setLinkStatus('')
+                    setScannerOpen(true)
+                  }}
+                >
+                  QR-Scanner oeffnen
+                </Button>
+              )}
             </Grid>
           </Grid>
         </CardContent>
@@ -297,6 +351,12 @@ export function UserDashboardPage() {
           </Stack>
         </CardContent>
       </Card>
+
+      <QrScannerDialog
+        open={scannerOpen}
+        onClose={() => setScannerOpen(false)}
+        onDetected={handleQrDetected}
+      />
     </Stack>
   )
 }

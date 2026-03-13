@@ -108,6 +108,77 @@ export async function registerUserWithGenerator(input: RegisterUserInput) {
   return credentials.user
 }
 
+export async function linkCurrentUserToGeneratorByCode(code: string) {
+  const currentUser = auth.currentUser
+
+  if (!currentUser) {
+    throw new Error('Bitte zuerst anmelden.')
+  }
+
+  const normalizedCode = formatCode(code)
+
+  if (!normalizedCode) {
+    throw new Error('Der gescannte QR-Code enthaelt keinen gueltigen Generatorcode.')
+  }
+
+  const userRef = doc(usersCollection, currentUser.uid)
+  const userSnapshot = await getDoc(userRef)
+
+  if (!userSnapshot.exists()) {
+    throw new Error('Zum angemeldeten Konto wurde kein Nutzerprofil gefunden.')
+  }
+
+  const profile = userSnapshot.data() as UserProfile
+
+  if (profile.generatorId) {
+    throw new Error('Dieses Konto ist bereits mit einer Brennstoffzelle verknuepft.')
+  }
+
+  const generatorQuery = query(generatorsCollection, where('code', '==', normalizedCode))
+  const generatorSnapshot = await getDocs(generatorQuery)
+  const existingGenerator = generatorSnapshot.docs[0]
+
+  if (existingGenerator) {
+    const existingData = existingGenerator.data() as Generator
+
+    if (existingData.ownerUid && existingData.ownerUid !== currentUser.uid) {
+      throw new Error('Dieser QR-Code ist bereits mit einem anderen Konto verknuepft.')
+    }
+
+    await updateDoc(doc(generatorsCollection, existingGenerator.id), {
+      ownerUid: currentUser.uid,
+      updatedAt: serverTimestamp(),
+    })
+    await updateDoc(userRef, {
+      generatorId: existingGenerator.id,
+    })
+
+    return {
+      ...existingData,
+      id: existingGenerator.id,
+      ownerUid: currentUser.uid,
+    } as Generator
+  }
+
+  const generatorRef = doc(generatorsCollection)
+
+  await setDoc(generatorRef, {
+    ownerUid: currentUser.uid,
+    code: normalizedCode,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  })
+  await updateDoc(userRef, {
+    generatorId: generatorRef.id,
+  })
+
+  return {
+    id: generatorRef.id,
+    ownerUid: currentUser.uid,
+    code: normalizedCode,
+  } as Generator
+}
+
 export async function login(input: LoginInput) {
   const credentials = await signInWithEmailAndPassword(auth, input.email, input.password)
   return credentials.user

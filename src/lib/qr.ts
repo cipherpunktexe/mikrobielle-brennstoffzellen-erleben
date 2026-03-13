@@ -1,4 +1,5 @@
 import QRCode from 'qrcode'
+import { formatCode } from './format'
 
 export interface QrCardDefinition {
   code: string
@@ -15,6 +16,35 @@ export async function generateQrDataUrl(url: string) {
       light: '#F8F2E7',
     },
   })
+}
+
+export function extractGeneratorCodeFromQrValue(value: string, origin = window.location.origin) {
+  const trimmedValue = value.trim()
+
+  if (!trimmedValue) {
+    return ''
+  }
+
+  try {
+    const url = new URL(trimmedValue, origin)
+    const pathSegments = url.pathname.split('/').filter(Boolean)
+
+    if (pathSegments[0] === 'register' && pathSegments[1]) {
+      return formatCode(decodeURIComponent(pathSegments[1]))
+    }
+
+    if (
+      pathSegments[0] === 'admin' &&
+      pathSegments[1] === 'generator' &&
+      pathSegments[2]
+    ) {
+      return formatCode(decodeURIComponent(pathSegments[2]))
+    }
+  } catch {
+    return formatCode(trimmedValue)
+  }
+
+  return formatCode(trimmedValue)
 }
 
 export async function printQrCards(cards: QrCardDefinition[]) {
