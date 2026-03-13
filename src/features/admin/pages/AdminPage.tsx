@@ -1,6 +1,7 @@
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings'
 import EditNoteIcon from '@mui/icons-material/EditNote'
 import OpenInNewIcon from '@mui/icons-material/OpenInNew'
+import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1'
 import PrintIcon from '@mui/icons-material/Print'
 import QrCode2Icon from '@mui/icons-material/QrCode2'
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner'
@@ -20,6 +21,7 @@ import {
   DialogTitle,
   Grid,
   List,
+  ListItem,
   ListItemButton,
   ListItemText,
   Stack,
@@ -41,7 +43,9 @@ import {
 import {
   addMeasurementByCode,
   findGeneratorForAdmin,
+  findUserProfileByEmailForAdmin,
   findUserProfileForAdmin,
+  getAdminProfiles,
   getGeneratorByCode,
   getMeasurementsForAdmin,
   getUserProfile,
@@ -212,8 +216,10 @@ export function AdminPage() {
   const [measurementStatus, setMeasurementStatus] = useState('')
   const [measurementError, setMeasurementError] = useState('')
 
-  const [adminLookup, setAdminLookup] = useState('')
-  const [adminCandidate, setAdminCandidate] = useState<UserProfile | null>(null)
+  const [adminUsers, setAdminUsers] = useState<UserProfile[]>([])
+  const [adminDialogOpen, setAdminDialogOpen] = useState(false)
+  const [adminEmail, setAdminEmail] = useState('')
+  const [adminSubmitting, setAdminSubmitting] = useState(false)
   const [adminStatus, setAdminStatus] = useState('')
   const [adminError, setAdminError] = useState('')
 
@@ -251,6 +257,14 @@ export function AdminPage() {
     setMeasurementLookup(routeCode)
     void loadGeneratorForScan(routeCode)
   }, [routeCode])
+
+  useEffect(() => {
+    if (activeTab !== 'admins' || !authUserId) {
+      return
+    }
+
+    void loadAdminUsers()
+  }, [activeTab, authUserId])
 
   const currentLeaderboardEntry = generator
     ? leaderboard.find((entry) => entry.generatorId === generator.id)
@@ -685,57 +699,79 @@ export function AdminPage() {
     }
   }
 
-  async function handleAdminLookup(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setAdminStatus('')
-    setAdminError('')
-
+  async function loadAdminUsers() {
     try {
-      const foundUser = await findUserProfileForAdmin(adminLookup)
-
-      if (!foundUser) {
-        throw new Error('Kein Nutzer mit dieser ID oder E-Mail gefunden.')
-      }
-
-      setAdminCandidate(foundUser)
-      setAdminStatus(`Nutzer ${foundUser.name} geladen.`)
-    } catch (lookupIssue) {
-      setAdminCandidate(null)
+      const admins = await getAdminProfiles()
+      setAdminUsers(admins)
+    } catch (loadIssue) {
       setAdminError(
-        lookupIssue instanceof Error ? lookupIssue.message : 'Nutzer konnte nicht geladen werden.',
+        loadIssue instanceof Error ? loadIssue.message : 'Admin-Übersicht konnte nicht geladen werden.',
       )
     }
   }
 
-  async function handlePromoteAdmin() {
-    if (!adminCandidate) {
+  function handleOpenAdminDialog() {
+    setAdminStatus('')
+    setAdminError('')
+    setAdminEmail('')
+    setAdminDialogOpen(true)
+  }
+
+  function handleCloseAdminDialog() {
+    if (adminSubmitting) {
       return
     }
 
+    setAdminDialogOpen(false)
+    setAdminEmail('')
+    setAdminError('')
+  }
+
+  async function handlePromoteAdmin(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setAdminSubmitting(true)
     setAdminStatus('')
     setAdminError('')
 
     try {
-      await updateUserProfileAsAdmin(adminCandidate.id, {
-        name: adminCandidate.name,
-        email: adminCandidate.email,
+      const foundUser = await findUserProfileByEmailForAdmin(adminEmail)
+
+      if (!foundUser) {
+        throw new Error('Es gibt keinen bereits registrierten Nutzer mit dieser E-Mail-Adresse.')
+      }
+
+      if (foundUser.role === 'admin') {
+        setAdminStatus(`${foundUser.name} hat bereits Admin-Rechte.`)
+        await loadAdminUsers()
+        setAdminDialogOpen(false)
+        setAdminEmail('')
+        return
+      }
+
+      await updateUserProfileAsAdmin(foundUser.id, {
+        name: foundUser.name,
+        email: foundUser.email,
         role: 'admin',
       })
 
-      const refreshedUser = await findUserProfileForAdmin(adminCandidate.id)
+      const refreshedUser = await findUserProfileForAdmin(foundUser.id)
 
       if (!refreshedUser) {
         throw new Error('Der Nutzer konnte nach dem Speichern nicht erneut geladen werden.')
       }
 
-      setAdminCandidate(refreshedUser)
+      await loadAdminUsers()
       setAdminStatus(`${refreshedUser.name} ist jetzt Admin.`)
+      setAdminDialogOpen(false)
+      setAdminEmail('')
     } catch (promoteIssue) {
       setAdminError(
         promoteIssue instanceof Error
           ? promoteIssue.message
           : 'Admin-Rolle konnte nicht vergeben werden.',
       )
+    } finally {
+      setAdminSubmitting(false)
     }
   }
 
@@ -1373,74 +1409,89 @@ export function AdminPage() {
 
       <TabPanel active={activeTab} value="admins">
         <Grid container spacing={{ xs: 2, md: 3 }}>
-          <Grid size={{ xs: 12, lg: 4 }}>
+          <Grid size={{ xs: 12, lg: 5 }}>
             <Card sx={{ height: '100%' }}>
               <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
-                <Stack component="form" spacing={2} onSubmit={handleAdminLookup}>
+                <Stack spacing={2.5}>
                   <Typography variant="h4" sx={{ fontSize: { xs: '1.45rem', sm: '2rem' } }}>
-                    Nutzer suchen
+                    Admins
                   </Typography>
                   <Typography color="text.secondary">
-                    Suche per Dokument-ID oder E-Mail und vergebe danach die Admin-Rolle.
+                    Übersicht aller aktuell freigeschalteten Admin-Konten.
                   </Typography>
                   {adminStatus ? <Alert severity="success">{adminStatus}</Alert> : null}
                   {adminError ? <Alert severity="error">{adminError}</Alert> : null}
-                  <TextField
-                    label="Nutzer-ID oder E-Mail"
-                    value={adminLookup}
-                    onChange={(event) => setAdminLookup(event.target.value)}
-                    fullWidth
-                  />
-                  <Button type="submit" variant="outlined" startIcon={<SearchIcon />} fullWidth>
-                    Nutzer laden
-                  </Button>
+                  <Stack direction="row" justifyContent="space-between" alignItems="center">
+                    <Chip label={`${adminUsers.length} Admins`} />
+                    <Button
+                      variant="contained"
+                      startIcon={<PersonAddAlt1Icon />}
+                      onClick={handleOpenAdminDialog}
+                    >
+                      Admin hinzufügen
+                    </Button>
+                  </Stack>
+                  <List
+                    disablePadding
+                    sx={{
+                      borderRadius: 3,
+                      overflow: 'hidden',
+                      bgcolor: 'background.default',
+                      border: (theme) => `1px solid ${theme.palette.divider}`,
+                    }}
+                  >
+                    {adminUsers.length ? (
+                      adminUsers.map((adminUser, index) => (
+                        <ListItem
+                          key={adminUser.id}
+                          divider={index < adminUsers.length - 1}
+                          sx={{ py: 1.5, alignItems: 'flex-start' }}
+                        >
+                          <ListItemText
+                            primary={adminUser.name}
+                            secondary={
+                              adminUser.generatorId
+                                ? `${adminUser.email} · Brennstoffzelle ${adminUser.generatorId}`
+                                : adminUser.email
+                            }
+                          />
+                        </ListItem>
+                      ))
+                    ) : (
+                      <ListItem sx={{ py: 2 }}>
+                        <ListItemText
+                          primary="Noch keine Admins gefunden"
+                          secondary="Sobald Konten die Admin-Rolle haben, erscheinen sie hier."
+                        />
+                      </ListItem>
+                    )}
+                  </List>
                 </Stack>
               </CardContent>
             </Card>
           </Grid>
 
-          <Grid size={{ xs: 12, lg: 8 }}>
+          <Grid size={{ xs: 12, lg: 7 }}>
             <Card sx={{ height: '100%' }}>
               <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
-                <Stack spacing={2}>
+                <Stack spacing={2.5}>
                   <Typography variant="h4" sx={{ fontSize: { xs: '1.45rem', sm: '2rem' } }}>
-                    Admin-Rolle vergeben
+                    Rechte vergeben
                   </Typography>
-                  <TextField
-                    label="Name"
-                    value={adminCandidate?.name ?? ''}
-                    disabled
-                    fullWidth
-                  />
-                  <TextField
-                    label="E-Mail"
-                    value={adminCandidate?.email ?? ''}
-                    disabled
-                    fullWidth
-                  />
-                  <TextField
-                    label="Aktuelle Rolle"
-                    value={adminCandidate?.role ?? 'Keine Auswahl'}
-                    disabled
-                    fullWidth
-                  />
-                  <TextField
-                    label="Verknüpfte Brennstoffzelle"
-                    value={adminCandidate?.generatorId ?? 'Keine'}
-                    disabled
-                    fullWidth
-                  />
-                  {adminCandidate?.role === 'admin' ? (
-                    <Alert severity="info">Dieser Nutzer hat bereits Admin-Rechte.</Alert>
-                  ) : null}
+                  <Typography color="text.secondary">
+                    Neue Admins werden ausschließlich über die bereits registrierte E-Mail-Adresse
+                    hinzugefügt.
+                  </Typography>
+                  <Alert severity="info">
+                    Die E-Mail muss bereits zu einem vorhandenen Nutzerkonto in Firestore gehören.
+                  </Alert>
                   <Button
-                    variant="contained"
+                    variant="outlined"
                     startIcon={<AdminPanelSettingsIcon />}
-                    onClick={() => void handlePromoteAdmin()}
-                    disabled={!adminCandidate || adminCandidate.role === 'admin'}
-                    fullWidth
+                    onClick={handleOpenAdminDialog}
+                    sx={{ alignSelf: 'flex-start' }}
                   >
-                    Zum Admin ernennen
+                    Admin per E-Mail hinzufügen
                   </Button>
                 </Stack>
               </CardContent>
@@ -1503,6 +1554,36 @@ export function AdminPage() {
             </Button>
             <Button type="submit" variant="contained" disabled={scanMeasurementSaving}>
               Speichern
+            </Button>
+          </DialogActions>
+        </Box>
+      </Dialog>
+
+      <Dialog open={adminDialogOpen} onClose={handleCloseAdminDialog} fullWidth maxWidth="xs">
+        <DialogTitle>Admin hinzufügen</DialogTitle>
+        <Box component="form" onSubmit={handlePromoteAdmin}>
+          <DialogContent>
+            <Stack spacing={2}>
+              <Typography color="text.secondary">
+                Gib die E-Mail-Adresse eines bereits registrierten Nutzers ein.
+              </Typography>
+              <TextField
+                label="E-Mail"
+                type="email"
+                value={adminEmail}
+                onChange={(event) => setAdminEmail(event.target.value)}
+                autoFocus
+                fullWidth
+              />
+              {adminError ? <Alert severity="error">{adminError}</Alert> : null}
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseAdminDialog} disabled={adminSubmitting}>
+              Abbrechen
+            </Button>
+            <Button type="submit" variant="contained" disabled={adminSubmitting}>
+              Admin hinzufügen
             </Button>
           </DialogActions>
         </Box>

@@ -309,6 +309,46 @@ export async function findUserProfileForAdmin(identifier: string) {
   } as UserProfile
 }
 
+export async function findUserProfileByEmailForAdmin(email: string) {
+  const trimmedEmail = email.trim().toLowerCase()
+
+  if (!trimmedEmail) {
+    return null
+  }
+
+  const emailSnapshot = await getDocs(
+    query(usersCollection, where('email', '==', trimmedEmail), limit(1)),
+  )
+  const match = emailSnapshot.docs[0]
+
+  if (!match) {
+    return null
+  }
+
+  return {
+    id: match.id,
+    ...match.data(),
+  } as UserProfile
+}
+
+export async function getAdminProfiles() {
+  const snapshot = await getDocs(query(usersCollection, where('role', '==', 'admin')))
+
+  return snapshot.docs
+    .map(
+      (item) =>
+        ({
+          id: item.id,
+          ...item.data(),
+        }) as UserProfile,
+    )
+    .sort((left, right) => {
+      const leftLabel = `${left.name} ${left.email}`.trim().toLocaleLowerCase('de-DE')
+      const rightLabel = `${right.name} ${right.email}`.trim().toLocaleLowerCase('de-DE')
+      return leftLabel.localeCompare(rightLabel, 'de-DE')
+    })
+}
+
 export async function updateUserProfileAsAdmin(
   userId: string,
   input: AdminUserProfileUpdateInput,
