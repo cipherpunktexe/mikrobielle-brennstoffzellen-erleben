@@ -93,6 +93,7 @@ export async function registerUserWithGenerator(input: RegisterUserInput) {
   await setDoc(generatorRef, {
     ownerUid: credentials.user.uid,
     code,
+    ownerName: input.name,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   })
@@ -129,6 +130,8 @@ export async function linkCurrentUserToGeneratorByCode(code: string) {
   }
 
   const profile = userSnapshot.data() as UserProfile
+  const ownerName =
+    profile.name?.trim() || currentUser.displayName?.trim() || currentUser.email?.split('@')[0] || normalizedCode
 
   if (profile.generatorId) {
     throw new Error('Dieses Konto ist bereits mit einer Brennstoffzelle verknuepft.')
@@ -147,6 +150,7 @@ export async function linkCurrentUserToGeneratorByCode(code: string) {
 
     await updateDoc(doc(generatorsCollection, existingGenerator.id), {
       ownerUid: currentUser.uid,
+      ownerName,
       updatedAt: serverTimestamp(),
     })
     await updateDoc(userRef, {
@@ -157,6 +161,7 @@ export async function linkCurrentUserToGeneratorByCode(code: string) {
       ...existingData,
       id: existingGenerator.id,
       ownerUid: currentUser.uid,
+      ownerName,
     } as Generator
   }
 
@@ -165,6 +170,7 @@ export async function linkCurrentUserToGeneratorByCode(code: string) {
   await setDoc(generatorRef, {
     ownerUid: currentUser.uid,
     code: normalizedCode,
+    ownerName,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   })
@@ -176,6 +182,7 @@ export async function linkCurrentUserToGeneratorByCode(code: string) {
     id: generatorRef.id,
     ownerUid: currentUser.uid,
     code: normalizedCode,
+    ownerName,
   } as Generator
 }
 
@@ -272,7 +279,6 @@ export function subscribeToMeasurements(
 export function subscribeToLeaderboard(callback: (entries: LeaderboardEntry[]) => void) {
   return onSnapshot(measurementsCollection, async (measurementSnapshot) => {
     const generatorSnapshot = await getDocs(generatorsCollection)
-    const userSnapshot = await getDocs(usersCollection)
     const generatorMap = new Map(
       generatorSnapshot.docs.map((item) => [
         item.id,
@@ -280,15 +286,6 @@ export function subscribeToLeaderboard(callback: (entries: LeaderboardEntry[]) =
           id: item.id,
           ...item.data(),
         } as Generator,
-      ]),
-    )
-    const userMap = new Map(
-      userSnapshot.docs.map((item) => [
-        item.id,
-        {
-          id: item.id,
-          ...item.data(),
-        } as UserProfile,
       ]),
     )
 
@@ -322,13 +319,12 @@ export function subscribeToLeaderboard(callback: (entries: LeaderboardEntry[]) =
     const entries = Array.from(maxByGenerator.values())
       .map((measurement) => {
         const generator = generatorMap.get(measurement.generatorId)
-        const ownerProfile = generator?.ownerUid ? userMap.get(generator.ownerUid) : null
         const code = generator?.code ?? 'unbekannt'
 
         return {
           generatorId: measurement.generatorId,
           code,
-          displayName: ownerProfile?.name?.trim() || code,
+          displayName: generator?.ownerName?.trim() || code,
           maxValue: measurement.value,
           maxMeasuredAt: measurement.createdAt ?? null,
         }

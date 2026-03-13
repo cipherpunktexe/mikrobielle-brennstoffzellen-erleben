@@ -15,6 +15,7 @@ export interface Generator {
   id: string
   ownerUid: string
   code: string
+  ownerName?: string
   createdAt?: Timestamp | null
   updatedAt?: Timestamp | null
 }
