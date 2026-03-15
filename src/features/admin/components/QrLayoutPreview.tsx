@@ -8,6 +8,8 @@ interface QrLayoutPreviewProps {
   totalCards: number
 }
 
+const PREVIEW_REFERENCE_MM = 297
+
 function createPreviewValues(count: number) {
   return Array.from(
     { length: count },
@@ -54,10 +56,12 @@ export function QrLayoutPreview({ layout, totalCards }: QrLayoutPreviewProps) {
   if (!layout) {
     return (
       <Alert severity="info">
-        Bitte eine gültige Anzahl und QR-Größe eingeben, damit die A4-Vorschau berechnet werden kann.
+        Bitte eine gültige Anzahl und QR-Größe eingeben, damit die Vorschau berechnet werden kann.
       </Alert>
     )
   }
+
+  const previewWidthPercent = Math.min((layout.pageWidthMm / PREVIEW_REFERENCE_MM) * 100, 100)
 
   return (
     <Stack spacing={2}>
@@ -72,47 +76,59 @@ export function QrLayoutPreview({ layout, totalCards }: QrLayoutPreviewProps) {
       >
         <Box
           sx={{
-            position: 'relative',
-            mx: 'auto',
             width: '100%',
-            maxWidth: layout.orientation === 'landscape' ? 920 : 680,
-            aspectRatio: `${layout.pageWidthMm} / ${layout.pageHeightMm}`,
-            bgcolor: 'transparent',
-            borderRadius: 3,
-            overflow: 'hidden',
+            minHeight: { xs: 220, sm: 320 },
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
           }}
         >
-          {qrDataUrls.map((dataUrl, index) => {
-            const row = Math.floor(index / layout.columns)
-            const column = index % layout.columns
-            const xMm = layout.startXmm + column * (layout.cardWidthMm + layout.gapXmm)
-            const yMm = layout.startYmm + row * (layout.cardHeightMm + layout.gapYmm)
+          <Box
+            sx={{
+              position: 'relative',
+              width: `${previewWidthPercent}%`,
+              maxWidth: '100%',
+              aspectRatio: `${layout.pageWidthMm} / ${layout.pageHeightMm}`,
+              bgcolor: '#fffdf8',
+              borderRadius: 2,
+              border: '1px solid rgba(36,28,19,0.14)',
+              boxShadow: '0 12px 24px rgba(36,28,19,0.08)',
+              overflow: 'hidden',
+              flexShrink: 0,
+            }}
+          >
+            {qrDataUrls.map((dataUrl, index) => {
+              const row = Math.floor(index / layout.columns)
+              const column = index % layout.columns
+              const xMm = layout.startXmm + column * (layout.cardWidthMm + layout.gapXmm)
+              const yMm = layout.startYmm + row * (layout.cardHeightMm + layout.gapYmm)
 
-            return (
-              <Box
-                key={`preview-card-${index + 1}`}
-                sx={{
-                  position: 'absolute',
-                  left: `${(xMm / layout.pageWidthMm) * 100}%`,
-                  top: `${(yMm / layout.pageHeightMm) * 100}%`,
-                  width: `${(layout.cardWidthMm / layout.pageWidthMm) * 100}%`,
-                  height: `${(layout.cardHeightMm / layout.pageHeightMm) * 100}%`,
-                  display: 'grid',
-                }}
-              >
+              return (
                 <Box
-                  component="img"
-                  src={dataUrl}
-                  alt=""
+                  key={`preview-card-${index + 1}`}
                   sx={{
-                    width: '100%',
-                    aspectRatio: '1 / 1',
-                    display: 'block',
+                    position: 'absolute',
+                    left: `${(xMm / layout.pageWidthMm) * 100}%`,
+                    top: `${(yMm / layout.pageHeightMm) * 100}%`,
+                    width: `${(layout.cardWidthMm / layout.pageWidthMm) * 100}%`,
+                    height: `${(layout.cardHeightMm / layout.pageHeightMm) * 100}%`,
+                    display: 'grid',
                   }}
-                />
-              </Box>
-            )
-          })}
+                >
+                  <Box
+                    component="img"
+                    src={dataUrl}
+                    alt=""
+                    sx={{
+                      width: '100%',
+                      aspectRatio: '1 / 1',
+                      display: 'block',
+                    }}
+                  />
+                </Box>
+              )
+            })}
+          </Box>
         </Box>
       </Box>
       <Stack
