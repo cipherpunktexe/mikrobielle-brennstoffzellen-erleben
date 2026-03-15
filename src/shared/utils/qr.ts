@@ -44,6 +44,14 @@ export interface QrPdfLayoutPreview {
   cardsPerPage: number
   qrSizeMm: number
   pageCount: number
+  pageWidthMm: number
+  pageHeightMm: number
+  cardWidthMm: number
+  cardHeightMm: number
+  startXmm: number
+  startYmm: number
+  gapXmm: number
+  gapYmm: number
 }
 
 const QR_PREFIX = 'mbz:generator:'
@@ -53,9 +61,9 @@ const A4_FORMATS: PageFormat[] = [
 ]
 const OUTER_MARGIN_MM = 10
 const BASE_GAP_MM = 4
-const CARD_PADDING_MM = 4
-const CARD_HEADER_MM = 12
-const CARD_FOOTER_MM = 10
+const CARD_PADDING_MM = 6
+const CARD_HEADER_MM = 0
+const CARD_FOOTER_MM = 0
 const MIN_QR_SIZE_MM = 18
 const MAX_QR_SIZE_MM = 120
 const QR_CANVAS_SIZE = 720
@@ -176,7 +184,12 @@ function renderFancyQrToCanvas(value: string) {
 
 export function buildGeneratorQrValue(code: string) {
   const normalizedCode = formatCode(code)
-  return normalizedCode ? `${QR_PREFIX}${normalizedCode}` : ''
+
+  if (!normalizedCode) {
+    return ''
+  }
+
+  return new URL(`/register/${encodeURIComponent(normalizedCode)}`, window.location.origin).toString()
 }
 
 export async function generateQrDataUrl(value: string) {
@@ -367,22 +380,28 @@ export function getQrPdfLayoutPreview(totalCards: number, options: QrPdfExportOp
     cardsPerPage: layout.cardsPerPage,
     qrSizeMm: Number(layout.qrSizeMm.toFixed(1)),
     pageCount: Math.ceil(Math.max(totalCards, 1) / layout.cardsPerPage),
+    pageWidthMm: layout.pageFormat.widthMm,
+    pageHeightMm: layout.pageFormat.heightMm,
+    cardWidthMm: Number(layout.cardWidthMm.toFixed(1)),
+    cardHeightMm: Number(layout.cardHeightMm.toFixed(1)),
+    startXmm: Number(layout.startXmm.toFixed(1)),
+    startYmm: Number(layout.startYmm.toFixed(1)),
+    gapXmm: Number(layout.gapXmm.toFixed(1)),
+    gapYmm: Number(layout.gapYmm.toFixed(1)),
   }
 }
 
-function getExportFileName(prefix: string, explicitFileName?: string) {
+function getExportFileName(explicitFileName?: string) {
   if (explicitFileName?.trim()) {
     return explicitFileName.trim()
   }
 
   const dateStamp = new Date().toISOString().slice(0, 10)
-  const normalizedPrefix = formatCode(prefix) || 'qr-export'
-  return `${normalizedPrefix}-${dateStamp}.pdf`
+  return `qr-codes-${dateStamp}.pdf`
 }
 
 function drawCard(
   doc: jsPDF,
-  card: QrCardDefinition,
   qrDataUrl: string,
   layout: ResolvedQrPdfLayout,
   column: number,
@@ -395,26 +414,9 @@ function drawCard(
   doc.setFillColor('#fffaf1')
   doc.roundedRect(x, y, layout.cardWidthMm, layout.cardHeightMm, 3, 3, 'FD')
 
-  doc.setTextColor('#241c13')
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(10)
-  doc.text(card.code, x + layout.cardWidthMm / 2, y + 7, { align: 'center' })
-
   const qrX = x + (layout.cardWidthMm - layout.qrSizeMm) / 2
-  const qrY = y + CARD_HEADER_MM
+  const qrY = y + (layout.cardHeightMm - layout.qrSizeMm) / 2
   doc.addImage(qrDataUrl, 'PNG', qrX, qrY, layout.qrSizeMm, layout.qrSizeMm)
-
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(8)
-  doc.text('App-QR-Code', x + layout.cardWidthMm / 2, qrY + layout.qrSizeMm + 5, {
-    align: 'center',
-  })
-
-  doc.setFont('helvetica', 'normal')
-  doc.setFontSize(6.5)
-  doc.text('Scannen in der App', x + layout.cardWidthMm / 2, y + layout.cardHeightMm - 4, {
-    align: 'center',
-  })
 }
 
 export async function downloadQrPdf(cards: QrCardDefinition[], options: QrPdfExportOptions) {
@@ -432,7 +434,7 @@ export async function downloadQrPdf(cards: QrCardDefinition[], options: QrPdfExp
 
   const qrDataUrls = await Promise.all(cards.map((card) => generateQrDataUrl(card.scanValue)))
 
-  cards.forEach((card, index) => {
+  cards.forEach((_card, index) => {
     const pageIndex = Math.floor(index / layout.cardsPerPage)
     const indexOnPage = index % layout.cardsPerPage
     const row = Math.floor(indexOnPage / layout.columns)
@@ -442,8 +444,8 @@ export async function downloadQrPdf(cards: QrCardDefinition[], options: QrPdfExp
       doc.addPage('a4', layout.pageFormat.orientation)
     }
 
-    drawCard(doc, card, qrDataUrls[index], layout, column, row)
+    drawCard(doc, qrDataUrls[index], layout, column, row)
   })
 
-  doc.save(getExportFileName(cards[0]?.code.split('-').slice(0, -1).join('-') || 'qr-export', options.fileName))
+  doc.save(getExportFileName(options.fileName))
 }

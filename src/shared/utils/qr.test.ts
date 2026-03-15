@@ -2,11 +2,15 @@ import { describe, expect, test } from 'vitest'
 import { buildGeneratorQrValue, extractGeneratorCodeFromQrValue, getQrBadgeHex } from './qr'
 
 describe('qr utils', () => {
-  test('builds and parses the app-internal qr payload', () => {
+  test('builds and parses register links for newly generated qr codes', () => {
     const value = buildGeneratorQrValue('Station-007')
 
-    expect(value).toBe('mbz:generator:station-007')
+    expect(value).toBe('http://localhost:3000/register/station-007')
     expect(extractGeneratorCodeFromQrValue(value)).toBe('station-007')
+  })
+
+  test('continues to parse legacy internal qr payloads', () => {
+    expect(extractGeneratorCodeFromQrValue('mbz:generator:station-007')).toBe('station-007')
   })
 
   test('continues to parse legacy register links', () => {

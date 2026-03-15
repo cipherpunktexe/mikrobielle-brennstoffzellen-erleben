@@ -1,4 +1,4 @@
-import EditNoteIcon from '@mui/icons-material/EditNote'
+﻿import EditNoteIcon from '@mui/icons-material/EditNote'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import QrCode2Icon from '@mui/icons-material/QrCode2'
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner'
@@ -9,8 +9,6 @@ import {
   Button,
   Card,
   CardContent,
-  Chip,
-  Divider,
   Dialog,
   DialogActions,
   DialogContent,
@@ -23,13 +21,10 @@ import {
   ListItemText,
   Menu,
   MenuItem,
-  Slider,
   Stack,
   Tab,
   Tabs,
   TextField,
-  ToggleButton,
-  ToggleButtonGroup,
   Typography,
 } from '@mui/material'
 import {
@@ -41,6 +36,7 @@ import {
   type SyntheticEvent,
 } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { QrLayoutPreview } from '../components/QrLayoutPreview'
 import { AuthCard } from '../../../shared/ui/AuthCard'
 import { QrScannerDialog } from '../../../shared/qr/QrScannerDialog'
 import { formatCode, formatMeasurement, formatTimestamp } from '../../../shared/utils/format'
@@ -50,7 +46,6 @@ import {
   extractGeneratorCodeFromQrValue,
   getQrPdfLayoutPreview,
 } from '../../../shared/utils/qr'
-import type { QrPdfLayoutMode } from '../../../shared/utils/qr'
 import {
   addMeasurementByCode,
   getGeneratorByCode,
@@ -77,7 +72,6 @@ import type { AdminRecentMeasurementItem } from '../../../shared/data/firebaseDa
 type AdminTabValue = 'qr' | 'scan' | 'moderation'
 type ModerationTabValue = 'users' | 'generators'
 type MeasurementUnit = 'uV' | 'mV' | 'V' | 'kV'
-type ExportPreviewMode = 'single' | 'page'
 
 interface UserFormState {
   name: string
@@ -91,11 +85,14 @@ interface GeneratorFormState {
   ownerName: string
 }
 
-function createStationCodes(prefix: string, count: number) {
-  return Array.from(
-    { length: count },
-    (_, index) => `${formatCode(prefix)}-${String(index + 1).padStart(3, '0')}`,
-  )
+function createGeneratorCodes(count: number) {
+  const codes = new Set<string>()
+
+  while (codes.size < count) {
+    codes.add(crypto.randomUUID().replaceAll('-', '').slice(0, 10))
+  }
+
+  return Array.from(codes)
 }
 
 function TabPanel({
@@ -162,12 +159,8 @@ export function AdminPage() {
   const [activeTab, setActiveTab] = useState<AdminTabValue>(routeCode ? 'scan' : 'qr')
   const [moderationTab, setModerationTab] = useState<ModerationTabValue>('users')
 
-  const [exportPrefix, setExportPrefix] = useState('station')
   const [exportCount, setExportCount] = useState('12')
-  const [exportLayoutMode, setExportLayoutMode] = useState<QrPdfLayoutMode>('cardsPerPage')
-  const [exportCardsPerPage, setExportCardsPerPage] = useState('12')
   const [exportQrSize, setExportQrSize] = useState('42')
-  const [exportPreviewMode, setExportPreviewMode] = useState<ExportPreviewMode>('page')
   const [exportStatus, setExportStatus] = useState('')
   const [exportError, setExportError] = useState('')
 
@@ -248,15 +241,13 @@ export function AdminPage() {
   }, [activeTab, moderationTab])
 
   const parsedExportCount = Number.parseInt(exportCount, 10)
-  const requestedCardsPerPage = Number.parseInt(exportCardsPerPage, 10)
   const requestedQrSize = Number.parseFloat(exportQrSize)
   let exportLayoutPreview: ReturnType<typeof getQrPdfLayoutPreview> | null = null
 
   if (Number.isFinite(parsedExportCount) && parsedExportCount > 0) {
     try {
       exportLayoutPreview = getQrPdfLayoutPreview(parsedExportCount, {
-        mode: exportLayoutMode,
-        cardsPerPage: requestedCardsPerPage,
+        mode: 'qrSize',
         qrSizeMm: requestedQrSize,
       })
     } catch {
@@ -264,17 +255,7 @@ export function AdminPage() {
     }
   }
 
-  const normalizedExportPrefix = formatCode(exportPrefix) || 'station'
   const previewTotalCards = Number.isFinite(parsedExportCount) && parsedExportCount > 0 ? parsedExportCount : 1
-  const previewCardsVisible =
-    exportPreviewMode === 'single'
-      ? 1
-      : Math.min(exportLayoutPreview?.cardsPerPage ?? 1, previewTotalCards)
-  const previewCardLabels = createStationCodes(normalizedExportPrefix, previewCardsVisible)
-  const cardsPerPageSliderMax = Math.max(1, Math.min(previewTotalCards, 24))
-  const previewPageLabel = exportLayoutPreview
-    ? `Seite 1 / ${exportLayoutPreview.pageCount}`
-    : 'Seite 1 / 1'
 
   useEffect(() => {
     const enteredBy = profile?.email?.trim() || authUserId
@@ -329,29 +310,24 @@ export function AdminPage() {
 
     try {
       const count = Number.parseInt(exportCount, 10)
-      const cardsPerPage = Number.parseInt(exportCardsPerPage, 10)
       const qrSizeMm = Number.parseFloat(exportQrSize)
 
       if (!Number.isFinite(count) || count < 1 || count > 200) {
         throw new Error('Bitte eine Anzahl zwischen 1 und 200 angeben.')
       }
 
-      const normalizedPrefix = formatCode(exportPrefix)
-
-      if (!normalizedPrefix) {
-        throw new Error('Bitte ein gültiges Präfix angeben.')
+      if (!Number.isFinite(qrSizeMm) || qrSizeMm <= 0) {
+        throw new Error('Bitte eine gÃ¼ltige QR-GrÃ¶ÃŸe angeben.')
       }
 
-      const cards = createStationCodes(normalizedPrefix, count).map((code) => ({
+      const cards = createGeneratorCodes(count).map((code) => ({
         code,
         scanValue: buildGeneratorQrValue(code),
       }))
 
       await downloadQrPdf(cards, {
-        mode: exportLayoutMode,
-        cardsPerPage,
+        mode: 'qrSize',
         qrSizeMm,
-        fileName: `${normalizedPrefix}-qr-codes.pdf`,
       })
       setExportStatus(`PDF mit ${count} QR-Codes wurde erstellt.`)
     } catch (exportIssue) {
@@ -398,7 +374,7 @@ export function AdminPage() {
     const code = extractGeneratorCodeFromQrValue(value)
 
     if (!code) {
-      throw new Error('Der QR-Code enthält keinen gültigen Brennstoffzellen-Code.')
+      throw new Error('Der QR-Code enthÃ¤lt keinen gÃ¼ltigen Brennstoffzellen-Code.')
     }
 
     const foundGenerator = await getGeneratorByCode(code)
@@ -433,13 +409,13 @@ export function AdminPage() {
       const numericValue = Number.parseFloat(scanMeasurementInput)
 
       if (Number.isNaN(numericValue)) {
-        throw new Error('Bitte einen gültigen Messwert eingeben.')
+        throw new Error('Bitte einen gÃ¼ltigen Messwert eingeben.')
       }
 
       const measuredAt = new Date(scanMeasurementDateTime)
 
       if (Number.isNaN(measuredAt.getTime())) {
-        throw new Error('Bitte ein gültiges Datum und eine gültige Uhrzeit angeben.')
+        throw new Error('Bitte ein gÃ¼ltiges Datum und eine gÃ¼ltige Uhrzeit angeben.')
       }
 
       const linkedGenerator = await addMeasurementByCode({
@@ -453,7 +429,7 @@ export function AdminPage() {
       setScanCode(normalizedCode)
       setScanMeasurementDialogOpen(false)
       setScanMeasurementCodeLocked(false)
-      setScanStatus(`Messwert für ${linkedGenerator.code} wurde gespeichert.`)
+      setScanStatus(`Messwert fÃ¼r ${linkedGenerator.code} wurde gespeichert.`)
     } catch (submitIssue) {
       setScanMeasurementError(
         submitIssue instanceof Error
@@ -678,7 +654,7 @@ export function AdminPage() {
         <Grid size={{ xs: 12, md: 6 }}>
           <AuthCard
             title="Admin-Login"
-            description="Admins melden sich über Firebase Authentication an und verwalten danach QR-Codes, Scans und Moderation an einer Stelle."
+            description="Admins melden sich Ã¼ber Firebase Authentication an und verwalten danach QR-Codes, Scans und Moderation an einer Stelle."
             values={formValues}
             submitLabel="Als Admin anmelden"
             googleLabel="Mit Google anmelden"
@@ -702,7 +678,7 @@ export function AdminPage() {
                   Die Admin-Seite ist jetzt in drei Bereiche getrennt: QR erstellen, Scannen und Moderieren.
                 </Typography>
                 <Typography color="text.secondary">
-                  Voraussetzung ist ein Firestore-User mit <code>role: "admin"</code> für das angemeldete Konto.
+                  Voraussetzung ist ein Firestore-User mit <code>role: "admin"</code> fÃ¼r das angemeldete Konto.
                 </Typography>
               </Stack>
             </CardContent>
@@ -780,125 +756,45 @@ export function AdminPage() {
           <Grid size={{ xs: 12, lg: 4 }}>
             <Card sx={{ height: '100%' }}>
               <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
-                <Stack spacing={2.5}>
+                <Stack spacing={3}>
                   <Box>
                     <Typography variant="h4" sx={{ fontSize: { xs: '1.45rem', sm: '2rem' } }}>
                       QR-Export
                     </Typography>
                     <Typography color="text.secondary">
-                      Erzeuge ein A4-PDF mit automatisch optimierter Seitenbelegung.
+                      Erzeuge ein A4-PDF mit reduzierten QR-Karten ohne Zusatzinfos.
                     </Typography>
                   </Box>
                   {exportStatus ? <Alert severity="success">{exportStatus}</Alert> : null}
                   {exportError ? <Alert severity="error">{exportError}</Alert> : null}
                   <Stack spacing={2}>
-                    <Stack direction="row" spacing={1.5} alignItems="flex-start">
-                      <Chip label="1" color="primary" sx={{ minWidth: 36, height: 36, borderRadius: 999 }} />
-                      <Card variant="outlined" sx={{ flex: 1 }}>
-                        <CardContent sx={{ p: 2 }}>
-                          <Stack spacing={1.5}>
-                            <Typography fontWeight={700}>Generatoren</Typography>
-                            <TextField
-                              label="Präfix"
-                              value={exportPrefix}
-                              onChange={(event) => setExportPrefix(event.target.value)}
-                              helperText='Ergebnisformat: "station-001", "station-002", ...'
-                              fullWidth
-                            />
-                            <TextField
-                              label="Anzahl"
-                              type="number"
-                              value={exportCount}
-                              onChange={(event) => setExportCount(event.target.value)}
-                              fullWidth
-                            />
-                          </Stack>
-                        </CardContent>
-                      </Card>
-                    </Stack>
-                    <Stack direction="row" spacing={1.5} alignItems="flex-start">
-                      <Chip label="2" color="primary" sx={{ minWidth: 36, height: 36, borderRadius: 999 }} />
-                      <Card variant="outlined" sx={{ flex: 1 }}>
-                        <CardContent sx={{ p: 2 }}>
-                          <Stack spacing={2}>
-                            <Typography fontWeight={700}>Drucklayout</Typography>
-                            <ToggleButtonGroup
-                              exclusive
-                              value={exportLayoutMode}
-                              onChange={(_event, value: QrPdfLayoutMode | null) => {
-                                if (value) {
-                                  setExportLayoutMode(value)
-                                }
-                              }}
-                              fullWidth
-                              size="small"
-                            >
-                              <ToggleButton value="cardsPerPage">Pro Seite</ToggleButton>
-                              <ToggleButton value="qrSize">QR-Größe</ToggleButton>
-                            </ToggleButtonGroup>
-                            {exportLayoutMode === 'cardsPerPage' ? (
-                              <Stack spacing={1}>
-                                <Stack direction="row" justifyContent="space-between" alignItems="center">
-                                  <Typography fontWeight={600}>Karten pro Seite</Typography>
-                                  <Typography color="text.secondary">{exportCardsPerPage}</Typography>
-                                </Stack>
-                                <Slider
-                                  value={Math.max(1, Math.min(cardsPerPageSliderMax, requestedCardsPerPage || 1))}
-                                  min={1}
-                                  max={cardsPerPageSliderMax}
-                                  step={1}
-                                  onChange={(_event, value) => setExportCardsPerPage(String(value))}
-                                  valueLabelDisplay="auto"
-                                />
-                                <Typography variant="body2" color="text.secondary">
-                                  Das Layout nutzt den A4-Platz automatisch bestmöglich aus.
-                                </Typography>
-                              </Stack>
-                            ) : (
-                              <Stack spacing={1.5}>
-                                <TextField
-                                  label="QR-Größe in mm"
-                                  type="number"
-                                  value={exportQrSize}
-                                  onChange={(event) => setExportQrSize(event.target.value)}
-                                  fullWidth
-                                />
-                                <Typography variant="body2" color="text.secondary">
-                                  Die Anzahl pro Seite wird aus der QR-Größe automatisch berechnet.
-                                </Typography>
-                              </Stack>
-                            )}
-                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} flexWrap="wrap" useFlexGap>
-                              {exportLayoutPreview ? <Chip label={`${exportLayoutPreview.columns} × ${exportLayoutPreview.rows}`} /> : null}
-                              {exportLayoutPreview ? <Chip label={`${exportLayoutPreview.cardsPerPage} pro Seite`} /> : null}
-                              {exportLayoutPreview ? <Chip label={`QR ${exportLayoutPreview.qrSizeMm.toFixed(0)} mm`} /> : null}
-                            </Stack>
-                          </Stack>
-                        </CardContent>
-                      </Card>
-                    </Stack>
-                    <Stack direction="row" spacing={1.5} alignItems="flex-start">
-                      <Chip label="3" color="primary" sx={{ minWidth: 36, height: 36, borderRadius: 999 }} />
-                      <Card variant="outlined" sx={{ flex: 1 }}>
-                        <CardContent sx={{ p: 2 }}>
-                          <Stack spacing={1.5}>
-                            <Typography fontWeight={700}>Export</Typography>
-                            <Button
-                              variant="contained"
-                              onClick={() => void handleExport()}
-                              startIcon={<SaveIcon />}
-                              fullWidth
-                            >
-                              PDF herunterladen
-                            </Button>
-                            <Typography variant="body2" color="text.secondary">
-                              Die Karten enthalten den App-internen QR-Payload und sind direkt
-                              druckbar.
-                            </Typography>
-                          </Stack>
-                        </CardContent>
-                      </Card>
-                    </Stack>
+                    <TextField
+                      label="Anzahl"
+                      type="number"
+                      value={exportCount}
+                      onChange={(event) => setExportCount(event.target.value)}
+                      fullWidth
+                    />
+                    <TextField
+                      label="QR-Größe in mm"
+                      type="number"
+                      value={exportQrSize}
+                      onChange={(event) => setExportQrSize(event.target.value)}
+                      helperText="Die Seitenbelegung wird auf A4 automatisch aus der QR-Größe berechnet."
+                      fullWidth
+                    />
+                    <Typography variant="body2" color="text.secondary">
+                      Die Vorschau zeigt das reale A4-Seitenverhältnis. Exportiert werden nur QR-Karten
+                      ohne Präfix, Titel oder weitere Hinweise.
+                    </Typography>
+                    <Button
+                      variant="contained"
+                      onClick={() => void handleExport()}
+                      startIcon={<SaveIcon />}
+                      fullWidth
+                    >
+                      PDF herunterladen
+                    </Button>
                   </Stack>
                 </Stack>
               </CardContent>
@@ -917,282 +813,20 @@ export function AdminPage() {
                   >
                     <Box>
                       <Typography variant="h4" sx={{ fontSize: { xs: '1.45rem', sm: '2rem' } }}>
-                        Ticket-Vorschau
+                        A4-Vorschau
                       </Typography>
                       <Typography color="text.secondary">
-                        Vorschau für Einzelkarte oder komplette Seite.
+                        Vorschau mit korrektem Seitenformat und Dummy-QR-Codes.
                       </Typography>
                     </Box>
-                    <ToggleButtonGroup
-                      exclusive
-                      size="small"
-                      value={exportPreviewMode}
-                      onChange={(_event, value: ExportPreviewMode | null) => {
-                        if (value) {
-                          setExportPreviewMode(value)
-                        }
-                      }}
-                    >
-                      <ToggleButton value="single">Einzeln</ToggleButton>
-                      <ToggleButton value="page">Seite</ToggleButton>
-                    </ToggleButtonGroup>
                   </Stack>
-                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} flexWrap="wrap" useFlexGap>
-                    <Chip label={`Präfix ${normalizedExportPrefix}`} />
-                    <Chip label={`${previewTotalCards} Karten`} />
-                    {exportLayoutPreview ? (
-                      <Chip label={exportLayoutPreview.orientation === 'landscape' ? 'A4 quer' : 'A4 hoch'} />
-                    ) : null}
-                    {exportLayoutPreview ? <Chip label={`${exportLayoutPreview.pageCount} Seiten`} /> : null}
-                  </Stack>
-                  <Box
-                    sx={{
-                      p: { xs: 1.5, sm: 2 },
-                      borderRadius: 4,
-                      bgcolor: 'rgba(36,28,19,0.06)',
-                      border: (theme) => `1px solid ${theme.palette.divider}`,
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        mx: 'auto',
-                        width: '100%',
-                        maxWidth:
-                          exportPreviewMode === 'single'
-                            ? 360
-                            : exportLayoutPreview?.orientation === 'landscape'
-                              ? 760
-                              : 560,
-                        aspectRatio:
-                          exportPreviewMode === 'single'
-                            ? '0.72'
-                            : exportLayoutPreview?.orientation === 'landscape'
-                              ? '1.414 / 1'
-                              : '1 / 1.414',
-                        bgcolor: '#fbf7ef',
-                        borderRadius: 3,
-                        border: '1px solid rgba(36,28,19,0.14)',
-                        p: { xs: 2, sm: 3 },
-                        display: 'flex',
-                        alignItems: 'stretch',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      {exportPreviewMode === 'single' ? (
-                        <Box
-                          sx={{
-                            width: '100%',
-                            maxWidth: 280,
-                            borderRadius: 2.5,
-                            border: '1px solid rgba(36,28,19,0.18)',
-                            bgcolor: '#fffdf8',
-                            p: 2,
-                            display: 'grid',
-                            gridTemplateRows: 'auto 1fr auto',
-                            gap: 1.5,
-                          }}
-                        >
-                          <Typography align="center" fontWeight={700}>
-                            {previewCardLabels[0]}
-                          </Typography>
-                          <Box
-                            sx={{
-                              borderRadius: 2,
-                              border: '1px dashed rgba(36,28,19,0.24)',
-                              bgcolor: 'rgba(36,28,19,0.03)',
-                              display: 'grid',
-                              placeItems: 'center',
-                              minHeight: 220,
-                            }}
-                          >
-                            <Stack spacing={1} alignItems="center">
-                              <Box
-                                sx={{
-                                  width: 96,
-                                  height: 96,
-                                  borderRadius: 2,
-                                  border: '1px dashed rgba(36,28,19,0.24)',
-                                  bgcolor: '#f6efe2',
-                                  display: 'grid',
-                                  placeItems: 'center',
-                                }}
-                              >
-                                <Typography fontWeight={700}>QR</Typography>
-                              </Box>
-                              <Typography variant="body2" color="text.secondary">
-                                App-QR-Code
-                              </Typography>
-                            </Stack>
-                          </Box>
-                          <Typography variant="body2" color="text.secondary" align="center">
-                            Scannen in der App
-                          </Typography>
-                        </Box>
-                      ) : (
-                        <Box
-                          sx={{
-                            width: '100%',
-                            display: 'grid',
-                            gridTemplateColumns: `repeat(${exportLayoutPreview?.columns ?? 1}, minmax(0, 1fr))`,
-                            gap: 1.25,
-                            alignContent: 'start',
-                          }}
-                        >
-                          {previewCardLabels.map((label, index) => (
-                            <Box
-                              key={label}
-                              sx={{
-                                borderRadius: 2,
-                                border: '1px solid rgba(36,28,19,0.14)',
-                                bgcolor: '#fffdf8',
-                                p: 1,
-                                minHeight: 84,
-                                display: 'grid',
-                                placeItems: 'center',
-                              }}
-                            >
-                              <Box
-                                sx={{
-                                  width: '100%',
-                                  height: '100%',
-                                  borderRadius: 1.5,
-                                  border: '1px dashed rgba(36,28,19,0.2)',
-                                  display: 'grid',
-                                  placeItems: 'center',
-                                  p: 1,
-                                }}
-                              >
-                                <Typography variant="body2" fontWeight={700} align="center" sx={{ wordBreak: 'break-word' }}>
-                                  {label || `#${index + 1}`}
-                                </Typography>
-                              </Box>
-                            </Box>
-                          ))}
-                        </Box>
-                      )}
-                    </Box>
-                  </Box>
-                  <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" spacing={1}>
-                    <Typography variant="body2" color="text.secondary">
-                      {previewPageLabel}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {exportPreviewMode === 'single'
-                        ? '1 Ticket in der Einzelansicht'
-                        : `${previewCardsVisible} von ${previewTotalCards} Tickets auf dieser Seite`}
-                    </Typography>
-                  </Stack>
-                </Stack>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid size={{ xs: 12, lg: 4 }} sx={{ display: 'none' }}>
-            <Card sx={{ height: '100%' }}>
-              <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
-                <Stack spacing={2}>
-                  <Typography variant="h4" sx={{ fontSize: { xs: '1.45rem', sm: '2rem' } }}>
-                    QR-Codes exportieren
-                  </Typography>
-                  <Typography color="text.secondary">
-                    Erzeuge ein A4-PDF mit automatisch optimiertem QR-Layout.
-                  </Typography>
-                  {exportStatus ? <Alert severity="success">{exportStatus}</Alert> : null}
-                  {exportError ? <Alert severity="error">{exportError}</Alert> : null}
-                  <TextField
-                    label="Pr?fix"
-                    value={exportPrefix}
-                    onChange={(event) => setExportPrefix(event.target.value)}
-                    helperText='Ergebnisformat: "station-001", "station-002", ...'
-                    fullWidth
-                  />
-                  <TextField
-                    label="Anzahl"
-                    type="number"
-                    value={exportCount}
-                    onChange={(event) => setExportCount(event.target.value)}
-                    fullWidth
-                  />
-                  <TextField
-                    label="Layout-Modus"
-                    select
-                    value={exportLayoutMode}
-                    onChange={(event) => setExportLayoutMode(event.target.value as QrPdfLayoutMode)}
-                    fullWidth
-                    SelectProps={{ native: true }}
-                  >
-                    <option value="cardsPerPage">Karten pro Seite</option>
-                    <option value="qrSize">QR-Größe in mm</option>
-                  </TextField>
-                  {exportLayoutMode === 'cardsPerPage' ? (
-                    <TextField
-                      label="Karten pro Seite"
-                      type="number"
-                      value={exportCardsPerPage}
-                      onChange={(event) => setExportCardsPerPage(event.target.value)}
-                      helperText="Das Layout nutzt den Platz auf A4 automatisch bestmöglich aus."
-                      fullWidth
-                    />
-                  ) : (
-                    <TextField
-                      label="QR-Größe in mm"
-                      type="number"
-                      value={exportQrSize}
-                      onChange={(event) => setExportQrSize(event.target.value)}
-                      helperText="Die Anzahl pro Seite wird aus der QR-Größe automatisch berechnet."
-                      fullWidth
-                    />
-                  )}
-                  <Button
-                    variant="contained"
-                    onClick={() => void handleExport()}
-                    startIcon={<SaveIcon />}
-                    fullWidth
-                  >
-                    PDF herunterladen
-                  </Button>
-                </Stack>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid size={{ xs: 12, lg: 8 }} sx={{ display: 'none' }}>
-            <Card sx={{ height: '100%' }}>
-              <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
-                <Stack spacing={2.5}>
-                  <Typography variant="h4" sx={{ fontSize: { xs: '1.45rem', sm: '2rem' } }}>
-                    Layout-Vorschau
-                  </Typography>
-                  <Stack
-                    direction={{ xs: 'column', sm: 'row' }}
-                    spacing={1}
-                    flexWrap="wrap"
-                    useFlexGap
-                  >
-                    <Chip label={`Präfix ${formatCode(exportPrefix) || '-'}`} />
-                    <Chip label={`${exportCount || '0'} Karten`} />
-                    {exportLayoutPreview ? <Chip label={`${exportLayoutPreview.columns} x ${exportLayoutPreview.rows}`} /> : null}
-                    {exportLayoutPreview ? <Chip label={`${exportLayoutPreview.cardsPerPage} pro Seite`} /> : null}
-                    {exportLayoutPreview ? <Chip label={`QR ${exportLayoutPreview.qrSizeMm.toFixed(0)} mm`} /> : null}
-                    {exportLayoutPreview ? <Chip label={exportLayoutPreview.orientation === 'landscape' ? 'A4 quer' : 'A4 hoch'} /> : null}
-                    {exportLayoutPreview ? <Chip label={`${exportLayoutPreview.pageCount} Seiten`} /> : null}
-                  </Stack>
-                  <Divider />
-                  <Typography color="text.secondary">
-                    Das PDF wird automatisch so auf A4 verteilt, dass die QR-Codes bei der gewählten
-                    Vorgabe möglichst groß bleiben und der Platz effizient genutzt wird.
-                  </Typography>
-                  <Typography color="text.secondary">
-                    Neue Karten enthalten den App-internen QR-Payload und können direkt aus dem PDF
-                    gedruckt werden.
-                  </Typography>
+                  <QrLayoutPreview layout={exportLayoutPreview} totalCards={previewTotalCards} />
                 </Stack>
               </CardContent>
             </Card>
           </Grid>
         </Grid>
       </TabPanel>
-
       <TabPanel active={activeTab} value="scan">
         <Grid container spacing={{ xs: 2, md: 3 }}>
           <Grid size={{ xs: 12, lg: 5 }}>
@@ -1213,7 +847,7 @@ export function AdminPage() {
                     onClick={() => setScannerOpen(true)}
                     fullWidth
                   >
-                    Scanner öffnen
+                    Scanner Ã¶ffnen
                   </Button>
                   <Button
                     variant="outlined"
@@ -1221,7 +855,7 @@ export function AdminPage() {
                     onClick={handleOpenManualMeasurementDialog}
                     fullWidth
                   >
-                    Manuell Messwert hinzufügen
+                    Manuell Messwert hinzufÃ¼gen
                   </Button>
                 </Stack>
               </CardContent>
@@ -1233,7 +867,7 @@ export function AdminPage() {
               <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
                 <Stack spacing={2}>
                   <Typography variant="h4" sx={{ fontSize: { xs: '1.45rem', sm: '2rem' } }}>
-                    Letzte eigene Einträge
+                    Letzte eigene EintrÃ¤ge
                   </Typography>
                   <Typography color="text.secondary">
                     Hier siehst du die zuletzt von dir eingetragenen Messwerte.
@@ -1299,7 +933,7 @@ export function AdminPage() {
 
               {moderationLoading ? (
                 <Stack alignItems="center" justifyContent="center" sx={{ py: 6 }}>
-                  <Typography color="text.secondary">Einträge werden geladen...</Typography>
+                  <Typography color="text.secondary">EintrÃ¤ge werden geladen...</Typography>
                 </Stack>
               ) : null}
 
@@ -1501,7 +1135,7 @@ export function AdminPage() {
                 <option value="admin">admin</option>
               </TextField>
               <TextField
-                label="Verknüpfte Brennstoffzelle"
+                label="VerknÃ¼pfte Brennstoffzelle"
                 value={editingUser?.generatorId ?? 'Keine'}
                 disabled
                 fullWidth
@@ -1579,7 +1213,7 @@ export function AdminPage() {
       >
         <DialogTitle>
           {selectedMeasurementGenerator
-            ? `Messwerte für ${selectedMeasurementGenerator.ownerName?.trim() || selectedMeasurementGenerator.code}`
+            ? `Messwerte fÃ¼r ${selectedMeasurementGenerator.ownerName?.trim() || selectedMeasurementGenerator.code}`
             : 'Messwerte'}
         </DialogTitle>
         <DialogContent>
@@ -1615,7 +1249,7 @@ export function AdminPage() {
                   <ListItem>
                     <ListItemText
                       primary="Noch keine Messwerte"
-                      secondary="Für diese Brennstoffzelle wurden noch keine Werte eingetragen."
+                      secondary="FÃ¼r diese Brennstoffzelle wurden noch keine Werte eingetragen."
                     />
                   </ListItem>
                 )}
@@ -1624,7 +1258,7 @@ export function AdminPage() {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseGeneratorMeasurementsDialog}>Schließen</Button>
+          <Button onClick={handleCloseGeneratorMeasurementsDialog}>SchlieÃŸen</Button>
         </DialogActions>
       </Dialog>
 
@@ -1696,3 +1330,5 @@ export function AdminPage() {
     </Stack>
   )
 }
+
+
