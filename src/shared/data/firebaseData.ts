@@ -8,6 +8,7 @@ import {
   limit,
   onSnapshot,
   query,
+  runTransaction,
   serverTimestamp,
   setDoc,
   updateDoc,
@@ -35,6 +36,8 @@ import type {
 const usersCollection = collection(db, 'users')
 const generatorsCollection = collection(db, 'generators')
 const measurementsCollection = collection(db, 'measurements')
+const adminStateCollection = collection(db, 'adminState')
+const qrExportCounterRef = doc(adminStateCollection, 'qr-export-counter')
 const googleProvider = new GoogleAuthProvider()
 
 export interface RegisterUserInput {
@@ -76,6 +79,25 @@ export interface AddMeasurementByCodeInput {
 export interface AdminRecentMeasurementItem extends Measurement {
   generatorCode: string
   ownerName: string
+}
+
+export interface ReservedGeneratorCodes {
+  codes: string[]
+  startCode: string
+  endCode: string
+  nextCode: string
+}
+
+function formatSequentialGeneratorCode(sequence: number) {
+  return String(sequence).padStart(4, '0')
+}
+
+function getNextGeneratorSequence(value: unknown) {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 1) {
+    return 1
+  }
+
+  return Math.floor(value)
 }
 
 export function subscribeToAuth(callback: (user: User | null) => void) {
@@ -281,6 +303,45 @@ export async function getUserProfile(uid: string) {
     id: snapshot.id,
     ...snapshot.data(),
   } as UserProfile
+}
+
+export async function getNextGeneratorCodePreview() {
+  const snapshot = await getDoc(qrExportCounterRef)
+  const nextSequence = getNextGeneratorSequence(snapshot.data()?.nextSequence)
+  return formatSequentialGeneratorCode(nextSequence)
+}
+
+export async function reserveNextGeneratorCodes(count: number): Promise<ReservedGeneratorCodes> {
+  if (!Number.isInteger(count) || count < 1) {
+    throw new Error('Die Anzahl der QR-Codes muss mindestens 1 sein.')
+  }
+
+  return runTransaction(db, async (transaction) => {
+    const snapshot = await transaction.get(qrExportCounterRef)
+    const startSequence = getNextGeneratorSequence(snapshot.data()?.nextSequence)
+    const codes = Array.from(
+      { length: count },
+      (_, index) => formatSequentialGeneratorCode(startSequence + index),
+    )
+    const nextCode = formatSequentialGeneratorCode(startSequence + count)
+
+    transaction.set(
+      qrExportCounterRef,
+      {
+        nextSequence: startSequence + count,
+        updatedAt: serverTimestamp(),
+        ...(snapshot.exists() ? {} : { createdAt: serverTimestamp() }),
+      },
+      { merge: true },
+    )
+
+    return {
+      codes,
+      startCode: codes[0],
+      endCode: codes[codes.length - 1],
+      nextCode,
+    }
+  })
 }
 
 export async function findUserProfileForAdmin(identifier: string) {

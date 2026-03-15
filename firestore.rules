@@ -78,5 +78,9 @@ service cloud.firestore {
 
       allow delete: if false;
     }
+
+    match /adminState/{documentId} {
+      allow read, write: if isAdmin();
+    }
   }
 }

@@ -48,6 +48,7 @@ import {
 } from '../../../shared/utils/qr'
 import {
   addMeasurementByCode,
+  getNextGeneratorCodePreview,
   getGeneratorByCode,
   getMeasurementsForAdmin,
   getRecentMeasurementsEnteredBy,
@@ -56,6 +57,7 @@ import {
   listUserProfilesForAdmin,
   login,
   logout,
+  reserveNextGeneratorCodes,
   signInWithGoogle,
   subscribeToAuth,
   updateGeneratorAsAdmin,
@@ -83,16 +85,6 @@ interface GeneratorFormState {
   code: string
   ownerUid: string
   ownerName: string
-}
-
-function createGeneratorCodes(count: number) {
-  const codes = new Set<string>()
-
-  while (codes.size < count) {
-    codes.add(crypto.randomUUID().replaceAll('-', '').slice(0, 10))
-  }
-
-  return Array.from(codes)
 }
 
 function TabPanel({
@@ -161,6 +153,7 @@ export function AdminPage() {
 
   const [exportCount, setExportCount] = useState('12')
   const [exportQrSize, setExportQrSize] = useState('42')
+  const [exportNextCode, setExportNextCode] = useState('')
   const [exportStatus, setExportStatus] = useState('')
   const [exportError, setExportError] = useState('')
 
@@ -239,6 +232,15 @@ export function AdminPage() {
 
     void loadModerationEntries(moderationTab)
   }, [activeTab, moderationTab])
+
+  useEffect(() => {
+    if (profile?.role !== 'admin') {
+      setExportNextCode('')
+      return
+    }
+
+    void loadNextGeneratorCodePreview()
+  }, [profile?.role])
 
   const parsedExportCount = Number.parseInt(exportCount, 10)
   const requestedQrSize = Number.parseFloat(exportQrSize)
@@ -320,7 +322,8 @@ export function AdminPage() {
         throw new Error('Bitte eine gÃ¼ltige QR-GrÃ¶ÃŸe angeben.')
       }
 
-      const cards = createGeneratorCodes(count).map((code) => ({
+      const reservation = await reserveNextGeneratorCodes(count)
+      const cards = reservation.codes.map((code) => ({
         code,
         scanValue: buildGeneratorQrValue(code),
       }))
@@ -329,9 +332,21 @@ export function AdminPage() {
         mode: 'qrSize',
         qrSizeMm,
       })
-      setExportStatus(`PDF mit ${count} QR-Codes wurde erstellt.`)
+      setExportNextCode(reservation.nextCode)
+      setExportStatus(
+        `PDF mit ${count} QR-Codes wurde erstellt. Bereich ${reservation.startCode} bis ${reservation.endCode}.`,
+      )
     } catch (exportIssue) {
       setExportError(exportIssue instanceof Error ? exportIssue.message : 'Export fehlgeschlagen.')
+    }
+  }
+
+  async function loadNextGeneratorCodePreview() {
+    try {
+      const nextCode = await getNextGeneratorCodePreview()
+      setExportNextCode(nextCode)
+    } catch {
+      setExportNextCode('')
     }
   }
 
@@ -783,6 +798,11 @@ export function AdminPage() {
                       helperText="Die Seitenbelegung wird auf A4 automatisch aus der QR-Größe berechnet."
                       fullWidth
                     />
+                    <Typography variant="body2" color="text.secondary">
+                      {exportNextCode
+                        ? `Nächster fortlaufender Code: ${exportNextCode}`
+                        : 'Der nächste fortlaufende Code wird geladen.'}
+                    </Typography>
                     <Typography variant="body2" color="text.secondary">
                       Die Vorschau zeigt das reale A4-Seitenverhältnis. Exportiert werden nur QR-Karten
                       ohne Präfix, Titel oder weitere Hinweise.
