@@ -77,10 +77,8 @@ export function QrLayoutPreview({ layout, totalCards }: QrLayoutPreviewProps) {
             width: '100%',
             maxWidth: layout.orientation === 'landscape' ? 920 : 680,
             aspectRatio: `${layout.pageWidthMm} / ${layout.pageHeightMm}`,
-            bgcolor: '#fbf7ef',
+            bgcolor: 'transparent',
             borderRadius: 3,
-            border: '1px solid rgba(36,28,19,0.14)',
-            boxShadow: '0 18px 40px rgba(36,28,19,0.08)',
             overflow: 'hidden',
           }}
         >
@@ -99,11 +97,7 @@ export function QrLayoutPreview({ layout, totalCards }: QrLayoutPreviewProps) {
                   top: `${(yMm / layout.pageHeightMm) * 100}%`,
                   width: `${(layout.cardWidthMm / layout.pageWidthMm) * 100}%`,
                   height: `${(layout.cardHeightMm / layout.pageHeightMm) * 100}%`,
-                  borderRadius: '8%',
-                  border: '1px solid rgba(121,101,66,0.28)',
-                  bgcolor: '#fffaf1',
                   display: 'grid',
-                  placeItems: 'center',
                 }}
               >
                 <Box
@@ -111,7 +105,7 @@ export function QrLayoutPreview({ layout, totalCards }: QrLayoutPreviewProps) {
                   src={dataUrl}
                   alt=""
                   sx={{
-                    width: `${(layout.qrSizeMm / layout.cardWidthMm) * 100}%`,
+                    width: '100%',
                     aspectRatio: '1 / 1',
                     display: 'block',
                   }}

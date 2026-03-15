@@ -151,8 +151,8 @@ function formatPageSizeLabel(pageSize: QrPdfPageSize) {
       return 'A5'
     case 'a6':
       return 'A6'
-    case 'ticket':
-      return 'Ticket'
+    case 'qr':
+      return 'QR-Code'
     case 'auto':
       return 'Auto'
     case 'a4':
@@ -913,7 +913,7 @@ export function AdminPage() {
                                   <option value="a4">A4</option>
                                   <option value="a5">A5</option>
                                   <option value="a6">A6</option>
-                                  <option value="ticket">Ticket</option>
+                                  <option value="qr">QR-Code</option>
                                   <option value="auto">Auto</option>
                                 </TextField>
                                 <Typography variant="body2" color="text.secondary">

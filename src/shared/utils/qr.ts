@@ -8,9 +8,9 @@ export interface QrCardDefinition {
 }
 
 export type QrPdfLayoutMode = 'cardsPerPage' | 'qrSize'
-export type QrPdfPageSize = 'auto' | 'a4' | 'a5' | 'a6' | 'ticket'
+export type QrPdfPageSize = 'auto' | 'a4' | 'a5' | 'a6' | 'qr'
 type PageOrientation = 'portrait' | 'landscape'
-type StaticQrPdfPageSize = Exclude<QrPdfPageSize, 'auto' | 'ticket'>
+type StaticQrPdfPageSize = Exclude<QrPdfPageSize, 'auto' | 'qr'>
 
 interface PageFormat {
   size: Exclude<QrPdfPageSize, 'auto'>
@@ -76,7 +76,7 @@ const PAGE_FORMATS: Record<StaticQrPdfPageSize, PageFormat[]> = {
 }
 const OUTER_MARGIN_MM = 10
 const BASE_GAP_MM = 4
-const CARD_PADDING_MM = 6
+const CARD_PADDING_MM = 0
 const CARD_HEADER_MM = 0
 const CARD_FOOTER_MM = 0
 const MIN_QR_SIZE_MM = 18
@@ -94,107 +94,8 @@ function hashToThreeDigitHex(input: string) {
   return hash.toString(16).toUpperCase().padStart(3, '0')
 }
 
-function getQrCenterHex(value: string) {
-  const code = extractGeneratorCodeFromQrValue(value, 'https://mbz.local')
-  return hashToThreeDigitHex(code || value.trim() || '000')
-}
-
 export function getQrBadgeHex(code: string) {
   return hashToThreeDigitHex(formatCode(code) || code.trim() || '000')
-}
-
-function isFinderZone(row: number, col: number, size: number) {
-  const finderSize = 7
-  const topLeft = row < finderSize && col < finderSize
-  const topRight = row < finderSize && col >= size - finderSize
-  const bottomLeft = row >= size - finderSize && col < finderSize
-  return topLeft || topRight || bottomLeft
-}
-
-function drawRoundedRect(
-  context: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  radius: number,
-) {
-  context.beginPath()
-  context.moveTo(x + radius, y)
-  context.arcTo(x + width, y, x + width, y + height, radius)
-  context.arcTo(x + width, y + height, x, y + height, radius)
-  context.arcTo(x, y + height, x, y, radius)
-  context.arcTo(x, y, x + width, y, radius)
-  context.closePath()
-}
-
-function renderFancyQrToCanvas(value: string) {
-  const qr = QRCode.create(value, {
-    errorCorrectionLevel: 'H',
-  })
-  const canvas = document.createElement('canvas')
-  const context = canvas.getContext('2d')
-
-  if (!context) {
-    throw new Error('QR-Code konnte nicht gezeichnet werden.')
-  }
-
-  const badgeHex = getQrCenterHex(value)
-  const totalModules = qr.modules.size + QR_QUIET_ZONE_MODULES * 2
-  const moduleSize = QR_CANVAS_SIZE / totalModules
-  const qrOffset = QR_QUIET_ZONE_MODULES * moduleSize
-
-  canvas.width = QR_CANVAS_SIZE
-  canvas.height = QR_CANVAS_SIZE
-
-  context.fillStyle = '#F8F2E7'
-  context.fillRect(0, 0, canvas.width, canvas.height)
-
-  context.fillStyle = '#EFE6D4'
-  drawRoundedRect(context, 18, 18, canvas.width - 36, canvas.height - 36, 40)
-  context.fill()
-
-  for (let row = 0; row < qr.modules.size; row += 1) {
-    for (let col = 0; col < qr.modules.size; col += 1) {
-      if (!qr.modules.get(row, col)) {
-        continue
-      }
-
-      const x = qrOffset + col * moduleSize
-      const y = qrOffset + row * moduleSize
-      const isFinder = isFinderZone(row, col, qr.modules.size)
-
-      context.fillStyle = isFinder ? '#7CB342' : '#241C13'
-      drawRoundedRect(
-        context,
-        x + moduleSize * 0.12,
-        y + moduleSize * 0.12,
-        moduleSize * 0.76,
-        moduleSize * 0.76,
-        Math.max(2, moduleSize * 0.22),
-      )
-      context.fill()
-    }
-  }
-
-  const badgeSize = canvas.width * 0.2
-  const badgeX = (canvas.width - badgeSize) / 2
-  const badgeY = (canvas.height - badgeSize) / 2
-
-  context.fillStyle = '#FFF9EF'
-  context.strokeStyle = '#1F7A8C'
-  context.lineWidth = 10
-  drawRoundedRect(context, badgeX, badgeY, badgeSize, badgeSize, 26)
-  context.fill()
-  context.stroke()
-
-  context.fillStyle = '#241C13'
-  context.font = 'bold 54px "Trebuchet MS", sans-serif'
-  context.textAlign = 'center'
-  context.textBaseline = 'middle'
-  context.fillText(badgeHex, canvas.width / 2, canvas.height / 2 + 2)
-
-  return canvas
 }
 
 export function buildGeneratorQrValue(code: string) {
@@ -208,7 +109,15 @@ export function buildGeneratorQrValue(code: string) {
 }
 
 export async function generateQrDataUrl(value: string) {
-  return renderFancyQrToCanvas(value).toDataURL('image/png')
+  return QRCode.toDataURL(value, {
+    errorCorrectionLevel: 'H',
+    margin: QR_QUIET_ZONE_MODULES,
+    width: QR_CANVAS_SIZE,
+    color: {
+      dark: '#000000',
+      light: '#0000',
+    },
+  })
 }
 
 export function extractGeneratorCodeFromQrValue(value: string, origin = window.location.origin) {
@@ -249,7 +158,7 @@ function getCandidatePageFormats(pageSize: QrPdfPageSize) {
     return Object.values(PAGE_FORMATS).flat()
   }
 
-  if (pageSize === 'ticket') {
+  if (pageSize === 'qr') {
     return []
   }
 
@@ -343,23 +252,21 @@ function resolveLayoutByQrSize(pageFormat: PageFormat, requestedQrSizeMm: number
   } satisfies ResolvedQrPdfLayout
 }
 
-function resolveTicketPageLayout(requestedQrSizeMm: number) {
+function resolveQrOnlyPageLayout(requestedQrSizeMm: number) {
   const qrSizeMm = clamp(requestedQrSizeMm, MIN_QR_SIZE_MM, MAX_QR_SIZE_MM)
-  const cardWidthMm = qrSizeMm + CARD_PADDING_MM * 2
-  const cardHeightMm = qrSizeMm + CARD_HEADER_MM + CARD_FOOTER_MM + CARD_PADDING_MM * 2
 
   return {
     pageFormat: {
-      size: 'ticket',
-      widthMm: cardWidthMm,
-      heightMm: cardHeightMm,
-      orientation: cardWidthMm > cardHeightMm ? 'landscape' : 'portrait',
+      size: 'qr',
+      widthMm: qrSizeMm,
+      heightMm: qrSizeMm,
+      orientation: 'portrait',
     },
     columns: 1,
     rows: 1,
     cardsPerPage: 1,
-    cardWidthMm,
-    cardHeightMm,
+    cardWidthMm: qrSizeMm,
+    cardHeightMm: qrSizeMm,
     qrSizeMm,
     startXmm: 0,
     startYmm: 0,
@@ -376,8 +283,8 @@ function resolveQrPdfLayout(totalCards: number, options: QrPdfExportOptions) {
   if (options.mode === 'qrSize') {
     const requestedQrSizeMm = clamp(options.qrSizeMm ?? 42, MIN_QR_SIZE_MM, MAX_QR_SIZE_MM)
 
-    if (pageSize === 'ticket') {
-      return resolveTicketPageLayout(requestedQrSizeMm)
+    if (pageSize === 'qr') {
+      return resolveQrOnlyPageLayout(requestedQrSizeMm)
     }
 
     const candidates = pageFormats.map((pageFormat) => resolveLayoutByQrSize(pageFormat, requestedQrSizeMm))
@@ -470,13 +377,7 @@ function drawCard(
   const x = layout.startXmm + column * (layout.cardWidthMm + layout.gapXmm)
   const y = layout.startYmm + row * (layout.cardHeightMm + layout.gapYmm)
 
-  doc.setDrawColor('#796542')
-  doc.setFillColor('#fffaf1')
-  doc.roundedRect(x, y, layout.cardWidthMm, layout.cardHeightMm, 3, 3, 'FD')
-
-  const qrX = x + (layout.cardWidthMm - layout.qrSizeMm) / 2
-  const qrY = y + (layout.cardHeightMm - layout.qrSizeMm) / 2
-  doc.addImage(qrDataUrl, 'PNG', qrX, qrY, layout.qrSizeMm, layout.qrSizeMm)
+  doc.addImage(qrDataUrl, 'PNG', x, y, layout.qrSizeMm, layout.qrSizeMm)
 }
 
 export async function downloadQrPdf(cards: QrCardDefinition[], options: QrPdfExportOptions) {
