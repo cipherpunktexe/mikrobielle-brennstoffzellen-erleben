@@ -161,7 +161,7 @@ export function AdminPage() {
   const [activeTab, setActiveTab] = useState<AdminTabValue>(routeCode ? 'scan' : 'qr')
   const [moderationTab, setModerationTab] = useState<ModerationTabValue>('users')
 
-  const [exportCount, setExportCount] = useState('12')
+  const [exportCount, setExportCount] = useState('1')
   const [exportQrSize, setExportQrSize] = useState('42')
   const [exportPageSize, setExportPageSize] = useState<QrPdfPageSize>('a4')
   const [exportDigits, setExportDigits] = useState('4')
