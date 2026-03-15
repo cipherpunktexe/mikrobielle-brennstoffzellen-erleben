@@ -758,30 +758,6 @@ export function AdminPage() {
 
   return (
     <Stack spacing={{ xs: 2.5, md: 3 }}>
-      <Stack
-        direction={{ xs: 'column', md: 'row' }}
-        justifyContent="space-between"
-        alignItems={{ xs: 'stretch', md: 'center' }}
-        spacing={2}
-      >
-        <div>
-          <Typography variant="overline">Admin</Typography>
-          <Typography variant="h2" sx={{ fontSize: { xs: '1.9rem', sm: undefined } }}>
-            Verwaltungsbereich
-          </Typography>
-          <Typography color="text.secondary">
-            QR-Erstellung, Scan-Workflow und Moderation sind sauber getrennt.
-          </Typography>
-        </div>
-        <Button
-          variant="outlined"
-          onClick={() => void logout()}
-          sx={{ width: { xs: '100%', sm: 'auto' } }}
-        >
-          Abmelden
-        </Button>
-      </Stack>
-
       <Card>
         <Tabs
           value={activeTab}
