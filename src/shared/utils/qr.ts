@@ -8,8 +8,9 @@ export interface QrCardDefinition {
 }
 
 export type QrPdfLayoutMode = 'cardsPerPage' | 'qrSize'
-export type QrPdfPageSize = 'auto' | 'a4' | 'a5' | 'a6'
+export type QrPdfPageSize = 'auto' | 'a4' | 'a5' | 'a6' | 'ticket'
 type PageOrientation = 'portrait' | 'landscape'
+type StaticQrPdfPageSize = Exclude<QrPdfPageSize, 'auto' | 'ticket'>
 
 interface PageFormat {
   size: Exclude<QrPdfPageSize, 'auto'>
@@ -59,7 +60,7 @@ export interface QrPdfLayoutPreview {
 }
 
 const QR_PREFIX = 'mbz:generator:'
-const PAGE_FORMATS: Record<Exclude<QrPdfPageSize, 'auto'>, PageFormat[]> = {
+const PAGE_FORMATS: Record<StaticQrPdfPageSize, PageFormat[]> = {
   a4: [
     { size: 'a4', widthMm: 210, heightMm: 297, orientation: 'portrait' },
     { size: 'a4', widthMm: 297, heightMm: 210, orientation: 'landscape' },
@@ -248,6 +249,10 @@ function getCandidatePageFormats(pageSize: QrPdfPageSize) {
     return Object.values(PAGE_FORMATS).flat()
   }
 
+  if (pageSize === 'ticket') {
+    return []
+  }
+
   return PAGE_FORMATS[pageSize]
 }
 
@@ -338,12 +343,43 @@ function resolveLayoutByQrSize(pageFormat: PageFormat, requestedQrSizeMm: number
   } satisfies ResolvedQrPdfLayout
 }
 
+function resolveTicketPageLayout(requestedQrSizeMm: number) {
+  const qrSizeMm = clamp(requestedQrSizeMm, MIN_QR_SIZE_MM, MAX_QR_SIZE_MM)
+  const cardWidthMm = qrSizeMm + CARD_PADDING_MM * 2
+  const cardHeightMm = qrSizeMm + CARD_HEADER_MM + CARD_FOOTER_MM + CARD_PADDING_MM * 2
+
+  return {
+    pageFormat: {
+      size: 'ticket',
+      widthMm: cardWidthMm,
+      heightMm: cardHeightMm,
+      orientation: cardWidthMm > cardHeightMm ? 'landscape' : 'portrait',
+    },
+    columns: 1,
+    rows: 1,
+    cardsPerPage: 1,
+    cardWidthMm,
+    cardHeightMm,
+    qrSizeMm,
+    startXmm: 0,
+    startYmm: 0,
+    gapXmm: 0,
+    gapYmm: 0,
+  } satisfies ResolvedQrPdfLayout
+}
+
 function resolveQrPdfLayout(totalCards: number, options: QrPdfExportOptions) {
   const safeTotalCards = Math.max(totalCards, 1)
-  const pageFormats = getCandidatePageFormats(options.pageSize ?? 'a4')
+  const pageSize = options.pageSize ?? 'a4'
+  const pageFormats = getCandidatePageFormats(pageSize)
 
   if (options.mode === 'qrSize') {
     const requestedQrSizeMm = clamp(options.qrSizeMm ?? 42, MIN_QR_SIZE_MM, MAX_QR_SIZE_MM)
+
+    if (pageSize === 'ticket') {
+      return resolveTicketPageLayout(requestedQrSizeMm)
+    }
+
     const candidates = pageFormats.map((pageFormat) => resolveLayoutByQrSize(pageFormat, requestedQrSizeMm))
       .filter((candidate): candidate is ResolvedQrPdfLayout => candidate !== null)
       .sort((left, right) => {
