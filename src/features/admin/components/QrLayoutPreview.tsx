@@ -8,8 +8,6 @@ interface QrLayoutPreviewProps {
   totalCards: number
 }
 
-const PREVIEW_REFERENCE_MM = 297
-
 function createPreviewValues(count: number) {
   return Array.from(
     { length: count },
@@ -61,8 +59,6 @@ export function QrLayoutPreview({ layout, totalCards }: QrLayoutPreviewProps) {
     )
   }
 
-  const previewWidthPercent = Math.min((layout.pageWidthMm / PREVIEW_REFERENCE_MM) * 100, 100)
-
   return (
     <Stack spacing={2}>
       {error ? <Alert severity="error">{error}</Alert> : null}
@@ -77,7 +73,7 @@ export function QrLayoutPreview({ layout, totalCards }: QrLayoutPreviewProps) {
         <Box
           sx={{
             width: '100%',
-            minHeight: { xs: 220, sm: 320 },
+            height: { xs: 220, sm: 320 },
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
@@ -86,7 +82,8 @@ export function QrLayoutPreview({ layout, totalCards }: QrLayoutPreviewProps) {
           <Box
             sx={{
               position: 'relative',
-              width: `${previewWidthPercent}%`,
+              height: '100%',
+              width: 'auto',
               maxWidth: '100%',
               aspectRatio: `${layout.pageWidthMm} / ${layout.pageHeightMm}`,
               bgcolor: '#fffdf8',
