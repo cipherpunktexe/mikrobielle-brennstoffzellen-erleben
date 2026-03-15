@@ -8,9 +8,11 @@ export interface QrCardDefinition {
 }
 
 export type QrPdfLayoutMode = 'cardsPerPage' | 'qrSize'
+export type QrPdfPageSize = 'auto' | 'a4' | 'a5' | 'a6'
 type PageOrientation = 'portrait' | 'landscape'
 
 interface PageFormat {
+  size: Exclude<QrPdfPageSize, 'auto'>
   widthMm: number
   heightMm: number
   orientation: PageOrientation
@@ -34,10 +36,12 @@ export interface QrPdfExportOptions {
   mode: QrPdfLayoutMode
   cardsPerPage?: number
   qrSizeMm?: number
+  pageSize?: QrPdfPageSize
   fileName?: string
 }
 
 export interface QrPdfLayoutPreview {
+  pageSize: Exclude<QrPdfPageSize, 'auto'>
   orientation: PageOrientation
   columns: number
   rows: number
@@ -55,10 +59,20 @@ export interface QrPdfLayoutPreview {
 }
 
 const QR_PREFIX = 'mbz:generator:'
-const A4_FORMATS: PageFormat[] = [
-  { widthMm: 210, heightMm: 297, orientation: 'portrait' },
-  { widthMm: 297, heightMm: 210, orientation: 'landscape' },
-]
+const PAGE_FORMATS: Record<Exclude<QrPdfPageSize, 'auto'>, PageFormat[]> = {
+  a4: [
+    { size: 'a4', widthMm: 210, heightMm: 297, orientation: 'portrait' },
+    { size: 'a4', widthMm: 297, heightMm: 210, orientation: 'landscape' },
+  ],
+  a5: [
+    { size: 'a5', widthMm: 148, heightMm: 210, orientation: 'portrait' },
+    { size: 'a5', widthMm: 210, heightMm: 148, orientation: 'landscape' },
+  ],
+  a6: [
+    { size: 'a6', widthMm: 105, heightMm: 148, orientation: 'portrait' },
+    { size: 'a6', widthMm: 148, heightMm: 105, orientation: 'landscape' },
+  ],
+}
 const OUTER_MARGIN_MM = 10
 const BASE_GAP_MM = 4
 const CARD_PADDING_MM = 6
@@ -229,6 +243,14 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max)
 }
 
+function getCandidatePageFormats(pageSize: QrPdfPageSize) {
+  if (pageSize === 'auto') {
+    return Object.values(PAGE_FORMATS).flat()
+  }
+
+  return PAGE_FORMATS[pageSize]
+}
+
 function getInnerSize(pageFormat: PageFormat) {
   return {
     widthMm: pageFormat.widthMm - OUTER_MARGIN_MM * 2,
@@ -318,10 +340,11 @@ function resolveLayoutByQrSize(pageFormat: PageFormat, requestedQrSizeMm: number
 
 function resolveQrPdfLayout(totalCards: number, options: QrPdfExportOptions) {
   const safeTotalCards = Math.max(totalCards, 1)
+  const pageFormats = getCandidatePageFormats(options.pageSize ?? 'a4')
 
   if (options.mode === 'qrSize') {
     const requestedQrSizeMm = clamp(options.qrSizeMm ?? 42, MIN_QR_SIZE_MM, MAX_QR_SIZE_MM)
-    const candidates = A4_FORMATS.map((pageFormat) => resolveLayoutByQrSize(pageFormat, requestedQrSizeMm))
+    const candidates = pageFormats.map((pageFormat) => resolveLayoutByQrSize(pageFormat, requestedQrSizeMm))
       .filter((candidate): candidate is ResolvedQrPdfLayout => candidate !== null)
       .sort((left, right) => {
         if (right.cardsPerPage !== left.cardsPerPage) {
@@ -345,7 +368,7 @@ function resolveQrPdfLayout(totalCards: number, options: QrPdfExportOptions) {
     1,
     Math.max(safeTotalCards, 1),
   )
-  const candidates = A4_FORMATS.map((pageFormat) =>
+  const candidates = pageFormats.map((pageFormat) =>
     resolveLayoutByCardsPerPage(pageFormat, requestedCardsPerPage),
   )
     .filter((candidate): candidate is ResolvedQrPdfLayout & { score: number } => candidate !== null)
@@ -374,6 +397,7 @@ export function getQrPdfLayoutPreview(totalCards: number, options: QrPdfExportOp
   const layout = resolveQrPdfLayout(totalCards, options)
 
   return {
+    pageSize: layout.pageFormat.size,
     orientation: layout.pageFormat.orientation,
     columns: layout.columns,
     rows: layout.rows,
@@ -428,7 +452,7 @@ export async function downloadQrPdf(cards: QrCardDefinition[], options: QrPdfExp
   const doc = new jsPDF({
     orientation: layout.pageFormat.orientation,
     unit: 'mm',
-    format: 'a4',
+    format: [layout.pageFormat.widthMm, layout.pageFormat.heightMm],
     compress: true,
   })
 
@@ -441,7 +465,7 @@ export async function downloadQrPdf(cards: QrCardDefinition[], options: QrPdfExp
     const column = indexOnPage % layout.columns
 
     if (pageIndex > 0 && indexOnPage === 0) {
-      doc.addPage('a4', layout.pageFormat.orientation)
+      doc.addPage([layout.pageFormat.widthMm, layout.pageFormat.heightMm], layout.pageFormat.orientation)
     }
 
     drawCard(doc, qrDataUrls[index], layout, column, row)

@@ -47,6 +47,7 @@ import {
   extractGeneratorCodeFromQrValue,
   getQrPdfLayoutPreview,
 } from '../../../shared/utils/qr'
+import type { QrPdfPageSize } from '../../../shared/utils/qr'
 import {
   addMeasurementByCode,
   getNextGeneratorCodePreview,
@@ -140,6 +141,20 @@ function convertMeasurementToVolts(value: number, unit: MeasurementUnit) {
   }
 }
 
+function formatPageSizeLabel(pageSize: QrPdfPageSize) {
+  switch (pageSize) {
+    case 'a5':
+      return 'A5'
+    case 'a6':
+      return 'A6'
+    case 'auto':
+      return 'Auto'
+    case 'a4':
+    default:
+      return 'A4'
+  }
+}
+
 export function AdminPage() {
   const navigate = useNavigate()
   const params = useParams()
@@ -154,6 +169,7 @@ export function AdminPage() {
 
   const [exportCount, setExportCount] = useState('12')
   const [exportQrSize, setExportQrSize] = useState('42')
+  const [exportPageSize, setExportPageSize] = useState<QrPdfPageSize>('a4')
   const [exportNextCode, setExportNextCode] = useState('')
   const [exportStatus, setExportStatus] = useState('')
   const [exportError, setExportError] = useState('')
@@ -252,6 +268,7 @@ export function AdminPage() {
       exportLayoutPreview = getQrPdfLayoutPreview(parsedExportCount, {
         mode: 'qrSize',
         qrSizeMm: requestedQrSize,
+        pageSize: exportPageSize,
       })
     } catch {
       exportLayoutPreview = null
@@ -332,6 +349,7 @@ export function AdminPage() {
       await downloadQrPdf(cards, {
         mode: 'qrSize',
         qrSizeMm,
+        pageSize: exportPageSize,
       })
       setExportNextCode(reservation.nextCode)
       setExportStatus(
@@ -806,7 +824,7 @@ export function AdminPage() {
                               type="number"
                               value={exportQrSize}
                               onChange={(event) => setExportQrSize(event.target.value)}
-                              helperText="Die Seitenbelegung wird auf A4 automatisch aus der QR-Größe berechnet."
+                              helperText="Die Ticketgröße ergibt sich aus QR-Größe plus Rand."
                               fullWidth
                             />
                           </Stack>
@@ -816,6 +834,43 @@ export function AdminPage() {
                     <Stack direction="row" spacing={1.5} alignItems="flex-start">
                       <Chip
                         label="2"
+                        color="primary"
+                        sx={{ minWidth: 36, height: 36, borderRadius: 999 }}
+                      />
+                      <Card variant="outlined" sx={{ flex: 1 }}>
+                        <CardContent sx={{ p: 2 }}>
+                          <Stack spacing={1.5}>
+                            <Typography fontWeight={700}>Layout</Typography>
+                            <TextField
+                              label="Seitenformat"
+                              select
+                              value={exportPageSize}
+                              onChange={(event) => setExportPageSize(event.target.value as QrPdfPageSize)}
+                              fullWidth
+                              SelectProps={{ native: true }}
+                            >
+                              <option value="a4">A4</option>
+                              <option value="a5">A5</option>
+                              <option value="a6">A6</option>
+                              <option value="auto">Auto</option>
+                            </TextField>
+                            <Typography variant="body2" color="text.secondary">
+                              {exportLayoutPreview
+                                ? `Ticketgröße: ${exportLayoutPreview.cardWidthMm.toFixed(1)} × ${exportLayoutPreview.cardHeightMm.toFixed(1)} mm`
+                                : 'Die Ticketgröße wird nach Eingabe gültiger Werte berechnet.'}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              {exportLayoutPreview
+                                ? `${formatPageSizeLabel(exportLayoutPreview.pageSize)} ${exportLayoutPreview.orientation === 'landscape' ? 'quer' : 'hoch'}, ${exportLayoutPreview.columns} × ${exportLayoutPreview.rows} pro Seite`
+                                : 'Seitenformat und Belegung werden aus dem gewählten Layout berechnet.'}
+                            </Typography>
+                          </Stack>
+                        </CardContent>
+                      </Card>
+                    </Stack>
+                    <Stack direction="row" spacing={1.5} alignItems="flex-start">
+                      <Chip
+                        label="3"
                         color="primary"
                         sx={{ minWidth: 36, height: 36, borderRadius: 999 }}
                       />
@@ -837,7 +892,7 @@ export function AdminPage() {
                     </Stack>
                     <Stack direction="row" spacing={1.5} alignItems="flex-start">
                       <Chip
-                        label="3"
+                        label="4"
                         color="primary"
                         sx={{ minWidth: 36, height: 36, borderRadius: 999 }}
                       />
