@@ -1,4 +1,5 @@
-﻿import EditNoteIcon from '@mui/icons-material/EditNote'
+import EditNoteIcon from '@mui/icons-material/EditNote'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import QrCode2Icon from '@mui/icons-material/QrCode2'
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner'
@@ -10,6 +11,7 @@ import {
   Card,
   CardContent,
   Chip,
+  Collapse,
   Dialog,
   DialogActions,
   DialogContent,
@@ -88,6 +90,8 @@ interface GeneratorFormState {
   ownerUid: string
   ownerName: string
 }
+
+type QrExportStepKey = 'count' | 'layout' | 'number' | 'export'
 
 function TabPanel({
   active,
@@ -181,6 +185,12 @@ export function AdminPage() {
   const [exportNextSequence, setExportNextSequence] = useState<number | null>(null)
   const [exportStatus, setExportStatus] = useState('')
   const [exportError, setExportError] = useState('')
+  const [exportStepOpen, setExportStepOpen] = useState<Record<QrExportStepKey, boolean>>({
+    count: true,
+    layout: false,
+    number: false,
+    export: true,
+  })
 
   const [scannerOpen, setScannerOpen] = useState(false)
   const [scanCode, setScanCode] = useState(routeCode)
@@ -312,6 +322,13 @@ export function AdminPage() {
 
   function handleModerationTabChange(_event: SyntheticEvent, value: ModerationTabValue) {
     setModerationTab(value)
+  }
+
+  function toggleExportStep(step: QrExportStepKey) {
+    setExportStepOpen((current) => ({
+      ...current,
+      [step]: !current[step],
+    }))
   }
 
   async function handleLogin(event: FormEvent<HTMLFormElement>) {
@@ -824,14 +841,30 @@ export function AdminPage() {
                       <Card variant="outlined" sx={{ flex: 1 }}>
                         <CardContent sx={{ p: 2 }}>
                           <Stack spacing={1.5}>
-                            <Typography fontWeight={700}>Anzahl</Typography>
-                            <TextField
-                              label="Anzahl"
-                              type="number"
-                              value={exportCount}
-                              onChange={(event) => setExportCount(event.target.value)}
-                              fullWidth
-                            />
+                            <Stack direction="row" alignItems="center" justifyContent="space-between">
+                              <Typography fontWeight={700}>Anzahl</Typography>
+                              <IconButton
+                                size="small"
+                                onClick={() => toggleExportStep('count')}
+                                aria-label="Step 1 ein- oder ausklappen"
+                              >
+                                <ExpandMoreIcon
+                                  sx={{
+                                    transform: exportStepOpen.count ? 'rotate(180deg)' : 'rotate(0deg)',
+                                    transition: 'transform 0.2s ease',
+                                  }}
+                                />
+                              </IconButton>
+                            </Stack>
+                            <Collapse in={exportStepOpen.count}>
+                              <TextField
+                                label="Anzahl"
+                                type="number"
+                                value={exportCount}
+                                onChange={(event) => setExportCount(event.target.value)}
+                                fullWidth
+                              />
+                            </Collapse>
                           </Stack>
                         </CardContent>
                       </Card>
@@ -845,38 +878,56 @@ export function AdminPage() {
                       <Card variant="outlined" sx={{ flex: 1 }}>
                         <CardContent sx={{ p: 2 }}>
                           <Stack spacing={1.5}>
-                            <Typography fontWeight={700}>Größe und Format</Typography>
-                            <TextField
-                              label="QR-Größe in mm"
-                              type="number"
-                              value={exportQrSize}
-                              onChange={(event) => setExportQrSize(event.target.value)}
-                              fullWidth
-                            />
-                            <TextField
-                              label="Seitenformat"
-                              select
-                              value={exportPageSize}
-                              onChange={(event) => setExportPageSize(event.target.value as QrPdfPageSize)}
-                              fullWidth
-                              SelectProps={{ native: true }}
-                            >
-                              <option value="a4">A4</option>
-                              <option value="a5">A5</option>
-                              <option value="a6">A6</option>
-                              <option value="ticket">Ticket</option>
-                              <option value="auto">Auto</option>
-                            </TextField>
-                            <Typography variant="body2" color="text.secondary">
-                              {exportLayoutPreview
-                                ? `${formatPageSizeLabel(exportLayoutPreview.pageSize)} ${exportLayoutPreview.orientation === 'landscape' ? 'quer' : 'hoch'}`
-                                : '-'}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              {exportLayoutPreview
-                                ? `${exportLayoutPreview.cardWidthMm.toFixed(1)} × ${exportLayoutPreview.cardHeightMm.toFixed(1)} mm`
-                                : '-'}
-                            </Typography>
+                            <Stack direction="row" alignItems="center" justifyContent="space-between">
+                              <Typography fontWeight={700}>Größe und Format</Typography>
+                              <IconButton
+                                size="small"
+                                onClick={() => toggleExportStep('layout')}
+                                aria-label="Step 2 ein- oder ausklappen"
+                              >
+                                <ExpandMoreIcon
+                                  sx={{
+                                    transform: exportStepOpen.layout ? 'rotate(180deg)' : 'rotate(0deg)',
+                                    transition: 'transform 0.2s ease',
+                                  }}
+                                />
+                              </IconButton>
+                            </Stack>
+                            <Collapse in={exportStepOpen.layout}>
+                              <Stack spacing={1.5}>
+                                <TextField
+                                  label="QR-Größe in mm"
+                                  type="number"
+                                  value={exportQrSize}
+                                  onChange={(event) => setExportQrSize(event.target.value)}
+                                  fullWidth
+                                />
+                                <TextField
+                                  label="Seitenformat"
+                                  select
+                                  value={exportPageSize}
+                                  onChange={(event) => setExportPageSize(event.target.value as QrPdfPageSize)}
+                                  fullWidth
+                                  SelectProps={{ native: true }}
+                                >
+                                  <option value="a4">A4</option>
+                                  <option value="a5">A5</option>
+                                  <option value="a6">A6</option>
+                                  <option value="ticket">Ticket</option>
+                                  <option value="auto">Auto</option>
+                                </TextField>
+                                <Typography variant="body2" color="text.secondary">
+                                  {exportLayoutPreview
+                                    ? `${formatPageSizeLabel(exportLayoutPreview.pageSize)} ${exportLayoutPreview.orientation === 'landscape' ? 'quer' : 'hoch'}`
+                                    : '-'}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                  {exportLayoutPreview
+                                    ? `${exportLayoutPreview.cardWidthMm.toFixed(1)} × ${exportLayoutPreview.cardHeightMm.toFixed(1)} mm`
+                                    : '-'}
+                                </Typography>
+                              </Stack>
+                            </Collapse>
                           </Stack>
                         </CardContent>
                       </Card>
@@ -889,33 +940,51 @@ export function AdminPage() {
                       />
                       <Card variant="outlined" sx={{ flex: 1 }}>
                         <CardContent sx={{ p: 2 }}>
-                          <Stack spacing={2}>
-                            <Typography fontWeight={700}>Nummer</Typography>
-                            <TextField
-                              label="Stellen"
-                              type="number"
-                              value={exportDigits}
-                              onChange={(event) => setExportDigits(event.target.value)}
-                              fullWidth
-                            />
-                            <Box>
-                              <Typography
-                                variant="h3"
-                                sx={{
-                                  fontFamily: '"Consolas", "Courier New", monospace',
-                                  fontSize: { xs: '1.9rem', sm: '2.4rem' },
-                                  letterSpacing: '0.08em',
-                                  lineHeight: 1,
-                                }}
+                          <Stack spacing={1.5}>
+                            <Stack direction="row" alignItems="center" justifyContent="space-between">
+                              <Typography fontWeight={700}>Nummer</Typography>
+                              <IconButton
+                                size="small"
+                                onClick={() => toggleExportStep('number')}
+                                aria-label="Step 3 ein- oder ausklappen"
                               >
-                                {exportNextCode || '-'}
-                              </Typography>
-                              <Typography variant="body2" color="text.secondary">
-                                {exportNextSequence === null
-                                  ? '-'
-                                  : formatMutedDecimal(exportNextSequence)}
-                              </Typography>
-                            </Box>
+                                <ExpandMoreIcon
+                                  sx={{
+                                    transform: exportStepOpen.number ? 'rotate(180deg)' : 'rotate(0deg)',
+                                    transition: 'transform 0.2s ease',
+                                  }}
+                                />
+                              </IconButton>
+                            </Stack>
+                            <Collapse in={exportStepOpen.number}>
+                              <Stack spacing={2}>
+                                <TextField
+                                  label="Stellen"
+                                  type="number"
+                                  value={exportDigits}
+                                  onChange={(event) => setExportDigits(event.target.value)}
+                                  fullWidth
+                                />
+                                <Box>
+                                  <Typography
+                                    variant="h3"
+                                    sx={{
+                                      fontFamily: '"Consolas", "Courier New", monospace',
+                                      fontSize: { xs: '1.9rem', sm: '2.4rem' },
+                                      letterSpacing: '0.08em',
+                                      lineHeight: 1,
+                                    }}
+                                  >
+                                    {exportNextCode || '-'}
+                                  </Typography>
+                                  <Typography variant="body2" color="text.secondary">
+                                    {exportNextSequence === null
+                                      ? '-'
+                                      : formatMutedDecimal(exportNextSequence)}
+                                  </Typography>
+                                </Box>
+                              </Stack>
+                            </Collapse>
                           </Stack>
                         </CardContent>
                       </Card>
@@ -929,15 +998,31 @@ export function AdminPage() {
                       <Card variant="outlined" sx={{ flex: 1 }}>
                         <CardContent sx={{ p: 2 }}>
                           <Stack spacing={1.5}>
-                            <Typography fontWeight={700}>Export</Typography>
-                            <Button
-                              variant="contained"
-                              onClick={() => void handleExport()}
-                              startIcon={<SaveIcon />}
-                              fullWidth
-                            >
-                              PDF herunterladen
-                            </Button>
+                            <Stack direction="row" alignItems="center" justifyContent="space-between">
+                              <Typography fontWeight={700}>Export</Typography>
+                              <IconButton
+                                size="small"
+                                onClick={() => toggleExportStep('export')}
+                                aria-label="Step 4 ein- oder ausklappen"
+                              >
+                                <ExpandMoreIcon
+                                  sx={{
+                                    transform: exportStepOpen.export ? 'rotate(180deg)' : 'rotate(0deg)',
+                                    transition: 'transform 0.2s ease',
+                                  }}
+                                />
+                              </IconButton>
+                            </Stack>
+                            <Collapse in={exportStepOpen.export}>
+                              <Button
+                                variant="contained"
+                                onClick={() => void handleExport()}
+                                startIcon={<SaveIcon />}
+                                fullWidth
+                              >
+                                PDF herunterladen
+                              </Button>
+                            </Collapse>
                           </Stack>
                         </CardContent>
                       </Card>
