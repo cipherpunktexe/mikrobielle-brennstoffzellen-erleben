@@ -89,23 +89,14 @@ const QR_BADGE_MIN_RATIO = 0.12
 const QR_BADGE_MAX_RATIO = 0.16
 const QR_BADGE_MODULE_SPAN = 6.5
 
-function hashToThreeDigitHex(input: string) {
-  let hash = 0
-
-  for (const character of input) {
-    hash = (hash * 31 + character.charCodeAt(0)) & 0xfff
-  }
-
-  return hash.toString(16).toUpperCase().padStart(3, '0')
+export function getQrBadgeLabel(code: string) {
+  const normalizedCode = formatCode(code) || code.trim() || '000'
+  return normalizedCode.toUpperCase()
 }
 
-export function getQrBadgeHex(code: string) {
-  return hashToThreeDigitHex(formatCode(code) || code.trim() || '000')
-}
-
-function getQrCenterHex(value: string) {
+function getQrCenterLabel(value: string) {
   const code = extractGeneratorCodeFromQrValue(value, 'https://mbz.local')
-  return hashToThreeDigitHex(code || value.trim() || '000')
+  return getQrBadgeLabel(code || value.trim() || '000')
 }
 
 function isFinderZone(row: number, col: number, size: number) {
@@ -151,7 +142,12 @@ function getQrBadgeMetrics(moduleSize: number) {
   }
 }
 
-function renderStyledQrToCanvas(value: string) {
+function getQrBadgeFontSize(label: string, badgeSize: number, preferredFontSize: number) {
+  const estimatedTextWidthRatio = Math.max(label.length * 0.66, 1)
+  return Math.min(preferredFontSize, (badgeSize * 0.8) / estimatedTextWidthRatio)
+}
+
+function renderStyledQrToCanvas(value: string, badgeLabel = getQrCenterLabel(value)) {
   const qr = QRCode.create(value, {
     errorCorrectionLevel: 'H',
   })
@@ -162,7 +158,6 @@ function renderStyledQrToCanvas(value: string) {
     throw new Error('QR-Code konnte nicht gezeichnet werden.')
   }
 
-  const badgeHex = getQrCenterHex(value)
   const totalModules = qr.modules.size + QR_QUIET_ZONE_MODULES * 2
   const moduleSize = QR_CANVAS_SIZE / totalModules
   const qrOffset = QR_QUIET_ZONE_MODULES * moduleSize
@@ -208,10 +203,10 @@ function renderStyledQrToCanvas(value: string) {
   context.stroke()
 
   context.fillStyle = '#241C13'
-  context.font = `bold ${badge.fontSize}px "Trebuchet MS", sans-serif`
+  context.font = `bold ${getQrBadgeFontSize(badgeLabel, badge.size, badge.fontSize)}px "Consolas", "Courier New", monospace`
   context.textAlign = 'center'
   context.textBaseline = 'middle'
-  context.fillText(badgeHex, canvas.width / 2, canvas.height / 2 + 2)
+  context.fillText(badgeLabel, canvas.width / 2, canvas.height / 2 + 2)
 
   return canvas
 }
@@ -226,8 +221,8 @@ export function buildGeneratorQrValue(code: string) {
   return new URL(`/register/${encodeURIComponent(normalizedCode)}`, window.location.origin).toString()
 }
 
-export async function generateQrDataUrl(value: string) {
-  return renderStyledQrToCanvas(value).toDataURL('image/png')
+export async function generateQrDataUrl(value: string, badgeLabel?: string) {
+  return renderStyledQrToCanvas(value, badgeLabel).toDataURL('image/png')
 }
 
 export function extractGeneratorCodeFromQrValue(value: string, origin = window.location.origin) {
@@ -503,7 +498,9 @@ export async function downloadQrPdf(cards: QrCardDefinition[], options: QrPdfExp
     compress: true,
   })
 
-  const qrDataUrls = await Promise.all(cards.map((card) => generateQrDataUrl(card.scanValue)))
+  const qrDataUrls = await Promise.all(
+    cards.map((card) => generateQrDataUrl(card.scanValue, getQrBadgeLabel(card.code))),
+  )
 
   cards.forEach((_card, index) => {
     const pageIndex = Math.floor(index / layout.cardsPerPage)

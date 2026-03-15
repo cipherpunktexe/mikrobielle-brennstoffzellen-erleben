@@ -274,6 +274,7 @@ export function AdminPage() {
 
   const parsedExportCount = Number.parseInt(exportCount, 10)
   const requestedQrSize = Number.parseFloat(exportQrSize)
+  const parsedExportDigits = Number.parseInt(exportDigits, 10)
   let exportLayoutPreview: ReturnType<typeof getQrPdfLayoutPreview> | null = null
 
   if (Number.isFinite(parsedExportCount) && parsedExportCount > 0) {
@@ -1022,7 +1023,12 @@ export function AdminPage() {
                       </Typography>
                     </Box>
                   </Stack>
-                  <QrLayoutPreview layout={exportLayoutPreview} totalCards={previewTotalCards} />
+                  <QrLayoutPreview
+                    layout={exportLayoutPreview}
+                    totalCards={previewTotalCards}
+                    digits={Number.isFinite(parsedExportDigits) && parsedExportDigits > 0 ? parsedExportDigits : 4}
+                    startSequence={exportNextSequence}
+                  />
                 </Stack>
               </CardContent>
             </Card>

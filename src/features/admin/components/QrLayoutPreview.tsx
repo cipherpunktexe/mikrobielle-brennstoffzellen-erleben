@@ -1,21 +1,33 @@
 import { Alert, Box, Stack, Typography } from '@mui/material'
 import { useEffect, useState } from 'react'
-import { generateQrDataUrl } from '../../../shared/utils/qr'
+import { buildGeneratorQrValue, generateQrDataUrl, getQrBadgeLabel } from '../../../shared/utils/qr'
 import type { QrPdfLayoutPreview } from '../../../shared/utils/qr'
 
 interface QrLayoutPreviewProps {
   layout: QrPdfLayoutPreview | null
   totalCards: number
+  digits: number
+  startSequence: number | null
 }
 
-function createPreviewValues(count: number) {
-  return Array.from(
-    { length: count },
-    (_, index) => `https://preview.local/register/dummy-${String(index + 1).padStart(3, '0')}`,
-  )
+function formatPreviewCode(sequence: number, digits: number) {
+  return sequence.toString(16).toUpperCase().padStart(Math.max(1, Math.floor(digits)), '0')
 }
 
-export function QrLayoutPreview({ layout, totalCards }: QrLayoutPreviewProps) {
+function createPreviewCards(count: number, digits: number, startSequence: number | null) {
+  const baseSequence = startSequence && Number.isFinite(startSequence) && startSequence > 0 ? startSequence : 1
+
+  return Array.from({ length: count }, (_, index) => {
+    const code = formatPreviewCode(baseSequence + index, digits)
+
+    return {
+      code,
+      scanValue: buildGeneratorQrValue(code),
+    }
+  })
+}
+
+export function QrLayoutPreview({ layout, totalCards, digits, startSequence }: QrLayoutPreviewProps) {
   const [qrDataUrls, setQrDataUrls] = useState<string[]>([])
   const [error, setError] = useState('')
 
@@ -28,7 +40,11 @@ export function QrLayoutPreview({ layout, totalCards }: QrLayoutPreviewProps) {
 
     let active = true
 
-    Promise.all(createPreviewValues(visibleCards).map((value) => generateQrDataUrl(value)))
+    Promise.all(
+      createPreviewCards(visibleCards, digits, startSequence).map((card) =>
+        generateQrDataUrl(card.scanValue, getQrBadgeLabel(card.code)),
+      ),
+    )
       .then((nextDataUrls) => {
         if (!active) {
           return
@@ -49,7 +65,7 @@ export function QrLayoutPreview({ layout, totalCards }: QrLayoutPreviewProps) {
     return () => {
       active = false
     }
-  }, [layout, visibleCards])
+  }, [digits, layout, startSequence, visibleCards])
 
   if (!layout) {
     return (

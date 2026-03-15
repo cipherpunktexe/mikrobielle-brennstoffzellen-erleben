@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { buildGeneratorQrValue, extractGeneratorCodeFromQrValue, getQrBadgeHex } from './qr'
+import { buildGeneratorQrValue, extractGeneratorCodeFromQrValue, getQrBadgeLabel } from './qr'
 
 describe('qr utils', () => {
   test('builds and parses register links for newly generated qr codes', () => {
@@ -29,8 +29,8 @@ describe('qr utils', () => {
     expect(extractGeneratorCodeFromQrValue('station-010')).toBe('station-010')
   })
 
-  test('builds a deterministic three-digit hex badge from the code', () => {
-    expect(getQrBadgeHex('station-010')).toMatch(/^[0-9A-F]{3}$/)
-    expect(getQrBadgeHex('station-010')).toBe(getQrBadgeHex('Station-010'))
+  test('uses the actual code as uppercase badge label', () => {
+    expect(getQrBadgeLabel('000a')).toBe('000A')
+    expect(getQrBadgeLabel('000a')).toBe(getQrBadgeLabel('000A'))
   })
 })
