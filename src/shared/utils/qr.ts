@@ -85,9 +85,10 @@ const QR_CANVAS_SIZE = 720
 const QR_QUIET_ZONE_MODULES = 4
 const QR_MODULE_INSET_RATIO = 0.1
 const QR_FINDER_INSET_RATIO = 0.06
-const QR_FRAME_PADDING = 26
-const QR_BADGE_HEIGHT_RATIO = 0.18
-const QR_BADGE_GAP = 22
+const QR_CENTER_BADGE_MIN_WIDTH_RATIO = 0.18
+const QR_CENTER_BADGE_MAX_WIDTH_RATIO = 0.3
+const QR_CENTER_BADGE_HEIGHT_RATIO = 0.17
+const QR_CENTER_BADGE_PADDING_RATIO = 0.18
 
 export function getQrBadgeLabel(code: string) {
   const normalizedCode = formatCode(code) || code.trim() || '000'
@@ -124,17 +125,25 @@ function drawRoundedRect(
   context.closePath()
 }
 
-function getQrBadgeMetrics(qrImageSize: number) {
-  const badgeWidth = Math.min(qrImageSize * 0.72, QR_CANVAS_SIZE - QR_FRAME_PADDING * 2)
-  const badgeHeight = QR_CANVAS_SIZE * QR_BADGE_HEIGHT_RATIO
+function getQrBadgeMetrics(label: string) {
+  const badgeHeight = QR_CANVAS_SIZE * QR_CENTER_BADGE_HEIGHT_RATIO
+  const estimatedWidth = Math.max(badgeHeight * 1.05, label.length * badgeHeight * 0.42)
+  const badgeWidth = clamp(
+    estimatedWidth,
+    QR_CANVAS_SIZE * QR_CENTER_BADGE_MIN_WIDTH_RATIO,
+    QR_CANVAS_SIZE * QR_CENTER_BADGE_MAX_WIDTH_RATIO,
+  )
+  const cutoutPadding = badgeHeight * QR_CENTER_BADGE_PADDING_RATIO
+
   return {
     width: badgeWidth,
     height: badgeHeight,
     x: (QR_CANVAS_SIZE - badgeWidth) / 2,
-    y: QR_CANVAS_SIZE - QR_FRAME_PADDING - badgeHeight,
+    y: (QR_CANVAS_SIZE - badgeHeight) / 2,
     radius: Math.max(16, badgeHeight * 0.28),
     lineWidth: Math.max(4, badgeHeight * 0.07),
     fontSize: Math.max(28, badgeHeight * 0.42),
+    cutoutPadding,
   }
 }
 
@@ -158,15 +167,13 @@ function renderStyledQrToCanvas(value: string, badgeLabel = getQrCenterLabel(val
 
   canvas.width = QR_CANVAS_SIZE
   canvas.height = QR_CANVAS_SIZE
-
-  const availableQrHeight = QR_CANVAS_SIZE - QR_FRAME_PADDING * 2 - QR_BADGE_GAP - QR_CANVAS_SIZE * QR_BADGE_HEIGHT_RATIO
-  const availableQrWidth = QR_CANVAS_SIZE - QR_FRAME_PADDING * 2
-  const qrImageSize = Math.min(availableQrWidth, availableQrHeight)
-  const moduleSize = qrImageSize / totalModules
-  const qrOriginX = (QR_CANVAS_SIZE - qrImageSize) / 2
-  const qrOriginY = QR_FRAME_PADDING
-  const qrOffsetX = qrOriginX + QR_QUIET_ZONE_MODULES * moduleSize
-  const qrOffsetY = qrOriginY + QR_QUIET_ZONE_MODULES * moduleSize
+  const moduleSize = QR_CANVAS_SIZE / totalModules
+  const qrOffset = QR_QUIET_ZONE_MODULES * moduleSize
+  const badge = getQrBadgeMetrics(badgeLabel)
+  const cutoutLeft = badge.x - badge.cutoutPadding
+  const cutoutTop = badge.y - badge.cutoutPadding
+  const cutoutRight = badge.x + badge.width + badge.cutoutPadding
+  const cutoutBottom = badge.y + badge.height + badge.cutoutPadding
 
   context.fillStyle = '#F8F2E7'
   context.fillRect(0, 0, canvas.width, canvas.height)
@@ -177,8 +184,20 @@ function renderStyledQrToCanvas(value: string, badgeLabel = getQrCenterLabel(val
         continue
       }
 
-      const x = qrOffsetX + col * moduleSize
-      const y = qrOffsetY + row * moduleSize
+      const x = qrOffset + col * moduleSize
+      const y = qrOffset + row * moduleSize
+      const moduleCenterX = x + moduleSize / 2
+      const moduleCenterY = y + moduleSize / 2
+
+      if (
+        moduleCenterX >= cutoutLeft &&
+        moduleCenterX <= cutoutRight &&
+        moduleCenterY >= cutoutTop &&
+        moduleCenterY <= cutoutBottom
+      ) {
+        continue
+      }
+
       const isFinder = isFinderZone(row, col, qr.modules.size)
       const insetRatio = isFinder ? QR_FINDER_INSET_RATIO : QR_MODULE_INSET_RATIO
       const inset = moduleSize * insetRatio
@@ -196,8 +215,6 @@ function renderStyledQrToCanvas(value: string, badgeLabel = getQrCenterLabel(val
     }
   }
 
-  const badge = getQrBadgeMetrics(qrImageSize)
-
   context.fillStyle = '#FFF9EF'
   context.strokeStyle = '#1F7A8C'
   context.lineWidth = badge.lineWidth
@@ -209,7 +226,7 @@ function renderStyledQrToCanvas(value: string, badgeLabel = getQrCenterLabel(val
   context.font = `bold ${getQrBadgeFontSize(badgeLabel, badge.width, badge.fontSize)}px "Consolas", "Courier New", monospace`
   context.textAlign = 'center'
   context.textBaseline = 'middle'
-  context.fillText(badgeLabel, canvas.width / 2, badge.y + badge.height / 2 + 2)
+  context.fillText(badgeLabel, canvas.width / 2, canvas.height / 2 + 2)
 
   return canvas
 }
