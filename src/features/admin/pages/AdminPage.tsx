@@ -1080,9 +1080,7 @@ export function AdminPage() {
                   <Typography color="text.secondary">
                     Hier siehst du die zuletzt von dir eingetragenen Messwerte.
                   </Typography>
-                  <List
-                    dense
-                    disablePadding
+                  <Box
                     sx={{
                       borderRadius: 3,
                       overflow: 'hidden',
@@ -1090,32 +1088,96 @@ export function AdminPage() {
                       border: (theme) => `1px solid ${theme.palette.divider}`,
                     }}
                   >
-                    {recentMeasurements.length ? (
-                      recentMeasurements.map((item, index) => (
-                        <ListItem
-                          key={item.id}
-                          divider={index < recentMeasurements.length - 1}
-                          sx={{ py: 1.25 }}
-                        >
+                    <Box
+                      sx={{
+                        display: { xs: 'none', sm: 'grid' },
+                        gridTemplateColumns: 'minmax(96px, 120px) minmax(110px, 140px) minmax(0, 1fr)',
+                        gap: 2,
+                        px: 2,
+                        py: 1.25,
+                        bgcolor: 'rgba(36,28,19,0.05)',
+                        borderBottom: recentMeasurements.length
+                          ? (theme) => `1px solid ${theme.palette.divider}`
+                          : 'none',
+                      }}
+                    >
+                      <Typography variant="caption" color="text.secondary" fontWeight={700}>
+                        Code
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary" fontWeight={700}>
+                        Wert
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary" fontWeight={700}>
+                        Zeitpunkt
+                      </Typography>
+                    </Box>
+                    <List disablePadding>
+                      {recentMeasurements.length ? (
+                        recentMeasurements.map((item, index) => (
+                          <ListItem
+                            key={item.id}
+                            divider={index < recentMeasurements.length - 1}
+                            sx={{ px: 2, py: 1.5 }}
+                          >
+                            <Box
+                              sx={{
+                                width: '100%',
+                                display: 'grid',
+                                gridTemplateColumns: {
+                                  xs: '1fr',
+                                  sm: 'minmax(96px, 120px) minmax(110px, 140px) minmax(0, 1fr)',
+                                },
+                                gap: { xs: 0.75, sm: 2 },
+                                alignItems: 'center',
+                              }}
+                            >
+                              <Box>
+                                <Typography
+                                  variant="body2"
+                                  sx={{ fontFamily: '"Consolas", "Courier New", monospace', fontWeight: 700 }}
+                                >
+                                  {item.generatorCode.toUpperCase()}
+                                </Typography>
+                                {item.ownerName ? (
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    sx={{ display: { sm: 'none' } }}
+                                  >
+                                    {item.ownerName}
+                                  </Typography>
+                                ) : null}
+                              </Box>
+                              <Typography variant="body2" fontWeight={600}>
+                                {formatMeasurement(item.value)}
+                              </Typography>
+                              <Box>
+                                <Typography variant="body2">
+                                  {formatTimestamp(item.createdAt)}
+                                </Typography>
+                                {item.ownerName ? (
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    sx={{ display: { xs: 'none', sm: 'block' } }}
+                                  >
+                                    {item.ownerName}
+                                  </Typography>
+                                ) : null}
+                              </Box>
+                            </Box>
+                          </ListItem>
+                        ))
+                      ) : (
+                        <ListItem sx={{ px: 2, py: 2 }}>
                           <ListItemText
-                            primary={`${item.generatorCode} ? ${formatMeasurement(item.value)}`}
-                            secondary={
-                              item.ownerName
-                                ? `${item.ownerName} ? ${formatTimestamp(item.createdAt)}`
-                                : formatTimestamp(item.createdAt)
-                            }
+                            primary="Noch keine eigenen Messwerte"
+                            secondary="Sobald du Werte speicherst, erscheinen sie hier."
                           />
                         </ListItem>
-                      ))
-                    ) : (
-                      <ListItem sx={{ py: 2 }}>
-                        <ListItemText
-                          primary="Noch keine eigenen Messwerte"
-                          secondary="Sobald du Werte speicherst, erscheinen sie hier."
-                        />
-                      </ListItem>
-                    )}
-                  </List>
+                      )}
+                    </List>
+                  </Box>
                 </Stack>
               </CardContent>
             </Card>
