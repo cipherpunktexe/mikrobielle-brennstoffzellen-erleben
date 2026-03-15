@@ -86,10 +86,14 @@ export interface ReservedGeneratorCodes {
   startCode: string
   endCode: string
   nextCode: string
+  startSequence: number
+  endSequence: number
+  nextSequence: number
 }
 
-function formatSequentialGeneratorCode(sequence: number) {
-  return String(sequence).padStart(4, '0')
+function formatSequentialGeneratorCode(sequence: number, digits = 4) {
+  const safeDigits = Math.max(1, Math.floor(digits))
+  return sequence.toString(16).toUpperCase().padStart(safeDigits, '0')
 }
 
 function getNextGeneratorSequence(value: unknown) {
@@ -305,13 +309,19 @@ export async function getUserProfile(uid: string) {
   } as UserProfile
 }
 
-export async function getNextGeneratorCodePreview() {
+export async function getNextGeneratorCodePreview(digits = 4) {
   const snapshot = await getDoc(qrExportCounterRef)
   const nextSequence = getNextGeneratorSequence(snapshot.data()?.nextSequence)
-  return formatSequentialGeneratorCode(nextSequence)
+  return {
+    code: formatSequentialGeneratorCode(nextSequence, digits),
+    sequence: nextSequence,
+  }
 }
 
-export async function reserveNextGeneratorCodes(count: number): Promise<ReservedGeneratorCodes> {
+export async function reserveNextGeneratorCodes(
+  count: number,
+  digits = 4,
+): Promise<ReservedGeneratorCodes> {
   if (!Number.isInteger(count) || count < 1) {
     throw new Error('Die Anzahl der QR-Codes muss mindestens 1 sein.')
   }
@@ -321,14 +331,15 @@ export async function reserveNextGeneratorCodes(count: number): Promise<Reserved
     const startSequence = getNextGeneratorSequence(snapshot.data()?.nextSequence)
     const codes = Array.from(
       { length: count },
-      (_, index) => formatSequentialGeneratorCode(startSequence + index),
+      (_, index) => formatSequentialGeneratorCode(startSequence + index, digits),
     )
-    const nextCode = formatSequentialGeneratorCode(startSequence + count)
+    const nextSequence = startSequence + count
+    const nextCode = formatSequentialGeneratorCode(nextSequence, digits)
 
     transaction.set(
       qrExportCounterRef,
       {
-        nextSequence: startSequence + count,
+        nextSequence,
         updatedAt: serverTimestamp(),
         ...(snapshot.exists() ? {} : { createdAt: serverTimestamp() }),
       },
@@ -340,6 +351,9 @@ export async function reserveNextGeneratorCodes(count: number): Promise<Reserved
       startCode: codes[0],
       endCode: codes[codes.length - 1],
       nextCode,
+      startSequence,
+      endSequence: nextSequence - 1,
+      nextSequence,
     }
   })
 }

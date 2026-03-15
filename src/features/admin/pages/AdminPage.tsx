@@ -155,6 +155,10 @@ function formatPageSizeLabel(pageSize: QrPdfPageSize) {
   }
 }
 
+function formatMutedDecimal(sequence: number) {
+  return sequence.toString(10)
+}
+
 export function AdminPage() {
   const navigate = useNavigate()
   const params = useParams()
@@ -170,7 +174,9 @@ export function AdminPage() {
   const [exportCount, setExportCount] = useState('12')
   const [exportQrSize, setExportQrSize] = useState('42')
   const [exportPageSize, setExportPageSize] = useState<QrPdfPageSize>('a4')
+  const [exportDigits, setExportDigits] = useState('4')
   const [exportNextCode, setExportNextCode] = useState('')
+  const [exportNextSequence, setExportNextSequence] = useState<number | null>(null)
   const [exportStatus, setExportStatus] = useState('')
   const [exportError, setExportError] = useState('')
 
@@ -253,11 +259,22 @@ export function AdminPage() {
   useEffect(() => {
     if (profile?.role !== 'admin') {
       setExportNextCode('')
+      setExportNextSequence(null)
       return
     }
 
-    void loadNextGeneratorCodePreview()
-  }, [profile?.role])
+    const digits = Number.parseInt(exportDigits, 10)
+
+    void getNextGeneratorCodePreview(Number.isFinite(digits) && digits > 0 ? digits : 4)
+      .then((preview) => {
+        setExportNextCode(preview.code)
+        setExportNextSequence(preview.sequence)
+      })
+      .catch(() => {
+        setExportNextCode('')
+        setExportNextSequence(null)
+      })
+  }, [profile?.role, exportDigits])
 
   const parsedExportCount = Number.parseInt(exportCount, 10)
   const requestedQrSize = Number.parseFloat(exportQrSize)
@@ -331,6 +348,7 @@ export function AdminPage() {
     try {
       const count = Number.parseInt(exportCount, 10)
       const qrSizeMm = Number.parseFloat(exportQrSize)
+      const digits = Number.parseInt(exportDigits, 10)
 
       if (!Number.isFinite(count) || count < 1 || count > 200) {
         throw new Error('Bitte eine Anzahl zwischen 1 und 200 angeben.')
@@ -340,7 +358,11 @@ export function AdminPage() {
         throw new Error('Bitte eine gÃ¼ltige QR-GrÃ¶ÃŸe angeben.')
       }
 
-      const reservation = await reserveNextGeneratorCodes(count)
+      if (!Number.isFinite(digits) || digits < 1 || digits > 12) {
+        throw new Error('Bitte eine Stellenzahl zwischen 1 und 12 angeben.')
+      }
+
+      const reservation = await reserveNextGeneratorCodes(count, digits)
       const cards = reservation.codes.map((code) => ({
         code,
         scanValue: buildGeneratorQrValue(code),
@@ -352,20 +374,12 @@ export function AdminPage() {
         pageSize: exportPageSize,
       })
       setExportNextCode(reservation.nextCode)
+      setExportNextSequence(reservation.nextSequence)
       setExportStatus(
         `PDF mit ${count} QR-Codes wurde erstellt. Bereich ${reservation.startCode} bis ${reservation.endCode}.`,
       )
     } catch (exportIssue) {
       setExportError(exportIssue instanceof Error ? exportIssue.message : 'Export fehlgeschlagen.')
-    }
-  }
-
-  async function loadNextGeneratorCodePreview() {
-    try {
-      const nextCode = await getNextGeneratorCodePreview()
-      setExportNextCode(nextCode)
-    } catch {
-      setExportNextCode('')
     }
   }
 
@@ -795,9 +809,6 @@ export function AdminPage() {
                     <Typography variant="h4" sx={{ fontSize: { xs: '1.45rem', sm: '2rem' } }}>
                       QR-Export
                     </Typography>
-                    <Typography color="text.secondary">
-                      Erzeuge ein A4-PDF mit reduzierten QR-Karten ohne Zusatzinfos.
-                    </Typography>
                   </Box>
                   {exportStatus ? <Alert severity="success">{exportStatus}</Alert> : null}
                   {exportError ? <Alert severity="error">{exportError}</Alert> : null}
@@ -811,20 +822,12 @@ export function AdminPage() {
                       <Card variant="outlined" sx={{ flex: 1 }}>
                         <CardContent sx={{ p: 2 }}>
                           <Stack spacing={1.5}>
-                            <Typography fontWeight={700}>Einstellungen</Typography>
+                            <Typography fontWeight={700}>Anzahl</Typography>
                             <TextField
                               label="Anzahl"
                               type="number"
                               value={exportCount}
                               onChange={(event) => setExportCount(event.target.value)}
-                              fullWidth
-                            />
-                            <TextField
-                              label="QR-Größe in mm"
-                              type="number"
-                              value={exportQrSize}
-                              onChange={(event) => setExportQrSize(event.target.value)}
-                              helperText="Die Ticketgröße ergibt sich aus QR-Größe plus Rand."
                               fullWidth
                             />
                           </Stack>
@@ -840,7 +843,14 @@ export function AdminPage() {
                       <Card variant="outlined" sx={{ flex: 1 }}>
                         <CardContent sx={{ p: 2 }}>
                           <Stack spacing={1.5}>
-                            <Typography fontWeight={700}>Layout</Typography>
+                            <Typography fontWeight={700}>Größe und Format</Typography>
+                            <TextField
+                              label="QR-Größe in mm"
+                              type="number"
+                              value={exportQrSize}
+                              onChange={(event) => setExportQrSize(event.target.value)}
+                              fullWidth
+                            />
                             <TextField
                               label="Seitenformat"
                               select
@@ -856,13 +866,13 @@ export function AdminPage() {
                             </TextField>
                             <Typography variant="body2" color="text.secondary">
                               {exportLayoutPreview
-                                ? `Ticketgröße: ${exportLayoutPreview.cardWidthMm.toFixed(1)} × ${exportLayoutPreview.cardHeightMm.toFixed(1)} mm`
-                                : 'Die Ticketgröße wird nach Eingabe gültiger Werte berechnet.'}
+                                ? `${formatPageSizeLabel(exportLayoutPreview.pageSize)} ${exportLayoutPreview.orientation === 'landscape' ? 'quer' : 'hoch'}`
+                                : '-'}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
                               {exportLayoutPreview
-                                ? `${formatPageSizeLabel(exportLayoutPreview.pageSize)} ${exportLayoutPreview.orientation === 'landscape' ? 'quer' : 'hoch'}, ${exportLayoutPreview.columns} × ${exportLayoutPreview.rows} pro Seite`
-                                : 'Seitenformat und Belegung werden aus dem gewählten Layout berechnet.'}
+                                ? `${exportLayoutPreview.cardWidthMm.toFixed(1)} × ${exportLayoutPreview.cardHeightMm.toFixed(1)} mm`
+                                : '-'}
                             </Typography>
                           </Stack>
                         </CardContent>
@@ -876,16 +886,33 @@ export function AdminPage() {
                       />
                       <Card variant="outlined" sx={{ flex: 1 }}>
                         <CardContent sx={{ p: 2 }}>
-                          <Stack spacing={1.5}>
-                            <Typography fontWeight={700}>Fortlaufende Nummern</Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              {exportNextCode
-                                ? `Nächster fortlaufender Code: ${exportNextCode}`
-                                : 'Der nächste fortlaufende Code wird geladen.'}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              Die Codes werden fortlaufend reserviert und der aktuelle Stand bleibt gespeichert.
-                            </Typography>
+                          <Stack spacing={2}>
+                            <Typography fontWeight={700}>Nummer</Typography>
+                            <TextField
+                              label="Stellen"
+                              type="number"
+                              value={exportDigits}
+                              onChange={(event) => setExportDigits(event.target.value)}
+                              fullWidth
+                            />
+                            <Box>
+                              <Typography
+                                variant="h3"
+                                sx={{
+                                  fontFamily: '"Consolas", "Courier New", monospace',
+                                  fontSize: { xs: '1.9rem', sm: '2.4rem' },
+                                  letterSpacing: '0.08em',
+                                  lineHeight: 1,
+                                }}
+                              >
+                                {exportNextCode || '-'}
+                              </Typography>
+                              <Typography variant="body2" color="text.secondary">
+                                {exportNextSequence === null
+                                  ? '-'
+                                  : formatMutedDecimal(exportNextSequence)}
+                              </Typography>
+                            </Box>
                           </Stack>
                         </CardContent>
                       </Card>
@@ -900,10 +927,6 @@ export function AdminPage() {
                         <CardContent sx={{ p: 2 }}>
                           <Stack spacing={1.5}>
                             <Typography fontWeight={700}>Export</Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              Die Vorschau zeigt das reale A4-Seitenverhältnis. Exportiert werden nur QR-Karten
-                              ohne Präfix, Titel oder weitere Hinweise.
-                            </Typography>
                             <Button
                               variant="contained"
                               onClick={() => void handleExport()}
@@ -934,10 +957,7 @@ export function AdminPage() {
                   >
                     <Box>
                       <Typography variant="h4" sx={{ fontSize: { xs: '1.45rem', sm: '2rem' } }}>
-                        A4-Vorschau
-                      </Typography>
-                      <Typography color="text.secondary">
-                        Vorschau mit korrektem Seitenformat und Dummy-QR-Codes.
+                        Vorschau
                       </Typography>
                     </Box>
                   </Stack>
