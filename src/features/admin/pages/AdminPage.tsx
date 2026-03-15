@@ -145,22 +145,6 @@ function convertMeasurementToVolts(value: number, unit: MeasurementUnit) {
   }
 }
 
-function formatPageSizeLabel(pageSize: QrPdfPageSize) {
-  switch (pageSize) {
-    case 'a5':
-      return 'A5'
-    case 'a6':
-      return 'A6'
-    case 'qr':
-      return 'QR-Code'
-    case 'auto':
-      return 'Auto'
-    case 'a4':
-    default:
-      return 'A4'
-  }
-}
-
 function formatMutedDecimal(sequence: number) {
   return sequence.toString(10)
 }
@@ -914,18 +898,7 @@ export function AdminPage() {
                                   <option value="a5">A5</option>
                                   <option value="a6">A6</option>
                                   <option value="qr">QR-Code</option>
-                                  <option value="auto">Auto</option>
                                 </TextField>
-                                <Typography variant="body2" color="text.secondary">
-                                  {exportLayoutPreview
-                                    ? `${formatPageSizeLabel(exportLayoutPreview.pageSize)} ${exportLayoutPreview.orientation === 'landscape' ? 'quer' : 'hoch'}`
-                                    : '-'}
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary">
-                                  {exportLayoutPreview
-                                    ? `${exportLayoutPreview.cardWidthMm.toFixed(1)} × ${exportLayoutPreview.cardHeightMm.toFixed(1)} mm`
-                                    : '-'}
-                                </Typography>
                               </Stack>
                             </Collapse>
                           </Stack>
