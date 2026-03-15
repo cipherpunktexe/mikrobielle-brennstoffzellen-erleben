@@ -9,6 +9,7 @@ import {
   Button,
   Card,
   CardContent,
+  Chip,
   Dialog,
   DialogActions,
   DialogContent,
@@ -783,38 +784,83 @@ export function AdminPage() {
                   {exportStatus ? <Alert severity="success">{exportStatus}</Alert> : null}
                   {exportError ? <Alert severity="error">{exportError}</Alert> : null}
                   <Stack spacing={2}>
-                    <TextField
-                      label="Anzahl"
-                      type="number"
-                      value={exportCount}
-                      onChange={(event) => setExportCount(event.target.value)}
-                      fullWidth
-                    />
-                    <TextField
-                      label="QR-Größe in mm"
-                      type="number"
-                      value={exportQrSize}
-                      onChange={(event) => setExportQrSize(event.target.value)}
-                      helperText="Die Seitenbelegung wird auf A4 automatisch aus der QR-Größe berechnet."
-                      fullWidth
-                    />
-                    <Typography variant="body2" color="text.secondary">
-                      {exportNextCode
-                        ? `Nächster fortlaufender Code: ${exportNextCode}`
-                        : 'Der nächste fortlaufende Code wird geladen.'}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Die Vorschau zeigt das reale A4-Seitenverhältnis. Exportiert werden nur QR-Karten
-                      ohne Präfix, Titel oder weitere Hinweise.
-                    </Typography>
-                    <Button
-                      variant="contained"
-                      onClick={() => void handleExport()}
-                      startIcon={<SaveIcon />}
-                      fullWidth
-                    >
-                      PDF herunterladen
-                    </Button>
+                    <Stack direction="row" spacing={1.5} alignItems="flex-start">
+                      <Chip
+                        label="1"
+                        color="primary"
+                        sx={{ minWidth: 36, height: 36, borderRadius: 999 }}
+                      />
+                      <Card variant="outlined" sx={{ flex: 1 }}>
+                        <CardContent sx={{ p: 2 }}>
+                          <Stack spacing={1.5}>
+                            <Typography fontWeight={700}>Einstellungen</Typography>
+                            <TextField
+                              label="Anzahl"
+                              type="number"
+                              value={exportCount}
+                              onChange={(event) => setExportCount(event.target.value)}
+                              fullWidth
+                            />
+                            <TextField
+                              label="QR-Größe in mm"
+                              type="number"
+                              value={exportQrSize}
+                              onChange={(event) => setExportQrSize(event.target.value)}
+                              helperText="Die Seitenbelegung wird auf A4 automatisch aus der QR-Größe berechnet."
+                              fullWidth
+                            />
+                          </Stack>
+                        </CardContent>
+                      </Card>
+                    </Stack>
+                    <Stack direction="row" spacing={1.5} alignItems="flex-start">
+                      <Chip
+                        label="2"
+                        color="primary"
+                        sx={{ minWidth: 36, height: 36, borderRadius: 999 }}
+                      />
+                      <Card variant="outlined" sx={{ flex: 1 }}>
+                        <CardContent sx={{ p: 2 }}>
+                          <Stack spacing={1.5}>
+                            <Typography fontWeight={700}>Fortlaufende Nummern</Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              {exportNextCode
+                                ? `Nächster fortlaufender Code: ${exportNextCode}`
+                                : 'Der nächste fortlaufende Code wird geladen.'}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              Die Codes werden fortlaufend reserviert und der aktuelle Stand bleibt gespeichert.
+                            </Typography>
+                          </Stack>
+                        </CardContent>
+                      </Card>
+                    </Stack>
+                    <Stack direction="row" spacing={1.5} alignItems="flex-start">
+                      <Chip
+                        label="3"
+                        color="primary"
+                        sx={{ minWidth: 36, height: 36, borderRadius: 999 }}
+                      />
+                      <Card variant="outlined" sx={{ flex: 1 }}>
+                        <CardContent sx={{ p: 2 }}>
+                          <Stack spacing={1.5}>
+                            <Typography fontWeight={700}>Export</Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              Die Vorschau zeigt das reale A4-Seitenverhältnis. Exportiert werden nur QR-Karten
+                              ohne Präfix, Titel oder weitere Hinweise.
+                            </Typography>
+                            <Button
+                              variant="contained"
+                              onClick={() => void handleExport()}
+                              startIcon={<SaveIcon />}
+                              fullWidth
+                            >
+                              PDF herunterladen
+                            </Button>
+                          </Stack>
+                        </CardContent>
+                      </Card>
+                    </Stack>
                   </Stack>
                 </Stack>
               </CardContent>
