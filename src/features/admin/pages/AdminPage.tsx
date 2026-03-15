@@ -20,7 +20,6 @@ import {
   IconButton,
   List,
   ListItem,
-  ListItemButton,
   ListItemText,
   Menu,
   MenuItem,
@@ -76,7 +75,6 @@ import type {
 import type { AdminRecentMeasurementItem } from '../../../shared/data/firebaseData'
 
 type AdminTabValue = 'qr' | 'scan' | 'moderation'
-type ModerationTabValue = 'users' | 'generators'
 type MeasurementUnit = 'uV' | 'mV' | 'V' | 'kV'
 
 interface UserFormState {
@@ -89,6 +87,11 @@ interface GeneratorFormState {
   code: string
   ownerUid: string
   ownerName: string
+}
+
+interface ModerationListEntry {
+  user: UserProfile
+  generator: Generator | null
 }
 
 type QrExportStepKey = 'count' | 'layout' | 'number' | 'export'
@@ -159,7 +162,6 @@ export function AdminPage() {
   const [authError, setAuthError] = useState('')
   const [authLoading, setAuthLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<AdminTabValue>(routeCode ? 'scan' : 'qr')
-  const [moderationTab, setModerationTab] = useState<ModerationTabValue>('users')
 
   const [exportCount, setExportCount] = useState('1')
   const [exportQrSize, setExportQrSize] = useState('42')
@@ -196,10 +198,8 @@ export function AdminPage() {
   const [moderationLoading, setModerationLoading] = useState(false)
   const [moderationStatus, setModerationStatus] = useState('')
   const [moderationError, setModerationError] = useState('')
-  const [userSearch, setUserSearch] = useState('')
-  const [generatorSearch, setGeneratorSearch] = useState('')
-  const [userMenuAnchorEl, setUserMenuAnchorEl] = useState<HTMLElement | null>(null)
-  const [generatorMenuAnchorEl, setGeneratorMenuAnchorEl] = useState<HTMLElement | null>(null)
+  const [moderationSearch, setModerationSearch] = useState('')
+  const [moderationMenuAnchorEl, setModerationMenuAnchorEl] = useState<HTMLElement | null>(null)
   const [menuUser, setMenuUser] = useState<UserProfile | null>(null)
   const [menuGenerator, setMenuGenerator] = useState<Generator | null>(null)
   const [userDialogOpen, setUserDialogOpen] = useState(false)
@@ -249,8 +249,8 @@ export function AdminPage() {
       return
     }
 
-    void loadModerationEntries(moderationTab)
-  }, [activeTab, moderationTab])
+    void loadModerationEntries()
+  }, [activeTab])
 
   useEffect(() => {
     if (profile?.role !== 'admin') {
@@ -303,10 +303,6 @@ export function AdminPage() {
 
   function handleAdminTabChange(_event: SyntheticEvent, value: AdminTabValue) {
     setActiveTab(value)
-  }
-
-  function handleModerationTabChange(_event: SyntheticEvent, value: ModerationTabValue) {
-    setModerationTab(value)
   }
 
   function toggleExportStep(step: QrExportStepKey) {
@@ -493,18 +489,17 @@ export function AdminPage() {
     }
   }
 
-  async function loadModerationEntries(targetTab: ModerationTabValue) {
+  async function loadModerationEntries() {
     setModerationLoading(true)
     setModerationError('')
 
     try {
-      if (targetTab === 'users') {
-        const users = await listUserProfilesForAdmin()
-        setModerationUsers(users)
-      } else {
-        const generators = await listGeneratorsForAdmin()
-        setModerationGenerators(generators)
-      }
+      const [users, generators] = await Promise.all([
+        listUserProfilesForAdmin(),
+        listGeneratorsForAdmin(),
+      ])
+      setModerationUsers(users)
+      setModerationGenerators(generators)
     } catch (loadIssue) {
       setModerationError(
         loadIssue instanceof Error
@@ -516,48 +511,51 @@ export function AdminPage() {
     }
   }
 
-  const normalizedUserSearch = userSearch.trim().toLocaleLowerCase('de-DE')
-  const normalizedGeneratorSearch = generatorSearch.trim().toLocaleLowerCase('de-DE')
-  const filteredModerationUsers = moderationUsers.filter((user) => {
-    if (!normalizedUserSearch) {
+  const normalizedModerationSearch = moderationSearch.trim().toLocaleLowerCase('de-DE')
+  const moderationEntries = moderationUsers.map((user) => {
+    const linkedGenerator =
+      moderationGenerators.find((generator) => generator.id === user.generatorId) ??
+      moderationGenerators.find((generator) => generator.ownerUid === user.id) ??
+      null
+
+    return {
+      user,
+      generator: linkedGenerator,
+    } satisfies ModerationListEntry
+  })
+  const filteredModerationEntries = moderationEntries.filter(({ user, generator }) => {
+    if (!normalizedModerationSearch) {
       return true
     }
 
-    const haystack = [user.name, user.email, user.role, user.generatorId ?? '']
+    const haystack = [
+      user.name,
+      user.email,
+      user.role,
+      user.generatorId ?? '',
+      generator?.code ?? '',
+      generator?.ownerUid ?? '',
+      generator?.ownerName ?? '',
+    ]
       .join(' ')
       .toLocaleLowerCase('de-DE')
-    return haystack.includes(normalizedUserSearch)
-  })
-  const filteredModerationGenerators = moderationGenerators.filter((generator) => {
-    if (!normalizedGeneratorSearch) {
-      return true
-    }
-
-    const haystack = [generator.ownerName ?? '', generator.code, generator.ownerUid]
-      .join(' ')
-      .toLocaleLowerCase('de-DE')
-    return haystack.includes(normalizedGeneratorSearch)
+    return haystack.includes(normalizedModerationSearch)
   })
 
-  function handleUserMenuOpen(event: MouseEvent<HTMLElement>, user: UserProfile) {
+  function handleModerationMenuOpen(
+    event: MouseEvent<HTMLElement>,
+    user: UserProfile,
+    generator: Generator | null,
+  ) {
     event.stopPropagation()
     setMenuUser(user)
-    setUserMenuAnchorEl(event.currentTarget)
-  }
-
-  function handleGeneratorMenuOpen(event: MouseEvent<HTMLElement>, generator: Generator) {
-    event.stopPropagation()
     setMenuGenerator(generator)
-    setGeneratorMenuAnchorEl(event.currentTarget)
+    setModerationMenuAnchorEl(event.currentTarget)
   }
 
-  function handleCloseUserMenu() {
-    setUserMenuAnchorEl(null)
+  function handleCloseModerationMenu() {
+    setModerationMenuAnchorEl(null)
     setMenuUser(null)
-  }
-
-  function handleCloseGeneratorMenu() {
-    setGeneratorMenuAnchorEl(null)
     setMenuGenerator(null)
   }
 
@@ -571,7 +569,7 @@ export function AdminPage() {
       role: user.role,
     })
     setUserDialogOpen(true)
-    handleCloseUserMenu()
+    handleCloseModerationMenu()
   }
 
   function handleCloseUserDialog() {
@@ -592,7 +590,7 @@ export function AdminPage() {
 
     try {
       await updateUserProfileAsAdmin(editingUser.id, userForm)
-      await loadModerationEntries('users')
+      await loadModerationEntries()
       setModerationStatus(`Nutzer ${userForm.name.trim() || editingUser.name} aktualisiert.`)
       handleCloseUserDialog()
     } catch (saveIssue) {
@@ -612,7 +610,7 @@ export function AdminPage() {
       ownerName: generator.ownerName ?? '',
     })
     setGeneratorDialogOpen(true)
-    handleCloseGeneratorMenu()
+    handleCloseModerationMenu()
   }
 
   function handleCloseGeneratorDialog() {
@@ -633,7 +631,7 @@ export function AdminPage() {
 
     try {
       await updateGeneratorAsAdmin(editingGenerator.id, generatorForm)
-      await loadModerationEntries('generators')
+      await loadModerationEntries()
       setModerationStatus(`Brennstoffzelle ${formatCode(generatorForm.code)} aktualisiert.`)
       handleCloseGeneratorDialog()
     } catch (saveIssue) {
@@ -674,7 +672,7 @@ export function AdminPage() {
 
   async function handlePromoteUserToAdmin() {
     if (!menuUser || menuUser.role === 'admin') {
-      handleCloseUserMenu()
+      handleCloseModerationMenu()
       return
     }
 
@@ -687,7 +685,7 @@ export function AdminPage() {
         email: menuUser.email,
         role: 'admin',
       })
-      await loadModerationEntries('users')
+      await loadModerationEntries()
       setModerationStatus(`${menuUser.name} ist jetzt Admin.`)
     } catch (promoteIssue) {
       setModerationError(
@@ -696,7 +694,7 @@ export function AdminPage() {
           : 'Admin-Rechte konnten nicht vergeben werden.',
       )
     } finally {
-      handleCloseUserMenu()
+      handleCloseModerationMenu()
     }
   }
 
@@ -706,7 +704,7 @@ export function AdminPage() {
         <Grid size={{ xs: 12, md: 6 }}>
           <AuthCard
             title="Admin-Login"
-            description="Admins melden sich Ã¼ber Firebase Authentication an und verwalten danach QR-Codes, Scans und Moderation an einer Stelle."
+            description="Admins melden sich über Firebase Authentication an und verwalten danach QR-Codes, Scans und Moderation an einer Stelle."
             values={formValues}
             submitLabel="Als Admin anmelden"
             googleLabel="Mit Google anmelden"
@@ -1187,15 +1185,6 @@ export function AdminPage() {
 
       <TabPanel active={activeTab} value="moderation">
         <Card>
-          <Tabs
-            value={moderationTab}
-            onChange={handleModerationTabChange}
-            variant="fullWidth"
-            sx={{ px: { xs: 1, sm: 2 }, pt: 1 }}
-          >
-            <Tab value="users" label="Nutzer" />
-            <Tab value="generators" label="Brennstoffzellen" />
-          </Tabs>
           <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
             <Stack spacing={2}>
               {moderationStatus ? <Alert severity="success">{moderationStatus}</Alert> : null}
@@ -1207,135 +1196,139 @@ export function AdminPage() {
                 </Stack>
               ) : null}
 
-              <TabPanel active={moderationTab} value="users">
-                <Stack spacing={2}>
-                  <TextField
-                    label="Nutzer suchen"
-                    value={userSearch}
-                    onChange={(event) => setUserSearch(event.target.value)}
-                    placeholder="Name, E-Mail oder Rolle"
-                    fullWidth
-                  />
-                  <List
-                    disablePadding
-                    sx={{
-                      borderRadius: 3,
-                      overflow: 'hidden',
-                      bgcolor: 'background.default',
-                      border: (theme) => `1px solid ${theme.palette.divider}`,
-                    }}
-                  >
-                    {filteredModerationUsers.length ? (
-                      filteredModerationUsers.map((user, index) => (
-                        <ListItem
-                          key={user.id}
-                          divider={index < filteredModerationUsers.length - 1}
-                          secondaryAction={
-                            <IconButton edge="end" onClick={(event) => handleUserMenuOpen(event, user)}>
-                              <MoreVertIcon />
-                            </IconButton>
-                          }
-                          sx={{ py: 1.25 }}
-                        >
-                          <ListItemText
-                            primary={user.name}
-                            secondary={
-                              user.generatorId
-                                ? `${user.email} | ${user.role} | ${user.generatorId}`
-                                : `${user.email} | ${user.role}`
+              <TextField
+                label="Suchen"
+                value={moderationSearch}
+                onChange={(event) => setModerationSearch(event.target.value)}
+                placeholder="Name, E-Mail, Code oder Rolle"
+                fullWidth
+              />
+              <Box
+                sx={{
+                  borderRadius: 3,
+                  overflow: 'hidden',
+                  bgcolor: 'background.default',
+                  border: (theme) => `1px solid ${theme.palette.divider}`,
+                }}
+              >
+                <Box
+                  sx={{
+                    display: { xs: 'none', sm: 'grid' },
+                    gridTemplateColumns: 'minmax(0, 1.4fr) minmax(110px, 140px) minmax(90px, 110px)',
+                    gap: 2,
+                    px: 2,
+                    py: 1.25,
+                    pr: 7,
+                    bgcolor: 'rgba(36,28,19,0.05)',
+                    borderBottom: filteredModerationEntries.length
+                      ? (theme) => `1px solid ${theme.palette.divider}`
+                      : 'none',
+                  }}
+                >
+                  <Typography variant="caption" color="text.secondary" fontWeight={700}>
+                    Nutzer
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" fontWeight={700}>
+                    Code
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" fontWeight={700}>
+                    Rolle
+                  </Typography>
+                </Box>
+                <List disablePadding>
+                  {filteredModerationEntries.length ? (
+                    filteredModerationEntries.map(({ user, generator }, index) => (
+                      <ListItem
+                        key={user.id}
+                        divider={index < filteredModerationEntries.length - 1}
+                        secondaryAction={
+                          <IconButton
+                            edge="end"
+                            onClick={(event) => handleModerationMenuOpen(event, user, generator)}
+                          >
+                            <MoreVertIcon />
+                          </IconButton>
+                        }
+                        sx={{ px: 2, py: 1.5 }}
+                      >
+                        <Box
+                          sx={{
+                            width: '100%',
+                            display: 'grid',
+                            gridTemplateColumns: {
+                              xs: '1fr',
+                              sm: 'minmax(0, 1.4fr) minmax(110px, 140px) minmax(90px, 110px)',
+                            },
+                            gap: { xs: 0.75, sm: 2 },
+                            alignItems: 'center',
+                            cursor: generator ? 'pointer' : 'default',
+                          }}
+                          onClick={() => {
+                            if (generator) {
+                              void handleOpenGeneratorMeasurements(generator)
                             }
-                          />
-                        </ListItem>
-                      ))
-                    ) : (
-                      <ListItem sx={{ py: 2 }}>
-                        <ListItemText
-                          primary={moderationUsers.length ? 'Keine Treffer' : 'Noch keine Nutzer gefunden'}
-                          secondary={
-                            moderationUsers.length
-                              ? 'Passe den Suchbegriff an, um weitere Nutzer zu sehen.'
-                              : 'Registrierte Konten erscheinen hier automatisch.'
-                          }
-                        />
-                      </ListItem>
-                    )}
-                  </List>
-                </Stack>
-              </TabPanel>
-
-              <TabPanel active={moderationTab} value="generators">
-                <Stack spacing={2}>
-                  <TextField
-                    label="Brennstoffzellen suchen"
-                    value={generatorSearch}
-                    onChange={(event) => setGeneratorSearch(event.target.value)}
-                    placeholder="Code, Anzeigename oder Owner UID"
-                    fullWidth
-                  />
-                  <List
-                    disablePadding
-                    sx={{
-                      borderRadius: 3,
-                      overflow: 'hidden',
-                      bgcolor: 'background.default',
-                      border: (theme) => `1px solid ${theme.palette.divider}`,
-                    }}
-                  >
-                    {filteredModerationGenerators.length ? (
-                      filteredModerationGenerators.map((generator, index) => (
-                        <ListItem
-                          key={generator.id}
-                          disablePadding
-                          divider={index < filteredModerationGenerators.length - 1}
-                          secondaryAction={
-                            <IconButton
-                              edge="end"
-                              onClick={(event) => handleGeneratorMenuOpen(event, generator)}
-                            >
-                              <MoreVertIcon />
-                            </IconButton>
-                          }
+                          }}
                         >
-                          <ListItemButton onClick={() => void handleOpenGeneratorMeasurements(generator)}>
-                            <ListItemText
-                              primary={generator.ownerName?.trim() || generator.code}
-                              secondary={
-                                generator.ownerName?.trim()
-                                  ? `${generator.code} | ${generator.ownerUid}`
-                                  : generator.ownerUid
-                              }
-                            />
-                          </ListItemButton>
-                        </ListItem>
-                      ))
-                    ) : (
-                      <ListItem sx={{ py: 2 }}>
-                        <ListItemText
-                          primary={
-                            moderationGenerators.length
-                              ? 'Keine Treffer'
-                              : 'Noch keine Brennstoffzellen gefunden'
-                          }
-                          secondary={
-                            moderationGenerators.length
-                              ? 'Passe den Suchbegriff an, um weitere Brennstoffzellen zu sehen.'
-                              : 'Sobald Brennstoffzellen angelegt sind, erscheinen sie hier.'
-                          }
-                        />
+                          <Box>
+                            <Typography variant="body2" fontWeight={700}>
+                              {user.name}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {user.email}
+                            </Typography>
+                          </Box>
+                          <Box>
+                            <Typography
+                              variant="body2"
+                              sx={{ fontFamily: '"Consolas", "Courier New", monospace', fontWeight: 700 }}
+                            >
+                              {generator ? generator.code.toUpperCase() : '-'}
+                            </Typography>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              sx={{ display: { sm: 'none' } }}
+                            >
+                              {user.role}
+                            </Typography>
+                          </Box>
+                          <Box>
+                            <Typography variant="body2">{user.role}</Typography>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              sx={{ display: { xs: 'none', sm: 'block' } }}
+                            >
+                              {generator ? 'Messwerte anzeigen' : 'Kein Generator'}
+                            </Typography>
+                          </Box>
+                        </Box>
                       </ListItem>
-                    )}
-                  </List>
-                </Stack>
-              </TabPanel>
+                    ))
+                  ) : (
+                    <ListItem sx={{ py: 2 }}>
+                      <ListItemText
+                        primary={moderationEntries.length ? 'Keine Treffer' : 'Noch keine Einträge'}
+                        secondary={
+                          moderationEntries.length
+                            ? 'Passe den Suchbegriff an, um weitere Einträge zu sehen.'
+                            : 'Registrierte Konten erscheinen hier automatisch.'
+                        }
+                      />
+                    </ListItem>
+                  )}
+                </List>
+              </Box>
+
             </Stack>
           </CardContent>
         </Card>
       </TabPanel>
 
       <Menu
-        anchorEl={userMenuAnchorEl}
-        open={Boolean(userMenuAnchorEl)}
-        onClose={handleCloseUserMenu}
+        anchorEl={moderationMenuAnchorEl}
+        open={Boolean(moderationMenuAnchorEl)}
+        onClose={handleCloseModerationMenu}
       >
         <MenuItem
           onClick={() => {
@@ -1344,26 +1337,31 @@ export function AdminPage() {
             }
           }}
         >
-          Bearbeiten
+          Nutzer bearbeiten
         </MenuItem>
-        <MenuItem onClick={() => void handlePromoteUserToAdmin()} disabled={menuUser?.role === 'admin'}>
-          {menuUser?.role === 'admin' ? 'Bereits Admin' : 'Zum Admin machen'}
-        </MenuItem>
-      </Menu>
-
-      <Menu
-        anchorEl={generatorMenuAnchorEl}
-        open={Boolean(generatorMenuAnchorEl)}
-        onClose={handleCloseGeneratorMenu}
-      >
         <MenuItem
           onClick={() => {
             if (menuGenerator) {
               handleOpenGeneratorDialog(menuGenerator)
             }
           }}
+          disabled={!menuGenerator}
         >
-          Bearbeiten
+          Brennstoffzelle bearbeiten
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            if (menuGenerator) {
+              void handleOpenGeneratorMeasurements(menuGenerator)
+              handleCloseModerationMenu()
+            }
+          }}
+          disabled={!menuGenerator}
+        >
+          Messwerte
+        </MenuItem>
+        <MenuItem onClick={() => void handlePromoteUserToAdmin()} disabled={menuUser?.role === 'admin'}>
+          {menuUser?.role === 'admin' ? 'Bereits Admin' : 'Zum Admin machen'}
         </MenuItem>
       </Menu>
 
@@ -1600,5 +1598,3 @@ export function AdminPage() {
     </Stack>
   )
 }
-
-
