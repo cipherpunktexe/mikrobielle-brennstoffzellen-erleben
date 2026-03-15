@@ -83,6 +83,11 @@ const MIN_QR_SIZE_MM = 18
 const MAX_QR_SIZE_MM = 120
 const QR_CANVAS_SIZE = 720
 const QR_QUIET_ZONE_MODULES = 4
+const QR_MODULE_INSET_RATIO = 0.1
+const QR_FINDER_INSET_RATIO = 0.06
+const QR_BADGE_MIN_RATIO = 0.12
+const QR_BADGE_MAX_RATIO = 0.16
+const QR_BADGE_MODULE_SPAN = 6.5
 
 function hashToThreeDigitHex(input: string) {
   let hash = 0
@@ -128,6 +133,24 @@ function drawRoundedRect(
   context.closePath()
 }
 
+function getQrBadgeMetrics(moduleSize: number) {
+  // Keep the center badge within a small module footprint so scanners retain enough data.
+  const badgeSize = clamp(
+    moduleSize * QR_BADGE_MODULE_SPAN,
+    QR_CANVAS_SIZE * QR_BADGE_MIN_RATIO,
+    QR_CANVAS_SIZE * QR_BADGE_MAX_RATIO,
+  )
+
+  return {
+    size: badgeSize,
+    x: (QR_CANVAS_SIZE - badgeSize) / 2,
+    y: (QR_CANVAS_SIZE - badgeSize) / 2,
+    radius: Math.max(14, badgeSize * 0.2),
+    lineWidth: Math.max(4, badgeSize * 0.07),
+    fontSize: Math.max(28, badgeSize * 0.38),
+  }
+}
+
 function renderStyledQrToCanvas(value: string) {
   const qr = QRCode.create(value, {
     errorCorrectionLevel: 'H',
@@ -159,33 +182,33 @@ function renderStyledQrToCanvas(value: string) {
       const x = qrOffset + col * moduleSize
       const y = qrOffset + row * moduleSize
       const isFinder = isFinderZone(row, col, qr.modules.size)
+      const insetRatio = isFinder ? QR_FINDER_INSET_RATIO : QR_MODULE_INSET_RATIO
+      const inset = moduleSize * insetRatio
 
       context.fillStyle = isFinder ? '#7CB342' : '#241C13'
       drawRoundedRect(
         context,
-        x + moduleSize * 0.12,
-        y + moduleSize * 0.12,
-        moduleSize * 0.76,
-        moduleSize * 0.76,
+        x + inset,
+        y + inset,
+        moduleSize - inset * 2,
+        moduleSize - inset * 2,
         Math.max(2, moduleSize * 0.22),
       )
       context.fill()
     }
   }
 
-  const badgeSize = canvas.width * 0.2
-  const badgeX = (canvas.width - badgeSize) / 2
-  const badgeY = (canvas.height - badgeSize) / 2
+  const badge = getQrBadgeMetrics(moduleSize)
 
   context.fillStyle = '#FFF9EF'
   context.strokeStyle = '#1F7A8C'
-  context.lineWidth = 10
-  drawRoundedRect(context, badgeX, badgeY, badgeSize, badgeSize, 26)
+  context.lineWidth = badge.lineWidth
+  drawRoundedRect(context, badge.x, badge.y, badge.size, badge.size, badge.radius)
   context.fill()
   context.stroke()
 
   context.fillStyle = '#241C13'
-  context.font = 'bold 54px "Trebuchet MS", sans-serif'
+  context.font = `bold ${badge.fontSize}px "Trebuchet MS", sans-serif`
   context.textAlign = 'center'
   context.textBaseline = 'middle'
   context.fillText(badgeHex, canvas.width / 2, canvas.height / 2 + 2)
