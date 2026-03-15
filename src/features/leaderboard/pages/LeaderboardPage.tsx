@@ -161,10 +161,10 @@ export function LeaderboardPage() {
   const remainingEntries = visibleEntries.slice(3)
   const leaderboardSections = buildLeaderboardSections(remainingEntries, 4)
   const podiumEntries = [
-    featuredEntries[1] ? { entry: featuredEntries[1], rank: 2, height: { xs: 190, md: 220 } } : null,
-    featuredEntries[0] ? { entry: featuredEntries[0], rank: 1, height: { xs: 240, md: 290 } } : null,
-    featuredEntries[2] ? { entry: featuredEntries[2], rank: 3, height: { xs: 165, md: 195 } } : null,
-  ].filter((item): item is { entry: LeaderboardEntry; rank: number; height: { xs: number; md: number } } => Boolean(item))
+    featuredEntries[1] ? { entry: featuredEntries[1], rank: 2, height: { xs: 160, sm: 190, md: 220 } } : null,
+    featuredEntries[0] ? { entry: featuredEntries[0], rank: 1, height: { xs: 210, sm: 240, md: 290 } } : null,
+    featuredEntries[2] ? { entry: featuredEntries[2], rank: 3, height: { xs: 145, sm: 165, md: 195 } } : null,
+  ].filter((item): item is { entry: LeaderboardEntry; rank: number; height: { xs: number; sm: number; md: number } } => Boolean(item))
 
   return (
     <Card>
@@ -175,7 +175,6 @@ export function LeaderboardPage() {
             <Typography variant="h2" gutterBottom sx={{ fontSize: { xs: '1.9rem', sm: undefined } }}>
               Aktuelles Ranking
             </Typography>
-            
           </Box>
 
           {podiumEntries.length > 0 ? (
@@ -213,11 +212,12 @@ export function LeaderboardPage() {
               <Box
                 sx={{
                   position: 'relative',
-                  display: 'flex',
+                  display: { xs: 'grid', sm: 'flex' },
+                  gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', sm: 'none' },
                   alignItems: 'flex-end',
                   justifyContent: 'center',
                   gap: { xs: 1, sm: 1.5, md: 2 },
-                  minHeight: { xs: 300, md: 380 },
+                  minHeight: { xs: 0, sm: 300, md: 380 },
                 }}
               >
                 {podiumEntries.map(({ entry, rank, height }) => {
@@ -231,8 +231,12 @@ export function LeaderboardPage() {
                       onClick={() => handleOpenEntry(entry)}
                       onKeyDown={(event) => handleRowKeyDown(event, entry)}
                       sx={{
-                        flex: 1,
-                        maxWidth: { xs: 180, md: 240 },
+                        flex: { sm: 1 },
+                        order: { xs: rank === 1 ? 1 : rank === 2 ? 2 : 3, sm: rank === 2 ? 1 : rank === 1 ? 2 : 3 },
+                        gridColumn: { xs: rank === 1 ? '1 / -1' : 'span 1', sm: 'auto' },
+                        justifySelf: { xs: rank === 1 ? 'center' : 'stretch', sm: 'auto' },
+                        width: '100%',
+                        maxWidth: { xs: rank === 1 ? 240 : 'none', sm: 180, md: 240 },
                         minWidth: 0,
                         display: 'flex',
                         flexDirection: 'column',
@@ -253,11 +257,12 @@ export function LeaderboardPage() {
                     >
                       <Typography
                         sx={{
-                          mb: 1.25,
-                          px: 1,
+                          mb: { xs: 0.9, sm: 1.25 },
+                          px: { xs: 0.5, sm: 1 },
                           textAlign: 'center',
                           fontWeight: 700,
-                          fontSize: { xs: rank === 1 ? '1rem' : '0.92rem', md: rank === 1 ? '1.22rem' : '1rem' },
+                          minHeight: { xs: rank === 1 ? 34 : 30, sm: 40 },
+                          fontSize: { xs: rank === 1 ? '0.98rem' : '0.88rem', sm: rank === 1 ? '1rem' : '0.92rem', md: rank === 1 ? '1.22rem' : '1rem' },
                           lineHeight: 1.15,
                           overflowWrap: 'anywhere',
                         }}
@@ -269,9 +274,9 @@ export function LeaderboardPage() {
                         sx={{
                           width: '100%',
                           height,
-                          px: { xs: 1, md: 1.5 },
-                          pt: { xs: 1.25, md: 1.5 },
-                          pb: { xs: 1.5, md: 1.75 },
+                          px: { xs: 0.75, sm: 1, md: 1.5 },
+                          pt: { xs: 1, sm: 1.25, md: 1.5 },
+                          pb: { xs: 1.1, sm: 1.5, md: 1.75 },
                           borderRadius: '18px 18px 0 0',
                           background: rankStyle.podiumBg,
                           color: 'rgba(249,246,239,0.96)',
@@ -295,16 +300,16 @@ export function LeaderboardPage() {
                         >
                           <Box
                             sx={{
-                              width: { xs: rank === 1 ? 72 : 62, md: rank === 1 ? 86 : 72 },
-                              height: { xs: rank === 1 ? 72 : 62, md: rank === 1 ? 86 : 72 },
+                              width: { xs: rank === 1 ? 62 : 54, sm: rank === 1 ? 72 : 62, md: rank === 1 ? 86 : 72 },
+                              height: { xs: rank === 1 ? 62 : 54, sm: rank === 1 ? 72 : 62, md: rank === 1 ? 86 : 72 },
                               borderRadius: '50%',
                               display: 'grid',
                               placeItems: 'center',
                               fontWeight: 900,
-                              fontSize: { xs: rank === 1 ? '2rem' : '1.65rem', md: rank === 1 ? '2.4rem' : '2rem' },
+                              fontSize: { xs: rank === 1 ? '1.7rem' : '1.45rem', sm: rank === 1 ? '2rem' : '1.65rem', md: rank === 1 ? '2.4rem' : '2rem' },
                               color: rank === 2 ? '#50545D' : 'rgba(255,248,236,0.98)',
                               background: rankStyle.medalBg,
-                              border: '4px solid rgba(249,246,239,0.35)',
+                              border: { xs: '3px solid rgba(249,246,239,0.35)', sm: '4px solid rgba(249,246,239,0.35)' },
                               boxShadow: 'inset 0 2px 0 rgba(255,255,255,0.35)',
                               textShadow: '0 1px 0 rgba(0,0,0,0.18)',
                             }}
@@ -317,7 +322,7 @@ export function LeaderboardPage() {
                               sx={{
                                 fontWeight: 900,
                                 lineHeight: 1,
-                                fontSize: { xs: rank === 1 ? '1.55rem' : '1.25rem', md: rank === 1 ? '1.95rem' : '1.45rem' },
+                                fontSize: { xs: rank === 1 ? '1.32rem' : '1.12rem', sm: rank === 1 ? '1.55rem' : '1.25rem', md: rank === 1 ? '1.95rem' : '1.45rem' },
                               }}
                             >
                               {formatMeasurement(entry.maxValue)}
