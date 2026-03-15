@@ -355,7 +355,7 @@ export function AdminPage() {
       }
 
       if (!Number.isFinite(qrSizeMm) || qrSizeMm <= 0) {
-        throw new Error('Bitte eine gÃ¼ltige QR-GrÃ¶ÃŸe angeben.')
+        throw new Error('Bitte eine gültige QR-Größe angeben.')
       }
 
       if (!Number.isFinite(digits) || digits < 1 || digits > 12) {
@@ -422,7 +422,7 @@ export function AdminPage() {
     const code = extractGeneratorCodeFromQrValue(value)
 
     if (!code) {
-      throw new Error('Der QR-Code enthÃ¤lt keinen gÃ¼ltigen Brennstoffzellen-Code.')
+      throw new Error('Der QR-Code enthält keinen gültigen Brennstoffzellen-Code.')
     }
 
     const foundGenerator = await getGeneratorByCode(code)
@@ -457,13 +457,13 @@ export function AdminPage() {
       const numericValue = Number.parseFloat(scanMeasurementInput)
 
       if (Number.isNaN(numericValue)) {
-        throw new Error('Bitte einen gÃ¼ltigen Messwert eingeben.')
+        throw new Error('Bitte einen gültigen Messwert eingeben.')
       }
 
       const measuredAt = new Date(scanMeasurementDateTime)
 
       if (Number.isNaN(measuredAt.getTime())) {
-        throw new Error('Bitte ein gÃ¼ltiges Datum und eine gÃ¼ltige Uhrzeit angeben.')
+        throw new Error('Bitte ein gültiges Datum und eine gültige Uhrzeit angeben.')
       }
 
       const linkedGenerator = await addMeasurementByCode({
@@ -477,7 +477,7 @@ export function AdminPage() {
       setScanCode(normalizedCode)
       setScanMeasurementDialogOpen(false)
       setScanMeasurementCodeLocked(false)
-      setScanStatus(`Messwert fÃ¼r ${linkedGenerator.code} wurde gespeichert.`)
+      setScanStatus(`Messwert für ${linkedGenerator.code} wurde gespeichert.`)
     } catch (submitIssue) {
       setScanMeasurementError(
         submitIssue instanceof Error
@@ -728,7 +728,7 @@ export function AdminPage() {
                   Die Admin-Seite ist jetzt in drei Bereiche getrennt: QR erstellen, Scannen und Moderieren.
                 </Typography>
                 <Typography color="text.secondary">
-                  Voraussetzung ist ein Firestore-User mit <code>role: "admin"</code> fÃ¼r das angemeldete Konto.
+                  Voraussetzung ist ein Firestore-User mit <code>role: "admin"</code> für das angemeldete Konto.
                 </Typography>
               </Stack>
             </CardContent>
@@ -1053,7 +1053,7 @@ export function AdminPage() {
                     onClick={() => setScannerOpen(true)}
                     fullWidth
                   >
-                    Scanner Ã¶ffnen
+                    Scanner öffnen
                   </Button>
                   <Button
                     variant="outlined"
@@ -1061,7 +1061,7 @@ export function AdminPage() {
                     onClick={handleOpenManualMeasurementDialog}
                     fullWidth
                   >
-                    Manuell Messwert hinzufÃ¼gen
+                    Manuell Messwert hinzufügen
                   </Button>
                 </Stack>
               </CardContent>
@@ -1073,7 +1073,7 @@ export function AdminPage() {
               <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
                 <Stack spacing={2}>
                   <Typography variant="h4" sx={{ fontSize: { xs: '1.45rem', sm: '2rem' } }}>
-                    Letzte eigene EintrÃ¤ge
+                    Letzte eigene Einträge
                   </Typography>
                   <Typography color="text.secondary">
                     Hier siehst du die zuletzt von dir eingetragenen Messwerte.
@@ -1192,7 +1192,7 @@ export function AdminPage() {
 
               {moderationLoading ? (
                 <Stack alignItems="center" justifyContent="center" sx={{ py: 6 }}>
-                  <Typography color="text.secondary">EintrÃ¤ge werden geladen...</Typography>
+                  <Typography color="text.secondary">Einträge werden geladen...</Typography>
                 </Stack>
               ) : null}
 
@@ -1403,7 +1403,7 @@ export function AdminPage() {
                 <option value="admin">admin</option>
               </TextField>
               <TextField
-                label="VerknÃ¼pfte Brennstoffzelle"
+                label="Verknüpfte Brennstoffzelle"
                 value={editingUser?.generatorId ?? 'Keine'}
                 disabled
                 fullWidth
@@ -1481,7 +1481,7 @@ export function AdminPage() {
       >
         <DialogTitle>
           {selectedMeasurementGenerator
-            ? `Messwerte fÃ¼r ${selectedMeasurementGenerator.ownerName?.trim() || selectedMeasurementGenerator.code}`
+            ? `Messwerte für ${selectedMeasurementGenerator.ownerName?.trim() || selectedMeasurementGenerator.code}`
             : 'Messwerte'}
         </DialogTitle>
         <DialogContent>
@@ -1517,7 +1517,7 @@ export function AdminPage() {
                   <ListItem>
                     <ListItemText
                       primary="Noch keine Messwerte"
-                      secondary="FÃ¼r diese Brennstoffzelle wurden noch keine Werte eingetragen."
+                      secondary="Für diese Brennstoffzelle wurden noch keine Werte eingetragen."
                     />
                   </ListItem>
                 )}
@@ -1526,7 +1526,7 @@ export function AdminPage() {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseGeneratorMeasurementsDialog}>SchlieÃŸen</Button>
+          <Button onClick={handleCloseGeneratorMeasurementsDialog}>Schließen</Button>
         </DialogActions>
       </Dialog>
 
