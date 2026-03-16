@@ -903,6 +903,8 @@ export function AdminPage() {
       showStatus?: boolean
     },
   ) {
+    return renderModerationCards(entries, options)
+
     return (
       <Box
         sx={{
@@ -1084,6 +1086,222 @@ export function AdminPage() {
                 primary={options.emptyPrimary}
                 secondary={options.emptySecondary}
               />
+            </ListItem>
+          )}
+        </List>
+      </Box>
+    )
+  }
+
+  function renderModerationCards(
+    entries: ModerationListEntry[],
+    options: {
+      ariaLabel: string
+      emptyPrimary: string
+      emptySecondary: string
+      showStatus?: boolean
+    },
+  ) {
+    return (
+      <Box
+        sx={{
+          borderRadius: 4,
+          overflow: 'hidden',
+          bgcolor: 'rgba(248,242,231,0.34)',
+          border: '1px solid rgba(121,101,66,0.14)',
+        }}
+      >
+        <Box
+          sx={{
+            display: { xs: 'none', sm: 'grid' },
+            gridTemplateColumns: options.showStatus
+              ? 'minmax(0, 1.2fr) 124px 112px'
+              : 'minmax(0, 1.4fr) 124px',
+            gap: 1.5,
+            px: 2,
+            py: 1,
+            pr: 6,
+            bgcolor: 'rgba(121,101,66,0.08)',
+            borderBottom: entries.length ? '1px solid rgba(121,101,66,0.1)' : 'none',
+          }}
+        >
+          <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ letterSpacing: '0.04em' }}>
+            Nutzer
+          </Typography>
+          <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ letterSpacing: '0.04em' }}>
+            Code
+          </Typography>
+          {options.showStatus ? (
+            <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ letterSpacing: '0.04em' }}>
+              Status
+            </Typography>
+          ) : null}
+        </Box>
+        <List disablePadding aria-label={options.ariaLabel} sx={{ p: 1 }}>
+          {entries.length ? (
+            entries.map(({ user, generator, status }, index) => (
+              <ListItem
+                key={user.id}
+                disablePadding
+                secondaryAction={
+                  <IconButton
+                    edge="end"
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      handleModerationMenuOpen(event, user, generator)
+                    }}
+                    aria-label={`Aktionen für ${user.name}`}
+                    sx={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: 1.75,
+                      border: '1px solid rgba(121,101,66,0.14)',
+                      bgcolor: 'rgba(255,250,242,0.92)',
+                      '&:hover': {
+                        bgcolor: 'rgba(255,255,255,1)',
+                      },
+                      '&:focus-visible': {
+                        outline: '2px solid rgba(143,122,81,0.55)',
+                        outlineOffset: 2,
+                      },
+                    }}
+                  >
+                    <MoreVertIcon fontSize="small" />
+                  </IconButton>
+                }
+                sx={{
+                  mb: index < entries.length - 1 ? 0.9 : 0,
+                  borderRadius: 3,
+                  border: '1px solid rgba(121,101,66,0.12)',
+                  bgcolor: 'rgba(255,249,239,0.42)',
+                  overflow: 'hidden',
+                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.28)',
+                }}
+              >
+                <ListItemButton
+                  disabled={!generator}
+                  aria-label={
+                    generator
+                      ? `Messwerte von ${user.name} mit Code ${generator.code.toUpperCase()} öffnen`
+                      : `${user.name} hat keine verknüpfte Brennstoffzelle`
+                  }
+                  onClick={() => {
+                    if (generator) {
+                      void handleOpenGeneratorMeasurements(generator)
+                    }
+                  }}
+                  sx={{
+                    px: { xs: 1.5, sm: 1.75 },
+                    py: 1.3,
+                    pr: 6,
+                    alignItems: 'center',
+                    '&.Mui-disabled': {
+                      opacity: 1,
+                      cursor: 'default',
+                    },
+                    '&:hover': {
+                      bgcolor: generator ? 'rgba(255,255,255,0.34)' : 'transparent',
+                    },
+                    '&:focus-visible': {
+                      outline: '2px solid rgba(143,122,81,0.55)',
+                      outlineOffset: -2,
+                      bgcolor: 'rgba(255,255,255,0.34)',
+                    },
+                  }}
+                >
+                  <Box sx={{ width: '100%' }}>
+                    <Box
+                      sx={{
+                        width: '100%',
+                        display: 'grid',
+                        gridTemplateColumns: {
+                          xs: '1fr',
+                          sm: options.showStatus
+                            ? 'minmax(0, 1.2fr) 124px 112px'
+                            : 'minmax(0, 1.4fr) 124px',
+                        },
+                        gap: { xs: 1, sm: 1.5 },
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Box sx={{ minWidth: 0 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, minWidth: 0 }}>
+                          <Typography variant="body2" fontWeight={700} noWrap>
+                            {user.name}
+                          </Typography>
+                          {user.role === 'admin' ? (
+                            <Box
+                              component="span"
+                              aria-label="Admin"
+                              sx={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: '#8F6410',
+                                flexShrink: 0,
+                              }}
+                            >
+                              <AdminPanelSettingsOutlinedIcon fontSize="small" />
+                            </Box>
+                          ) : null}
+                          {status !== 'active' ? (
+                            <Chip
+                              size="small"
+                              label={getLifecycleStatusLabel(status)}
+                              color={status === 'blocked' ? 'warning' : 'default'}
+                              sx={{ display: { xs: 'inline-flex', sm: 'none' } }}
+                            />
+                          ) : null}
+                        </Box>
+                        <Typography variant="caption" color="text.secondary">
+                          {user.email}
+                        </Typography>
+                      </Box>
+                      <Box>
+                        <Box
+                          sx={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            minWidth: 96,
+                            px: 1.1,
+                            py: 0.55,
+                            borderRadius: 99,
+                            border: '1px solid rgba(61,177,236,0.18)',
+                            bgcolor: 'rgba(255,255,255,0.78)',
+                          }}
+                        >
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              fontFamily: '"Consolas", "Courier New", monospace',
+                              fontWeight: 700,
+                              letterSpacing: '0.03em',
+                            }}
+                          >
+                            {generator ? generator.code.toUpperCase() : '-'}
+                          </Typography>
+                        </Box>
+                      </Box>
+                      {options.showStatus ? (
+                        <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
+                          {status !== 'active' ? (
+                            <Chip
+                              size="small"
+                              label={getLifecycleStatusLabel(status)}
+                              color={status === 'blocked' ? 'warning' : 'default'}
+                            />
+                          ) : null}
+                        </Box>
+                      ) : null}
+                    </Box>
+                  </Box>
+                </ListItemButton>
+              </ListItem>
+            ))
+          ) : (
+            <ListItem sx={{ px: 1, py: 1 }}>
+              <ListItemText primary={options.emptyPrimary} secondary={options.emptySecondary} />
             </ListItem>
           )}
         </List>
@@ -1574,40 +1792,39 @@ export function AdminPage() {
               />
               <Box
                 sx={{
-                  borderRadius: 3,
+                  borderRadius: 4,
                   overflow: 'hidden',
-                  bgcolor: 'background.default',
-                  border: (theme) => `1px solid ${theme.palette.divider}`,
+                  bgcolor: 'rgba(248,242,231,0.34)',
+                  border: '1px solid rgba(121,101,66,0.14)',
                 }}
               >
                 <Box
                   sx={{
                     display: { xs: 'none', sm: 'grid' },
-                    gridTemplateColumns: 'minmax(0, 1.4fr) minmax(110px, 140px)',
-                    gap: 2,
+                    gridTemplateColumns: 'minmax(0, 1.4fr) 124px',
+                    gap: 1.5,
                     px: 2,
-                    py: 1.25,
-                    pr: 7,
-                    bgcolor: 'rgba(36,28,19,0.05)',
+                    py: 1,
+                    pr: 6,
+                    bgcolor: 'rgba(121,101,66,0.08)',
                     borderBottom: activeModerationEntries.length
-                      ? (theme) => `1px solid ${theme.palette.divider}`
+                      ? '1px solid rgba(121,101,66,0.1)'
                       : 'none',
                   }}
                 >
-                  <Typography variant="caption" color="text.secondary" fontWeight={700}>
+                  <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ letterSpacing: '0.04em' }}>
                     Nutzer
                   </Typography>
-                  <Typography variant="caption" color="text.secondary" fontWeight={700}>
+                  <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ letterSpacing: '0.04em' }}>
                     Code
                   </Typography>
                 </Box>
-                <List disablePadding aria-label="Moderationsliste">
+                <List disablePadding aria-label="Moderationsliste" sx={{ p: 1 }}>
                   {activeModerationEntries.length ? (
                     activeModerationEntries.map(({ user, generator }, index) => (
                       <ListItem
                         key={user.id}
                         disablePadding
-                        divider={index < activeModerationEntries.length - 1}
                         secondaryAction={
                           <IconButton
                             edge="end"
@@ -1617,13 +1834,13 @@ export function AdminPage() {
                             }}
                             aria-label={`Aktionen für ${user.name}`}
                             sx={{
-                              width: 34,
-                              height: 34,
+                              width: 32,
+                              height: 32,
                               borderRadius: 1.75,
-                              border: (theme) => `1px solid ${theme.palette.divider}`,
-                              bgcolor: 'rgba(255,255,255,0.72)',
+                              border: '1px solid rgba(121,101,66,0.14)',
+                              bgcolor: 'rgba(255,250,242,0.92)',
                               '&:hover': {
-                                bgcolor: 'rgba(255,255,255,0.96)',
+                                bgcolor: 'rgba(255,255,255,1)',
                               },
                               '&:focus-visible': {
                                 outline: '2px solid rgba(143,122,81,0.55)',
@@ -1634,6 +1851,14 @@ export function AdminPage() {
                             <MoreVertIcon fontSize="small" />
                           </IconButton>
                         }
+                        sx={{
+                          mb: index < activeModerationEntries.length - 1 ? 0.9 : 0,
+                          borderRadius: 3,
+                          border: '1px solid rgba(121,101,66,0.12)',
+                          bgcolor: 'rgba(255,249,239,0.42)',
+                          overflow: 'hidden',
+                          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.28)',
+                        }}
                       >
                         <ListItemButton
                           disabled={!generator}
@@ -1648,21 +1873,21 @@ export function AdminPage() {
                             }
                           }}
                           sx={{
-                            px: 2,
-                            py: 1.5,
-                            pr: 7,
-                            alignItems: 'stretch',
+                            px: { xs: 1.5, sm: 1.75 },
+                            py: 1.3,
+                            pr: 6,
+                            alignItems: 'center',
                             '&.Mui-disabled': {
                               opacity: 1,
                               cursor: 'default',
                             },
                             '&:hover': {
-                              bgcolor: generator ? 'rgba(255,255,255,0.22)' : 'transparent',
+                              bgcolor: generator ? 'rgba(255,255,255,0.34)' : 'transparent',
                             },
                             '&:focus-visible': {
                               outline: '2px solid rgba(143,122,81,0.55)',
                               outlineOffset: -2,
-                              bgcolor: 'rgba(255,255,255,0.22)',
+                              bgcolor: 'rgba(255,255,255,0.34)',
                             },
                           }}
                         >
@@ -1673,9 +1898,9 @@ export function AdminPage() {
                                 display: 'grid',
                                 gridTemplateColumns: {
                                   xs: '1fr',
-                                  sm: 'minmax(0, 1.4fr) minmax(110px, 140px)',
+                                  sm: 'minmax(0, 1.4fr) 124px',
                                 },
-                                gap: { xs: 0.75, sm: 2 },
+                                gap: { xs: 1, sm: 1.5 },
                                 alignItems: 'center',
                               }}
                             >
@@ -1707,15 +1932,30 @@ export function AdminPage() {
                                 </Typography>
                               </Box>
                               <Box>
-                                <Typography
-                                  variant="body2"
+                                <Box
                                   sx={{
-                                    fontFamily: '"Consolas", "Courier New", monospace',
-                                    fontWeight: 700,
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    minWidth: 96,
+                                    px: 1.1,
+                                    py: 0.55,
+                                    borderRadius: 99,
+                                    border: '1px solid rgba(61,177,236,0.18)',
+                                    bgcolor: 'rgba(255,255,255,0.78)',
                                   }}
                                 >
-                                  {generator ? generator.code.toUpperCase() : '-'}
-                                </Typography>
+                                  <Typography
+                                    variant="body2"
+                                    sx={{
+                                      fontFamily: '"Consolas", "Courier New", monospace',
+                                      fontWeight: 700,
+                                      letterSpacing: '0.03em',
+                                    }}
+                                  >
+                                    {generator ? generator.code.toUpperCase() : '-'}
+                                  </Typography>
+                                </Box>
                               </Box>
                             </Box>
                           </Box>
