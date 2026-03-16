@@ -1338,33 +1338,30 @@ export function AdminPage() {
                             }
                           }}
                         >
-                          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
-                            <Box
-                              component="span"
-                              aria-label={user.role === 'admin' ? 'Admin' : undefined}
-                              sx={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                color: '#8F6410',
-                                minWidth: 18,
-                                minHeight: 20,
-                                mt: 0.15,
-                                flexShrink: 0,
-                              }}
-                            >
-                              {user.role === 'admin' ? (
-                                <AdminPanelSettingsOutlinedIcon fontSize="small" />
-                              ) : null}
-                            </Box>
-                            <Box sx={{ minWidth: 0 }}>
-                              <Typography variant="body2" fontWeight={700}>
+                          <Box sx={{ minWidth: 0 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, minWidth: 0 }}>
+                              <Typography variant="body2" fontWeight={700} noWrap>
                                 {user.name}
                               </Typography>
-                              <Typography variant="caption" color="text.secondary">
-                                {user.email}
-                              </Typography>
+                              {user.role === 'admin' ? (
+                                <Box
+                                  component="span"
+                                  aria-label="Admin"
+                                  sx={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    color: '#8F6410',
+                                    flexShrink: 0,
+                                  }}
+                                >
+                                  <AdminPanelSettingsOutlinedIcon fontSize="small" />
+                                </Box>
+                              ) : null}
                             </Box>
+                            <Typography variant="caption" color="text.secondary">
+                              {user.email}
+                            </Typography>
                           </Box>
                           <Box>
                             <Typography
