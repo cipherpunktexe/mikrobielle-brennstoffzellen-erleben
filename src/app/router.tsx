@@ -2,41 +2,41 @@
 import { Box, CircularProgress } from '@mui/material'
 import { lazy, Suspense, type ReactNode } from 'react'
 import { createBrowserRouter } from 'react-router-dom'
-import { AppShell } from './layout/AppShell'
+import { AppShell } from './AppShell'
 
 const LandingPage = lazy(() =>
-  import('../features/project/pages/LandingPage').then((module) => ({
+  import('../landing/LandingPage').then((module) => ({
     default: module.LandingPage,
   })),
 )
 const UserRegistrationPage = lazy(() =>
-  import('../features/user/pages/UserRegistrationPage').then((module) => ({
+  import('../user/UserRegistrationPage').then((module) => ({
     default: module.UserRegistrationPage,
   })),
 )
 const UserDashboardPage = lazy(() =>
-  import('../features/user/pages/UserDashboardPage').then((module) => ({
+  import('../user/UserDashboardPage').then((module) => ({
     default: module.UserDashboardPage,
   })),
 )
 const AdminPage = lazy(() =>
-  import('../features/admin/pages/AdminPage').then((module) => ({ default: module.AdminPage })),
+  import('../admin/AdminPage').then((module) => ({ default: module.AdminPage })),
 )
 const LeaderboardPage = lazy(() =>
-  import('../features/leaderboard/pages/LeaderboardPage').then((module) => ({
+  import('../leaderboard/LeaderboardPage').then((module) => ({
     default: module.LeaderboardPage,
   })),
 )
 const ImpressumPage = lazy(() =>
-  import('../features/legal/pages/ImpressumPage').then((module) => ({
+  import('../legal/ImpressumPage').then((module) => ({
     default: module.ImpressumPage,
   })),
 )
 const AboutPage = lazy(() =>
-  import('../features/project/pages/AboutPage').then((module) => ({ default: module.AboutPage })),
+  import('../landing/AboutPage').then((module) => ({ default: module.AboutPage })),
 )
 const DatenschutzPage = lazy(() =>
-  import('../features/legal/pages/DatenschutzPage').then((module) => ({
+  import('../legal/DatenschutzPage').then((module) => ({
     default: module.DatenschutzPage,
   })),
 )
