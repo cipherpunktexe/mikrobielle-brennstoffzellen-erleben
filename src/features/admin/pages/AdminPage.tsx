@@ -66,6 +66,7 @@ import {
   signInWithGoogle,
   subscribeToAuth,
   updateGeneratorAsAdmin,
+  updateMeasurementAsAdmin,
   updateUserProfileAsAdmin,
 } from '../../../shared/data/firebaseData'
 import type {
@@ -94,6 +95,11 @@ interface GeneratorFormState {
 interface ModerationListEntry {
   user: UserProfile
   generator: Generator | null
+}
+
+interface MeasurementFormState {
+  value: string
+  enteredBy: string
 }
 
 type QrExportStepKey = 'count' | 'layout' | 'number' | 'export'
@@ -127,6 +133,13 @@ function createEmptyGeneratorForm(): GeneratorFormState {
     code: '',
     ownerUid: '',
     ownerName: '',
+  }
+}
+
+function createEmptyMeasurementForm(): MeasurementFormState {
+  return {
+    value: '',
+    enteredBy: '',
   }
 }
 
@@ -216,6 +229,10 @@ export function AdminPage() {
   const [selectedMeasurementGenerator, setSelectedMeasurementGenerator] = useState<Generator | null>(
     null,
   )
+  const [editingMeasurementId, setEditingMeasurementId] = useState('')
+  const [measurementForm, setMeasurementForm] = useState<MeasurementFormState>(createEmptyMeasurementForm)
+  const [measurementSaving, setMeasurementSaving] = useState(false)
+  const [measurementError, setMeasurementError] = useState('')
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null)
   const [editingGenerator, setEditingGenerator] = useState<Generator | null>(null)
   const [userForm, setUserForm] = useState<UserFormState>(createEmptyUserForm)
@@ -654,17 +671,24 @@ export function AdminPage() {
     }
   }
 
+  async function loadGeneratorMeasurements(generatorId: string) {
+    const measurements = await getMeasurementsForAdmin(generatorId)
+    setGeneratorMeasurements(measurements)
+  }
+
   async function handleOpenGeneratorMeasurements(generator: Generator) {
     setModerationStatus('')
     setModerationError('')
+    setMeasurementError('')
+    setEditingMeasurementId('')
+    setMeasurementForm(createEmptyMeasurementForm())
     setSelectedMeasurementGenerator(generator)
     setGeneratorMeasurements([])
     setGeneratorMeasurementsLoading(true)
     setGeneratorMeasurementsDialogOpen(true)
 
     try {
-      const measurements = await getMeasurementsForAdmin(generator.id)
-      setGeneratorMeasurements(measurements)
+      await loadGeneratorMeasurements(generator.id)
     } catch (loadIssue) {
       setModerationError(
         loadIssue instanceof Error ? loadIssue.message : 'Messwerte konnten nicht geladen werden.',
@@ -679,6 +703,65 @@ export function AdminPage() {
     setSelectedMeasurementGenerator(null)
     setGeneratorMeasurements([])
     setGeneratorMeasurementsLoading(false)
+    setEditingMeasurementId('')
+    setMeasurementForm(createEmptyMeasurementForm())
+    setMeasurementSaving(false)
+    setMeasurementError('')
+  }
+
+  function handleOpenMeasurementEditor(measurement: Measurement) {
+    setMeasurementError('')
+    setEditingMeasurementId(measurement.id)
+    setMeasurementForm({
+      value: measurement.value.toString(),
+      enteredBy: measurement.enteredBy,
+    })
+  }
+
+  function handleCloseMeasurementEditor() {
+    if (measurementSaving) {
+      return
+    }
+
+    setEditingMeasurementId('')
+    setMeasurementForm(createEmptyMeasurementForm())
+    setMeasurementError('')
+  }
+
+  async function handleMeasurementSave(measurementId: string) {
+    if (!selectedMeasurementGenerator) {
+      return
+    }
+
+    setMeasurementSaving(true)
+    setMeasurementError('')
+    setModerationStatus('')
+    setModerationError('')
+
+    try {
+      const numericValue = Number.parseFloat(measurementForm.value)
+
+      if (Number.isNaN(numericValue)) {
+        throw new Error('Bitte einen gültigen Messwert in V eingeben.')
+      }
+
+      await updateMeasurementAsAdmin(measurementId, {
+        value: numericValue,
+        enteredBy: measurementForm.enteredBy,
+      })
+
+      await loadGeneratorMeasurements(selectedMeasurementGenerator.id)
+      setModerationStatus(`Messwert für ${selectedMeasurementGenerator.code} aktualisiert.`)
+      handleCloseMeasurementEditor()
+    } catch (saveIssue) {
+      setMeasurementError(
+        saveIssue instanceof Error
+          ? saveIssue.message
+          : 'Messwert konnte nicht gespeichert werden.',
+      )
+    } finally {
+      setMeasurementSaving(false)
+    }
   }
 
   async function handlePromoteUserToAdmin() {
@@ -1501,6 +1584,8 @@ export function AdminPage() {
               </Typography>
             ) : null}
 
+            {measurementError ? <Alert severity="error">{measurementError}</Alert> : null}
+
             {generatorMeasurementsLoading ? (
               <Typography color="text.secondary">Messwerte werden geladen...</Typography>
             ) : (
@@ -1515,11 +1600,73 @@ export function AdminPage() {
               >
                 {generatorMeasurements.length ? (
                   generatorMeasurements.map((measurement, index) => (
-                    <ListItem key={measurement.id} divider={index < generatorMeasurements.length - 1}>
-                      <ListItemText
-                        primary={formatMeasurement(measurement.value)}
-                        secondary={`${measurement.enteredBy} | ${formatTimestamp(measurement.createdAt)}`}
-                      />
+                    <ListItem
+                      key={measurement.id}
+                      divider={index < generatorMeasurements.length - 1}
+                      sx={{ py: 1.5 }}
+                    >
+                      {editingMeasurementId === measurement.id ? (
+                        <Stack spacing={1.5} sx={{ width: '100%' }}>
+                          <TextField
+                            label="Wert in V"
+                            value={measurementForm.value}
+                            onChange={(event) =>
+                              setMeasurementForm((current) => ({
+                                ...current,
+                                value: event.target.value,
+                              }))
+                            }
+                            fullWidth
+                          />
+                          <TextField
+                            label="Eingetragen von"
+                            value={measurementForm.enteredBy}
+                            onChange={(event) =>
+                              setMeasurementForm((current) => ({
+                                ...current,
+                                enteredBy: event.target.value,
+                              }))
+                            }
+                            fullWidth
+                          />
+                          <Stack direction="row" spacing={1}>
+                            <Button
+                              size="small"
+                              variant="contained"
+                              onClick={() => void handleMeasurementSave(measurement.id)}
+                              disabled={measurementSaving}
+                            >
+                              Speichern
+                            </Button>
+                            <Button
+                              size="small"
+                              onClick={handleCloseMeasurementEditor}
+                              disabled={measurementSaving}
+                            >
+                              Abbrechen
+                            </Button>
+                          </Stack>
+                        </Stack>
+                      ) : (
+                        <Stack
+                          direction="row"
+                          spacing={1.5}
+                          justifyContent="space-between"
+                          alignItems="flex-start"
+                          sx={{ width: '100%' }}
+                        >
+                          <ListItemText
+                            primary={formatMeasurement(measurement.value)}
+                            secondary={`${measurement.enteredBy} | ${formatTimestamp(measurement.createdAt)}`}
+                          />
+                          <Button
+                            size="small"
+                            onClick={() => handleOpenMeasurementEditor(measurement)}
+                          >
+                            Bearbeiten
+                          </Button>
+                        </Stack>
+                      )}
                     </ListItem>
                   ))
                 ) : (
