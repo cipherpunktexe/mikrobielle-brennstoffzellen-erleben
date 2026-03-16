@@ -1760,84 +1760,68 @@ export function AdminPage() {
               ) : null}
 
               <Stack direction="row" spacing={1} alignItems="center">
-                <Box
+                <IconButton
+                  aria-label={moderationSearchOpen ? 'Suche einklappen' : 'Suche ausklappen'}
+                  onClick={() => {
+                    setModerationSearchOpen((current) => !current)
+                  }}
                   sx={{
-                    position: 'relative',
-                    flex: moderationSearchOpen ? 1 : '0 0 44px',
-                    width: moderationSearchOpen ? 'auto' : 44,
-                    minWidth: moderationSearchOpen ? 0 : 44,
-                    transition: 'flex-basis 220ms ease, width 220ms ease',
-                    overflow: 'hidden',
+                    width: 44,
+                    height: 44,
+                    borderRadius: 2.25,
+                    border: '1px solid rgba(121,101,66,0.14)',
+                    bgcolor: moderationSearchOpen ? 'rgba(255,255,255,0.98)' : 'rgba(255,250,242,0.92)',
+                    flexShrink: 0,
+                    transition: 'background-color 180ms ease, border-color 180ms ease',
+                    '&:hover': {
+                      bgcolor: 'rgba(255,255,255,1)',
+                    },
                   }}
                 >
-                  <Box
-                    sx={{
-                      opacity: moderationSearchOpen ? 1 : 0,
-                      transform: moderationSearchOpen ? 'translateX(0)' : 'translateX(-12px)',
-                      transition: 'opacity 180ms ease, transform 220ms ease',
-                      pointerEvents: moderationSearchOpen ? 'auto' : 'none',
-                    }}
-                  >
-                    <TextField
-                      label="Suchen"
-                      value={moderationSearch}
-                      onChange={(event) => setModerationSearch(event.target.value)}
-                      placeholder="Name, E-Mail, Code oder Status"
-                      fullWidth
-                      sx={{
-                        '& .MuiInputBase-root': {
-                          pl: 4.5,
-                        },
-                      }}
-                      slotProps={{
-                        input: {
-                          endAdornment: (
-                            <InputAdornment position="end">
-                              <IconButton
-                                aria-label={moderationSearch ? 'Suche leeren' : 'Suche einklappen'}
-                                edge="end"
-                                size="small"
-                                onClick={() => {
-                                  if (moderationSearch) {
-                                    setModerationSearch('')
-                                    return
-                                  }
+                  <SearchIcon fontSize="small" />
+                </IconButton>
+                <Box
+                  sx={{
+                    flex: moderationSearchOpen ? 1 : '0 1 0px',
+                    maxWidth: moderationSearchOpen ? '100%' : 0,
+                    minWidth: 0,
+                    opacity: moderationSearchOpen ? 1 : 0,
+                    transform: moderationSearchOpen ? 'translateX(0)' : 'translateX(-10px)',
+                    transition: 'max-width 220ms ease, opacity 180ms ease, transform 220ms ease',
+                    overflow: 'hidden',
+                    pointerEvents: moderationSearchOpen ? 'auto' : 'none',
+                  }}
+                >
+                  <TextField
+                    label="Suchen"
+                    value={moderationSearch}
+                    onChange={(event) => setModerationSearch(event.target.value)}
+                    placeholder="Name, E-Mail, Code oder Status"
+                    fullWidth
+                    slotProps={{
+                      input: {
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              aria-label={moderationSearch ? 'Suche leeren' : 'Suche einklappen'}
+                              edge="end"
+                              size="small"
+                              onClick={() => {
+                                if (moderationSearch) {
+                                  setModerationSearch('')
+                                  return
+                                }
 
-                                  setModerationSearchOpen(false)
-                                }}
-                              >
-                                <CloseIcon fontSize="small" />
-                              </IconButton>
-                            </InputAdornment>
-                          ),
-                        },
-                      }}
-                    />
-                  </Box>
-                  <IconButton
-                    aria-label={moderationSearchOpen ? 'Suche einklappen' : 'Suche ausklappen'}
-                    onClick={() => {
-                      setModerationSearchOpen((current) => !current)
-                    }}
-                    sx={{
-                      position: 'absolute',
-                      left: moderationSearchOpen ? 6 : 0,
-                      top: moderationSearchOpen ? '50%' : 0,
-                      width: 44,
-                      height: 44,
-                      transform: moderationSearchOpen ? 'translateY(-50%)' : 'none',
-                      borderRadius: 2.25,
-                      border: moderationSearchOpen ? 'none' : '1px solid rgba(121,101,66,0.14)',
-                      bgcolor: moderationSearchOpen ? 'transparent' : 'rgba(255,250,242,0.92)',
-                      zIndex: 1,
-                      transition: 'left 220ms ease, top 220ms ease, transform 220ms ease, background-color 180ms ease, border-color 180ms ease',
-                      '&:hover': {
-                        bgcolor: moderationSearchOpen ? 'rgba(255,255,255,0.28)' : 'rgba(255,255,255,1)',
+                                setModerationSearchOpen(false)
+                              }}
+                            >
+                              <CloseIcon fontSize="small" />
+                            </IconButton>
+                          </InputAdornment>
+                        ),
                       },
                     }}
-                  >
-                    <SearchIcon fontSize="small" />
-                  </IconButton>
+                  />
                 </Box>
                 <IconButton
                   aria-label={`Weitere Aktionen${trashedModerationEntries.length ? ` (${trashedModerationEntries.length})` : ''}`}
