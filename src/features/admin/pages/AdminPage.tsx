@@ -25,6 +25,7 @@ import {
   IconButton,
   List,
   ListItem,
+  ListItemButton,
   ListItemText,
   Menu,
   MenuItem,
@@ -1305,11 +1306,12 @@ export function AdminPage() {
                     Code
                   </Typography>
                 </Box>
-                <List disablePadding>
+                <List disablePadding aria-label="Moderationsliste">
                   {filteredModerationEntries.length ? (
                     filteredModerationEntries.map(({ user, generator }, index) => (
                       <ListItem
                         key={user.id}
+                        disablePadding
                         divider={index < filteredModerationEntries.length - 1}
                         secondaryAction={
                           <IconButton
@@ -1318,6 +1320,7 @@ export function AdminPage() {
                               event.stopPropagation()
                               handleModerationMenuOpen(event, user, generator)
                             }}
+                            aria-label={`Aktionen für ${user.name}`}
                             sx={{
                               width: 34,
                               height: 34,
@@ -1327,65 +1330,101 @@ export function AdminPage() {
                               '&:hover': {
                                 bgcolor: 'rgba(255,255,255,0.96)',
                               },
+                              '&:focus-visible': {
+                                outline: '2px solid rgba(143,122,81,0.55)',
+                                outlineOffset: 2,
+                              },
                             }}
                           >
                             <MoreVertIcon fontSize="small" />
                           </IconButton>
                         }
-                        sx={{ px: 2, py: 1.5 }}
                       >
-                        <Box
-                          sx={{
-                            width: '100%',
-                            display: 'grid',
-                            gridTemplateColumns: {
-                              xs: '1fr',
-                              sm: 'minmax(0, 1.4fr) minmax(110px, 140px)',
-                            },
-                            gap: { xs: 0.75, sm: 2 },
-                            alignItems: 'center',
-                            cursor: generator ? 'pointer' : 'default',
-                          }}
+                        <ListItemButton
+                          disabled={!generator}
+                          aria-label={
+                            generator
+                              ? `Messwerte von ${user.name} mit Code ${generator.code.toUpperCase()} öffnen`
+                              : `${user.name} hat keine verknüpfte Brennstoffzelle`
+                          }
                           onClick={() => {
                             if (generator) {
                               void handleOpenGeneratorMeasurements(generator)
                             }
                           }}
+                          sx={{
+                            px: 2,
+                            py: 1.5,
+                            pr: 7,
+                            alignItems: 'stretch',
+                            '&.Mui-disabled': {
+                              opacity: 1,
+                              cursor: 'default',
+                            },
+                            '&:hover': {
+                              bgcolor: generator ? 'rgba(255,255,255,0.22)' : 'transparent',
+                            },
+                            '&:focus-visible': {
+                              outline: '2px solid rgba(143,122,81,0.55)',
+                              outlineOffset: -2,
+                              bgcolor: 'rgba(255,255,255,0.22)',
+                            },
+                          }}
                         >
-                          <Box sx={{ minWidth: 0 }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, minWidth: 0 }}>
-                              <Typography variant="body2" fontWeight={700} noWrap>
-                                {user.name}
-                              </Typography>
-                              {user.role === 'admin' ? (
+                          <Box>
+                            <Box
+                              sx={{
+                                width: '100%',
+                                display: 'grid',
+                                gridTemplateColumns: {
+                                  xs: '1fr',
+                                  sm: 'minmax(0, 1.4fr) minmax(110px, 140px)',
+                                },
+                                gap: { xs: 0.75, sm: 2 },
+                                alignItems: 'center',
+                              }}
+                            >
+                              <Box sx={{ minWidth: 0 }}>
                                 <Box
-                                  component="span"
-                                  aria-label="Admin"
+                                  sx={{ display: 'flex', alignItems: 'center', gap: 0.75, minWidth: 0 }}
+                                >
+                                  <Typography variant="body2" fontWeight={700} noWrap>
+                                    {user.name}
+                                  </Typography>
+                                  {user.role === 'admin' ? (
+                                    <Box
+                                      component="span"
+                                      aria-label="Admin"
+                                      sx={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        color: '#8F6410',
+                                        flexShrink: 0,
+                                      }}
+                                    >
+                                      <AdminPanelSettingsOutlinedIcon fontSize="small" />
+                                    </Box>
+                                  ) : null}
+                                </Box>
+                                <Typography variant="caption" color="text.secondary">
+                                  {user.email}
+                                </Typography>
+                              </Box>
+                              <Box>
+                                <Typography
+                                  variant="body2"
                                   sx={{
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    color: '#8F6410',
-                                    flexShrink: 0,
+                                    fontFamily: '"Consolas", "Courier New", monospace',
+                                    fontWeight: 700,
                                   }}
                                 >
-                                  <AdminPanelSettingsOutlinedIcon fontSize="small" />
-                                </Box>
-                              ) : null}
+                                  {generator ? generator.code.toUpperCase() : '-'}
+                                </Typography>
+                              </Box>
                             </Box>
-                            <Typography variant="caption" color="text.secondary">
-                              {user.email}
-                            </Typography>
                           </Box>
-                          <Box>
-                            <Typography
-                              variant="body2"
-                              sx={{ fontFamily: '"Consolas", "Courier New", monospace', fontWeight: 700 }}
-                            >
-                              {generator ? generator.code.toUpperCase() : '-'}
-                            </Typography>
-                          </Box>
-                        </Box>
+                        </ListItemButton>
                       </ListItem>
                     ))
                   ) : (
