@@ -1,6 +1,8 @@
+import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined'
 import EditNoteIcon from '@mui/icons-material/EditNote'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
+import PersonOutlineIcon from '@mui/icons-material/PersonOutline'
 import QrCode2Icon from '@mui/icons-material/QrCode2'
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner'
 import SaveIcon from '@mui/icons-material/Save'
@@ -1269,7 +1271,29 @@ export function AdminPage() {
                             </Typography>
                           </Box>
                           <Box>
-                            <Typography variant="body2">{user.role}</Typography>
+                            <Box
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                minHeight: 24,
+                              }}
+                            >
+                              <Box
+                                component="span"
+                                aria-label={user.role === 'admin' ? 'Admin' : 'Nutzer'}
+                                sx={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  color: user.role === 'admin' ? '#8F6410' : 'text.secondary',
+                                }}
+                              >
+                                {user.role === 'admin' ? (
+                                  <AdminPanelSettingsOutlinedIcon fontSize="small" />
+                                ) : (
+                                  <PersonOutlineIcon fontSize="small" />
+                                )}
+                              </Box>
+                            </Box>
                             <Typography
                               variant="caption"
                               color="text.secondary"
