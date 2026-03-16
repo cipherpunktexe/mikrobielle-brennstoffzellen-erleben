@@ -17,6 +17,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Divider,
   Grid,
   IconButton,
   List,
@@ -1300,8 +1301,13 @@ export function AdminPage() {
                   <Typography variant="caption" color="text.secondary" fontWeight={700}>
                     Code
                   </Typography>
-                  <Typography variant="caption" color="text.secondary" fontWeight={700}>
-                    Rolle
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    fontWeight={700}
+                    sx={{ textAlign: 'center' }}
+                  >
+                    Aktionen
                   </Typography>
                 </Box>
                 <List disablePadding>
@@ -1313,9 +1319,22 @@ export function AdminPage() {
                         secondaryAction={
                           <IconButton
                             edge="end"
-                            onClick={(event) => handleModerationMenuOpen(event, user, generator)}
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              handleModerationMenuOpen(event, user, generator)
+                            }}
+                            sx={{
+                              width: 34,
+                              height: 34,
+                              borderRadius: 1.75,
+                              border: (theme) => `1px solid ${theme.palette.divider}`,
+                              bgcolor: 'rgba(255,255,255,0.72)',
+                              '&:hover': {
+                                bgcolor: 'rgba(255,255,255,0.96)',
+                              },
+                            }}
                           >
-                            <MoreVertIcon />
+                            <MoreVertIcon fontSize="small" />
                           </IconButton>
                         }
                         sx={{ px: 2, py: 1.5 }}
@@ -1401,14 +1420,41 @@ export function AdminPage() {
         anchorEl={moderationMenuAnchorEl}
         open={Boolean(moderationMenuAnchorEl)}
         onClose={handleCloseModerationMenu}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        PaperProps={{
+          sx: {
+            mt: 1,
+            minWidth: 250,
+            overflow: 'hidden',
+            borderRadius: 3,
+            border: (theme) => `1px solid ${theme.palette.divider}`,
+            boxShadow: '0 22px 44px rgba(36,28,19,0.16)',
+          },
+        }}
+        MenuListProps={{
+          dense: true,
+          sx: { p: 0.75 },
+        }}
       >
+        <Box sx={{ px: 1.25, pt: 1, pb: 1.1 }}>
+          <Typography variant="subtitle2" fontWeight={700} noWrap>
+            {menuUser?.name ?? 'Eintrag'}
+          </Typography>
+          <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block' }}>
+            {menuGenerator?.code?.toUpperCase() ?? menuUser?.email ?? ''}
+          </Typography>
+        </Box>
+        <Divider />
         <MenuItem
           onClick={() => {
             if (menuUser) {
               handleOpenUserDialog(menuUser)
             }
           }}
+          sx={{ gap: 1.25, borderRadius: 2, mx: 0.5, my: 0.25 }}
         >
+          <EditNoteIcon fontSize="small" />
           Nutzer bearbeiten
         </MenuItem>
         <MenuItem
@@ -1418,7 +1464,9 @@ export function AdminPage() {
             }
           }}
           disabled={!menuGenerator}
+          sx={{ gap: 1.25, borderRadius: 2, mx: 0.5, my: 0.25 }}
         >
+          <QrCode2Icon fontSize="small" />
           Brennstoffzelle bearbeiten
         </MenuItem>
         <MenuItem
@@ -1429,10 +1477,18 @@ export function AdminPage() {
             }
           }}
           disabled={!menuGenerator}
+          sx={{ gap: 1.25, borderRadius: 2, mx: 0.5, my: 0.25 }}
         >
+          <QrCodeScannerIcon fontSize="small" />
           Messwerte
         </MenuItem>
-        <MenuItem onClick={() => void handlePromoteUserToAdmin()} disabled={menuUser?.role === 'admin'}>
+        <Divider sx={{ my: 0.5 }} />
+        <MenuItem
+          onClick={() => void handlePromoteUserToAdmin()}
+          disabled={menuUser?.role === 'admin'}
+          sx={{ gap: 1.25, borderRadius: 2, mx: 0.5, my: 0.25 }}
+        >
+          <AdminPanelSettingsOutlinedIcon fontSize="small" />
           {menuUser?.role === 'admin' ? 'Bereits Admin' : 'Zum Admin machen'}
         </MenuItem>
       </Menu>
