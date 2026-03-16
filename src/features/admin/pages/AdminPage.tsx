@@ -43,6 +43,7 @@ import {
 import {
   useEffect,
   useState,
+  type ReactElement,
   type FormEvent,
   type MouseEvent,
   type ReactNode,
@@ -108,6 +109,12 @@ interface MeasurementFormState {
 }
 
 type QrExportStepKey = 'count' | 'layout' | 'number' | 'export'
+
+const adminTabItems: { value: AdminTabValue; label: string; icon: ReactElement }[] = [
+  { value: 'scan', label: 'Scannen', icon: <QrCodeScannerIcon fontSize="small" /> },
+  { value: 'qr', label: 'QR erstellen', icon: <QrCode2Icon fontSize="small" /> },
+  { value: 'moderation', label: 'Moderieren', icon: <EditNoteIcon fontSize="small" /> },
+]
 
 function TabPanel({
   active,
@@ -246,6 +253,7 @@ export function AdminPage() {
   const [moderationError, setModerationError] = useState('')
   const [moderationSearch, setModerationSearch] = useState('')
   const [moderationSearchOpen, setModerationSearchOpen] = useState(false)
+  const [mobileAdminNavOpen, setMobileAdminNavOpen] = useState(false)
   const [trashMenuAnchorEl, setTrashMenuAnchorEl] = useState<HTMLElement | null>(null)
   const [trashDialogOpen, setTrashDialogOpen] = useState(false)
   const [moderationMenuAnchorEl, setModerationMenuAnchorEl] = useState<HTMLElement | null>(null)
@@ -319,6 +327,10 @@ export function AdminPage() {
   }, [activeTab])
 
   useEffect(() => {
+    setMobileAdminNavOpen(false)
+  }, [activeTab])
+
+  useEffect(() => {
     if (profile?.role !== 'admin') {
       setExportNextCode('')
       setExportNextSequence(null)
@@ -373,6 +385,12 @@ export function AdminPage() {
   }, [activeTab, authUserId, profile?.email])
 
   function navigateToAdminTab(value: AdminTabValue) {
+    setMobileAdminNavOpen(false)
+
+    if (value === activeTab && !(value === 'scan' && routeCode)) {
+      return
+    }
+
     if (value === 'scan' && routeCode) {
       navigate(`/admin/scan/generator/${routeCode}`)
       return
@@ -1326,23 +1344,84 @@ export function AdminPage() {
     )
   }
 
+  const activeAdminTabItem =
+    adminTabItems.find((item) => item.value === activeTab) ?? adminTabItems[0]
+
   return (
     <Stack spacing={{ xs: 2.5, md: 3 }}>
       <Card>
         {isMobileViewport ? (
-          <Box sx={{ p: 1.5 }}>
-            <TextField
-              label="Bereich"
-              select
-              value={activeTab}
-              onChange={(event) => navigateToAdminTab(event.target.value as AdminTabValue)}
-              fullWidth
-              SelectProps={{ native: true }}
-            >
-              <option value="scan">Scannen</option>
-              <option value="qr">QR erstellen</option>
-              <option value="moderation">Moderieren</option>
-            </TextField>
+          <Box sx={{ p: 1.25 }}>
+            <Stack spacing={1}>
+              <Button
+                type="button"
+                variant="outlined"
+                color="inherit"
+                onClick={() => setMobileAdminNavOpen((current) => !current)}
+                endIcon={
+                  <ExpandMoreIcon
+                    sx={{
+                      transform: mobileAdminNavOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                      transition: 'transform 180ms ease',
+                    }}
+                  />
+                }
+                sx={{
+                  justifyContent: 'space-between',
+                  px: 1.5,
+                  py: 1.15,
+                  borderRadius: 999,
+                  borderColor: 'rgba(61,177,236,0.38)',
+                }}
+              >
+                <Stack direction="row" spacing={1.25} alignItems="center" sx={{ minWidth: 0 }}>
+                  {activeAdminTabItem.icon}
+                  <Typography fontWeight={700} noWrap>
+                    {activeAdminTabItem.label}
+                  </Typography>
+                </Stack>
+              </Button>
+              <Collapse in={mobileAdminNavOpen}>
+                <Box
+                  sx={{
+                    borderRadius: 4,
+                    border: '1px solid rgba(121,101,66,0.14)',
+                    overflow: 'hidden',
+                    bgcolor: 'rgba(255,255,255,0.82)',
+                  }}
+                >
+                  <List disablePadding>
+                    {adminTabItems.map((item, index) => (
+                      <ListItemButton
+                        key={item.value}
+                        selected={item.value === activeTab}
+                        onClick={() => navigateToAdminTab(item.value)}
+                        sx={{
+                          px: 2,
+                          py: 1.5,
+                          borderBottom:
+                            index < adminTabItems.length - 1 ? '1px solid rgba(121,101,66,0.08)' : 'none',
+                          '&.Mui-selected': {
+                            bgcolor: 'rgba(61,177,236,0.08)',
+                            borderRight: '3px solid #0B6E69',
+                          },
+                          '&.Mui-selected:hover': {
+                            bgcolor: 'rgba(61,177,236,0.12)',
+                          },
+                        }}
+                      >
+                        <Stack direction="row" spacing={1.25} alignItems="center" sx={{ minWidth: 0 }}>
+                          {item.icon}
+                          <Typography fontWeight={item.value === activeTab ? 700 : 600} noWrap>
+                            {item.label}
+                          </Typography>
+                        </Stack>
+                      </ListItemButton>
+                    ))}
+                  </List>
+                </Box>
+              </Collapse>
+            </Stack>
           </Box>
         ) : (
           <Tabs
@@ -1352,14 +1431,15 @@ export function AdminPage() {
             scrollButtons="auto"
             sx={{ px: { xs: 1, sm: 2 }, pt: 1 }}
           >
-            <Tab value="scan" label="Scannen" icon={<QrCodeScannerIcon />} iconPosition="start" />
-            <Tab value="qr" label="QR erstellen" icon={<QrCode2Icon />} iconPosition="start" />
-            <Tab
-              value="moderation"
-              label="Moderieren"
-              icon={<EditNoteIcon />}
-              iconPosition="start"
-            />
+            {adminTabItems.map((item) => (
+              <Tab
+                key={item.value}
+                value={item.value}
+                label={item.label}
+                icon={item.icon}
+                iconPosition="start"
+              />
+            ))}
           </Tabs>
         )}
       </Card>
