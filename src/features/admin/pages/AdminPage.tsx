@@ -1067,9 +1067,8 @@ export function AdminPage() {
     return (
       <Box
         sx={{
-          borderRadius: 4,
+          borderRadius: 2.5,
           overflow: 'hidden',
-          bgcolor: 'rgba(248,242,231,0.34)',
           border: '1px solid rgba(121,101,66,0.14)',
         }}
       >
@@ -1083,7 +1082,6 @@ export function AdminPage() {
             px: 2,
             py: 1,
             pr: 6,
-            bgcolor: 'rgba(121,101,66,0.08)',
             borderBottom: entries.length ? '1px solid rgba(121,101,66,0.1)' : 'none',
           }}
         >
@@ -1099,7 +1097,7 @@ export function AdminPage() {
             </Typography>
           ) : null}
         </Box>
-        <List disablePadding aria-label={options.ariaLabel} sx={{ p: 1 }}>
+        <List disablePadding aria-label={options.ariaLabel}>
           {entries.length ? (
             entries.map(({ user, generator, status }, index) => (
               <ListItem
@@ -1132,12 +1130,7 @@ export function AdminPage() {
                   </IconButton>
                 }
                 sx={{
-                  mb: index < entries.length - 1 ? 0.9 : 0,
-                  borderRadius: 3,
-                  border: '1px solid rgba(121,101,66,0.12)',
-                  bgcolor: 'rgba(255,249,239,0.42)',
-                  overflow: 'hidden',
-                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.28)',
+                  borderBottom: index < entries.length - 1 ? '1px solid rgba(121,101,66,0.1)' : 'none',
                 }}
               >
                 <ListItemButton
@@ -1157,6 +1150,7 @@ export function AdminPage() {
                     py: 1.3,
                     pr: 6,
                     alignItems: 'center',
+                    borderRadius: 0,
                     '&.Mui-disabled': {
                       opacity: 1,
                       cursor: 'default',
@@ -1219,31 +1213,18 @@ export function AdminPage() {
                           {user.email}
                         </Typography>
                       </Box>
-                      <Box>
-                        <Box
+                      <Box sx={{ minWidth: 0 }}>
+                        <Typography
+                          variant="body2"
                           sx={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            minWidth: 96,
-                            px: 1.1,
-                            py: 0.55,
-                            borderRadius: 99,
-                            border: '1px solid rgba(61,177,236,0.18)',
-                            bgcolor: 'rgba(255,255,255,0.78)',
+                            fontFamily: '"Consolas", "Courier New", monospace',
+                            fontWeight: 700,
+                            letterSpacing: '0.03em',
+                            whiteSpace: 'nowrap',
                           }}
                         >
-                          <Typography
-                            variant="body2"
-                            sx={{
-                              fontFamily: '"Consolas", "Courier New", monospace',
-                              fontWeight: 700,
-                              letterSpacing: '0.03em',
-                            }}
-                          >
-                            {generator ? generator.code.toUpperCase() : '-'}
-                          </Typography>
-                        </Box>
+                          {generator ? generator.code.toUpperCase() : '-'}
+                        </Typography>
                       </Box>
                       {options.showStatus ? (
                         <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
@@ -1773,9 +1754,8 @@ export function AdminPage() {
               </Stack>
               <Box
                 sx={{
-                  borderRadius: 4,
+                  borderRadius: 2.5,
                   overflow: 'hidden',
-                  bgcolor: 'rgba(248,242,231,0.34)',
                   border: '1px solid rgba(121,101,66,0.14)',
                 }}
               >
@@ -1787,7 +1767,6 @@ export function AdminPage() {
                     px: 2,
                     py: 1,
                     pr: 6,
-                    bgcolor: 'rgba(121,101,66,0.08)',
                     borderBottom: activeModerationEntries.length
                       ? '1px solid rgba(121,101,66,0.1)'
                       : 'none',
@@ -1800,7 +1779,7 @@ export function AdminPage() {
                     Code
                   </Typography>
                 </Box>
-                <List disablePadding aria-label="Moderationsliste" sx={{ p: 1 }}>
+                <List disablePadding aria-label="Moderationsliste">
                   {activeModerationEntries.length ? (
                     activeModerationEntries.map(({ user, generator }, index) => (
                       <ListItem
@@ -1833,12 +1812,10 @@ export function AdminPage() {
                           </IconButton>
                         }
                         sx={{
-                          mb: index < activeModerationEntries.length - 1 ? 0.9 : 0,
-                          borderRadius: 3,
-                          border: '1px solid rgba(121,101,66,0.12)',
-                          bgcolor: 'rgba(255,249,239,0.42)',
-                          overflow: 'hidden',
-                          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.28)',
+                          borderBottom:
+                            index < activeModerationEntries.length - 1
+                              ? '1px solid rgba(121,101,66,0.1)'
+                              : 'none',
                         }}
                       >
                         <ListItemButton
@@ -1858,6 +1835,7 @@ export function AdminPage() {
                             py: 1.3,
                             pr: 6,
                             alignItems: 'center',
+                            borderRadius: 0,
                             '&.Mui-disabled': {
                               opacity: 1,
                               cursor: 'default',
@@ -1912,31 +1890,18 @@ export function AdminPage() {
                                   {user.email}
                                 </Typography>
                               </Box>
-                              <Box>
-                                <Box
+                              <Box sx={{ minWidth: 0 }}>
+                                <Typography
+                                  variant="body2"
                                   sx={{
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    minWidth: 96,
-                                    px: 1.1,
-                                    py: 0.55,
-                                    borderRadius: 99,
-                                    border: '1px solid rgba(61,177,236,0.18)',
-                                    bgcolor: 'rgba(255,255,255,0.78)',
+                                    fontFamily: '"Consolas", "Courier New", monospace',
+                                    fontWeight: 700,
+                                    letterSpacing: '0.03em',
+                                    whiteSpace: 'nowrap',
                                   }}
                                 >
-                                  <Typography
-                                    variant="body2"
-                                    sx={{
-                                      fontFamily: '"Consolas", "Courier New", monospace',
-                                      fontWeight: 700,
-                                      letterSpacing: '0.03em',
-                                    }}
-                                  >
-                                    {generator ? generator.code.toUpperCase() : '-'}
-                                  </Typography>
-                                </Box>
+                                  {generator ? generator.code.toUpperCase() : '-'}
+                                </Typography>
                               </Box>
                             </Box>
                           </Box>
