@@ -37,6 +37,8 @@ import {
   Tabs,
   TextField,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material'
 import {
   useEffect,
@@ -191,6 +193,8 @@ function isAdminTabValue(value: string | undefined): value is AdminTabValue {
 
 export function AdminPage() {
   const navigate = useNavigate()
+  const theme = useTheme()
+  const isMobileViewport = useMediaQuery(theme.breakpoints.down('sm'))
   const params = useParams()
   const routeCode = formatCode(params.code ?? '')
   const routeTab = params.tab
@@ -198,7 +202,7 @@ export function AdminPage() {
     ? routeTab
     : routeCode
       ? 'scan'
-      : 'qr'
+      : 'scan'
 
   const [authUserId, setAuthUserId] = useState('')
   const [profile, setProfile] = useState<UserProfile | null>(null)
@@ -368,13 +372,17 @@ export function AdminPage() {
     void loadRecentMeasurements(enteredBy)
   }, [activeTab, authUserId, profile?.email])
 
-  function handleAdminTabChange(_event: SyntheticEvent, value: AdminTabValue) {
+  function navigateToAdminTab(value: AdminTabValue) {
     if (value === 'scan' && routeCode) {
       navigate(`/admin/scan/generator/${routeCode}`)
       return
     }
 
     navigate(`/admin/${value}`)
+  }
+
+  function handleAdminTabChange(_event: SyntheticEvent, value: AdminTabValue) {
+    navigateToAdminTab(value)
   }
 
   function toggleExportStep(step: QrExportStepKey) {
@@ -1321,22 +1329,39 @@ export function AdminPage() {
   return (
     <Stack spacing={{ xs: 2.5, md: 3 }}>
       <Card>
-        <Tabs
-          value={activeTab}
-          onChange={handleAdminTabChange}
-          variant="scrollable"
-          scrollButtons="auto"
-          sx={{ px: { xs: 1, sm: 2 }, pt: 1 }}
-        >
-          <Tab value="qr" label="QR erstellen" icon={<QrCode2Icon />} iconPosition="start" />
-          <Tab value="scan" label="Scannen" icon={<QrCodeScannerIcon />} iconPosition="start" />
-          <Tab
-            value="moderation"
-            label="Moderieren"
-            icon={<EditNoteIcon />}
-            iconPosition="start"
-          />
-        </Tabs>
+        {isMobileViewport ? (
+          <Box sx={{ p: 1.5 }}>
+            <TextField
+              label="Bereich"
+              select
+              value={activeTab}
+              onChange={(event) => navigateToAdminTab(event.target.value as AdminTabValue)}
+              fullWidth
+              SelectProps={{ native: true }}
+            >
+              <option value="scan">Scannen</option>
+              <option value="qr">QR erstellen</option>
+              <option value="moderation">Moderieren</option>
+            </TextField>
+          </Box>
+        ) : (
+          <Tabs
+            value={activeTab}
+            onChange={handleAdminTabChange}
+            variant="scrollable"
+            scrollButtons="auto"
+            sx={{ px: { xs: 1, sm: 2 }, pt: 1 }}
+          >
+            <Tab value="scan" label="Scannen" icon={<QrCodeScannerIcon />} iconPosition="start" />
+            <Tab value="qr" label="QR erstellen" icon={<QrCode2Icon />} iconPosition="start" />
+            <Tab
+              value="moderation"
+              label="Moderieren"
+              icon={<EditNoteIcon />}
+              iconPosition="start"
+            />
+          </Tabs>
+        )}
       </Card>
 
       <TabPanel active={activeTab} value="qr">
