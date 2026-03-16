@@ -1735,25 +1735,27 @@ export function AdminPage() {
               ) : null}
 
               <Stack direction="row" spacing={1} alignItems="center">
-                <IconButton
-                  aria-label={moderationSearchOpen ? 'Suche einklappen' : 'Suche ausklappen'}
-                  onClick={() => {
-                    setModerationSearchOpen((current) => !current)
-                  }}
-                  sx={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 2.25,
-                    border: '1px solid rgba(121,101,66,0.14)',
-                    bgcolor: 'rgba(255,250,242,0.92)',
-                    flexShrink: 0,
-                    '&:hover': {
-                      bgcolor: 'rgba(255,255,255,1)',
-                    },
-                  }}
-                >
-                  <SearchIcon fontSize="small" />
-                </IconButton>
+                {!moderationSearchOpen ? (
+                  <IconButton
+                    aria-label="Suche ausklappen"
+                    onClick={() => {
+                      setModerationSearchOpen(true)
+                    }}
+                    sx={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: 2.25,
+                      border: '1px solid rgba(121,101,66,0.14)',
+                      bgcolor: 'rgba(255,250,242,0.92)',
+                      flexShrink: 0,
+                      '&:hover': {
+                        bgcolor: 'rgba(255,255,255,1)',
+                      },
+                    }}
+                  >
+                    <SearchIcon fontSize="small" />
+                  </IconButton>
+                ) : null}
                 <Collapse in={moderationSearchOpen} orientation="horizontal" sx={{ flex: 1, minWidth: 0 }}>
                   <TextField
                     label="Suchen"
@@ -1771,11 +1773,17 @@ export function AdminPage() {
                         endAdornment: (
                           <InputAdornment position="end">
                             <IconButton
-                              aria-label="Suche leeren"
+                              aria-label={moderationSearch ? 'Suche leeren' : 'Suche einklappen'}
                               edge="end"
                               size="small"
-                              onClick={() => setModerationSearch('')}
-                              disabled={!moderationSearch}
+                              onClick={() => {
+                                if (moderationSearch) {
+                                  setModerationSearch('')
+                                  return
+                                }
+
+                                setModerationSearchOpen(false)
+                              }}
                             >
                               <CloseIcon fontSize="small" />
                             </IconButton>
