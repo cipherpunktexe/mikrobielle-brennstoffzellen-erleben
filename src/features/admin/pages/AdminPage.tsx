@@ -1220,7 +1220,7 @@ export function AdminPage() {
                           {user.email}
                         </Typography>
                       </Box>
-                      <Box sx={{ minWidth: 0 }}>
+                      <Box sx={{ minWidth: 0, justifySelf: 'start', width: '100%' }}>
                         <Typography
                           variant="body2"
                           sx={{
@@ -1228,6 +1228,7 @@ export function AdminPage() {
                             fontWeight: 700,
                             letterSpacing: '0.03em',
                             whiteSpace: 'nowrap',
+                            textAlign: 'left',
                           }}
                         >
                           {generator ? generator.code.toUpperCase() : '-'}
@@ -1895,7 +1896,7 @@ export function AdminPage() {
                             },
                           }}
                         >
-                          <Box>
+                          <Box sx={{ width: '100%' }}>
                             <Box
                               sx={{
                                 width: '100%',
@@ -1935,7 +1936,7 @@ export function AdminPage() {
                                   {user.email}
                                 </Typography>
                               </Box>
-                              <Box sx={{ minWidth: 0 }}>
+                              <Box sx={{ minWidth: 0, justifySelf: 'start', width: '100%' }}>
                                 <Typography
                                   variant="body2"
                                   sx={{
@@ -1943,6 +1944,7 @@ export function AdminPage() {
                                     fontWeight: 700,
                                     letterSpacing: '0.03em',
                                     whiteSpace: 'nowrap',
+                                    textAlign: 'left',
                                   }}
                                 >
                                   {generator ? generator.code.toUpperCase() : '-'}
