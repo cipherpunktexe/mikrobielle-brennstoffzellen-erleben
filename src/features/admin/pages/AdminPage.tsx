@@ -1695,12 +1695,23 @@ export function AdminPage() {
                             primary={formatMeasurement(measurement.value)}
                             secondary={`${measurement.enteredBy} | ${formatTimestamp(measurement.createdAt)}`}
                           />
-                          <Button
+                          <IconButton
                             size="small"
+                            aria-label="Messwert bearbeiten"
                             onClick={() => handleOpenMeasurementEditor(measurement)}
+                            sx={{
+                              width: 34,
+                              height: 34,
+                              borderRadius: 1.75,
+                              border: (theme) => `1px solid ${theme.palette.divider}`,
+                              bgcolor: 'rgba(255,255,255,0.72)',
+                              '&:hover': {
+                                bgcolor: 'rgba(255,255,255,0.96)',
+                              },
+                            }}
                           >
-                            Bearbeiten
-                          </Button>
+                            <EditNoteIcon fontSize="small" />
+                          </IconButton>
                         </Stack>
                       )}
                     </ListItem>
