@@ -279,6 +279,18 @@ export function UserDashboardPage() {
     )
   }
 
+  if (profile?.status === 'blocked' || profile?.status === 'deleted') {
+    return (
+      <Stack spacing={2}>
+        <Alert severity={profile.status === 'blocked' ? 'warning' : 'error'}>
+          {profile.status === 'blocked'
+            ? 'Dieses Konto ist gesperrt. Brennstoffzelle, Messwerte und Ranking werden nicht mehr angezeigt.'
+            : 'Dieses Konto wurde gelöscht. Brennstoffzelle, Messwerte und Ranking werden nicht mehr angezeigt.'}
+        </Alert>
+      </Stack>
+    )
+  }
+
   return (
     <Stack spacing={{ xs: 2, md: 2.5 }}>
       <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={2}>

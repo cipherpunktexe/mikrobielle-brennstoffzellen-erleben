@@ -26,6 +26,7 @@ import {
 import { auth, db } from '../../app/firebase'
 import { formatCode } from '../utils/format'
 import type {
+  EntityLifecycleStatus,
   Generator,
   LeaderboardEntry,
   Measurement,
@@ -91,6 +92,18 @@ export interface ReservedGeneratorCodes {
   nextSequence: number
 }
 
+function getEntityLifecycleStatus(value: unknown): EntityLifecycleStatus {
+  if (value === 'blocked' || value === 'deleted') {
+    return value
+  }
+
+  return 'active'
+}
+
+function isActiveEntity(value: { status?: EntityLifecycleStatus } | null | undefined) {
+  return getEntityLifecycleStatus(value?.status) === 'active'
+}
+
 function formatSequentialGeneratorCode(sequence: number, digits = 4) {
   const safeDigits = Math.max(1, Math.floor(digits))
   return sequence.toString(16).toUpperCase().padStart(safeDigits, '0')
@@ -117,6 +130,7 @@ async function ensureUserProfileDocument(user: User) {
       name: user.displayName ?? user.email?.split('@')[0] ?? 'Google-Nutzer',
       email: user.email ?? '',
       role: 'user',
+      status: 'active',
       createdAt: serverTimestamp(),
     })
     return
@@ -152,6 +166,7 @@ export async function registerUserWithGenerator(input: RegisterUserInput) {
     ownerUid: credentials.user.uid,
     code,
     ownerName: input.name,
+    status: 'active',
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   })
@@ -160,6 +175,7 @@ export async function registerUserWithGenerator(input: RegisterUserInput) {
     name: input.name,
     email: input.email,
     role: 'user',
+    status: 'active',
     generatorId: generatorRef.id,
     createdAt: serverTimestamp(),
   })
@@ -188,6 +204,10 @@ export async function linkCurrentUserToGeneratorByCode(code: string) {
   }
 
   const profile = userSnapshot.data() as UserProfile
+
+  if (!isActiveEntity(profile)) {
+    throw new Error('Dieses Konto ist nicht mehr aktiv.')
+  }
   const ownerName =
     profile.name?.trim() || currentUser.displayName?.trim() || currentUser.email?.split('@')[0] || normalizedCode
 
@@ -201,6 +221,10 @@ export async function linkCurrentUserToGeneratorByCode(code: string) {
 
   if (existingGenerator) {
     const existingData = existingGenerator.data() as Generator
+
+    if (!isActiveEntity(existingData)) {
+      throw new Error('Dieser QR-Code ist nicht mehr aktiv.')
+    }
 
     if (existingData.ownerUid && existingData.ownerUid !== currentUser.uid) {
       throw new Error('Dieser QR-Code ist bereits mit einem anderen Konto verknüpft.')
@@ -229,6 +253,7 @@ export async function linkCurrentUserToGeneratorByCode(code: string) {
     ownerUid: currentUser.uid,
     code: normalizedCode,
     ownerName,
+    status: 'active',
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   })
@@ -283,6 +308,10 @@ export async function updateCurrentUserDisplayName(name: string) {
     id: userSnapshot.id,
     ...userSnapshot.data(),
   } as UserProfile
+
+  if (!isActiveEntity(profile)) {
+    throw new Error('Dieses Konto ist nicht mehr aktiv.')
+  }
 
   await updateDoc(userRef, {
     name: trimmedName,
@@ -429,6 +458,33 @@ export async function listUserProfilesForAdmin() {
     })
 }
 
+async function findLinkedGeneratorForUser(user: UserProfile) {
+  if (user.generatorId) {
+    const directSnapshot = await getDoc(doc(generatorsCollection, user.generatorId))
+
+    if (directSnapshot.exists()) {
+      return {
+        id: directSnapshot.id,
+        ...directSnapshot.data(),
+      } as Generator
+    }
+  }
+
+  const ownerSnapshot = await getDocs(
+    query(generatorsCollection, where('ownerUid', '==', user.id), limit(1)),
+  )
+  const match = ownerSnapshot.docs[0]
+
+  if (!match) {
+    return null
+  }
+
+  return {
+    id: match.id,
+    ...match.data(),
+  } as Generator
+}
+
 export async function getAdminProfiles() {
   const snapshot = await getDocs(query(usersCollection, where('role', '==', 'admin')))
 
@@ -465,6 +521,29 @@ export async function updateUserProfileAsAdmin(
   })
 }
 
+export async function setUserLifecycleStatusAsAdmin(
+  user: UserProfile,
+  status: Exclude<EntityLifecycleStatus, 'active'>,
+) {
+  const archivedBy = auth.currentUser?.uid ?? null
+  const linkedGenerator = await findLinkedGeneratorForUser(user)
+
+  await updateDoc(doc(usersCollection, user.id), {
+    status,
+    archivedAt: serverTimestamp(),
+    archivedBy,
+  })
+
+  if (linkedGenerator) {
+    await updateDoc(doc(generatorsCollection, linkedGenerator.id), {
+      status,
+      archivedAt: serverTimestamp(),
+      archivedBy,
+      updatedAt: serverTimestamp(),
+    })
+  }
+}
+
 export function subscribeToUserProfile(
   uid: string,
   callback: (profile: UserProfile | null) => void,
@@ -492,10 +571,12 @@ export function subscribeToGenerator(
       return
     }
 
-    callback({
+    const generator = {
       id: snapshot.id,
       ...snapshot.data(),
-    } as Generator)
+    } as Generator
+
+    callback(isActiveEntity(generator) ? generator : null)
   })
 }
 
@@ -508,7 +589,14 @@ export function subscribeToMeasurements(
     where('generatorId', '==', generatorId),
   )
 
-  return onSnapshot(measurementsQuery, (snapshot) => {
+  return onSnapshot(measurementsQuery, async (snapshot) => {
+    const generatorSnapshot = await getDoc(doc(generatorsCollection, generatorId))
+
+    if (!generatorSnapshot.exists() || !isActiveEntity(generatorSnapshot.data() as Generator)) {
+      callback([])
+      return
+    }
+
     const measurements = snapshot.docs
       .map(
         (item) =>
@@ -531,13 +619,13 @@ export function subscribeToLeaderboard(callback: (entries: LeaderboardEntry[]) =
   return onSnapshot(measurementsCollection, async (measurementSnapshot) => {
     const generatorSnapshot = await getDocs(generatorsCollection)
     const generatorMap = new Map(
-      generatorSnapshot.docs.map((item) => [
-        item.id,
-        {
+      generatorSnapshot.docs
+        .map((item) => ({
           id: item.id,
           ...item.data(),
-        } as Generator,
-      ]),
+        }) as Generator)
+        .filter((generator) => isActiveEntity(generator))
+        .map((generator) => [generator.id, generator]),
     )
 
     const maxByGenerator = new Map<string, Measurement>()
@@ -568,18 +656,23 @@ export function subscribeToLeaderboard(callback: (entries: LeaderboardEntry[]) =
     })
 
     const entries = Array.from(maxByGenerator.values())
-      .map((measurement) => {
+      .reduce<LeaderboardEntry[]>((items, measurement) => {
         const generator = generatorMap.get(measurement.generatorId)
-        const code = generator?.code ?? 'unbekannt'
 
-        return {
+        if (!generator) {
+          return items
+        }
+
+        const code = generator.code ?? 'unbekannt'
+        items.push({
           generatorId: measurement.generatorId,
           code,
-          displayName: generator?.ownerName?.trim() || code,
+          displayName: generator.ownerName?.trim() || code,
           maxValue: measurement.value,
           maxMeasuredAt: measurement.createdAt ?? null,
-        }
-      })
+        })
+        return items
+      }, [])
       .sort((left, right) => {
         if (right.maxValue !== left.maxValue) {
           return right.maxValue - left.maxValue
@@ -594,7 +687,7 @@ export function subscribeToLeaderboard(callback: (entries: LeaderboardEntry[]) =
   })
 }
 
-export async function getGeneratorByCode(code: string) {
+export async function getGeneratorByCode(code: string, options?: { includeInactive?: boolean }) {
   const normalizedCode = formatCode(code)
   const generatorQuery = query(generatorsCollection, where('code', '==', normalizedCode))
   const snapshot = await getDocs(generatorQuery)
@@ -604,10 +697,16 @@ export async function getGeneratorByCode(code: string) {
     return null
   }
 
-  return {
+  const generator = {
     id: match.id,
     ...match.data(),
   } as Generator
+
+  if (!options?.includeInactive && !isActiveEntity(generator)) {
+    return null
+  }
+
+  return generator
 }
 
 export async function findGeneratorForAdmin(identifier: string) {
@@ -626,7 +725,7 @@ export async function findGeneratorForAdmin(identifier: string) {
     } as Generator
   }
 
-  return getGeneratorByCode(trimmedIdentifier)
+  return getGeneratorByCode(trimmedIdentifier, { includeInactive: true })
 }
 
 export async function listGeneratorsForAdmin() {
@@ -702,13 +801,13 @@ export async function getRecentMeasurementsEnteredBy(
   )
   const generatorSnapshot = await getDocs(generatorsCollection)
   const generatorMap = new Map(
-    generatorSnapshot.docs.map((item) => [
-      item.id,
-      {
+    generatorSnapshot.docs
+      .map((item) => ({
         id: item.id,
         ...item.data(),
-      } as Generator,
-    ]),
+      }) as Generator)
+      .filter((generator) => isActiveEntity(generator))
+      .map((generator) => [generator.id, generator]),
   )
 
   return measurementsSnapshot.docs
@@ -728,12 +827,17 @@ export async function getRecentMeasurementsEnteredBy(
     .map((measurement) => {
       const generator = generatorMap.get(measurement.generatorId)
 
+       if (!generator) {
+        return null
+      }
+
       return {
         ...measurement,
         generatorCode: generator?.code ?? 'unbekannt',
         ownerName: generator?.ownerName?.trim() ?? '',
       } satisfies AdminRecentMeasurementItem
     })
+    .filter((item): item is AdminRecentMeasurementItem => Boolean(item))
 }
 
 export async function updateMeasurementAsAdmin(

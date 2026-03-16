@@ -68,12 +68,14 @@ import {
   logout,
   reserveNextGeneratorCodes,
   signInWithGoogle,
+  setUserLifecycleStatusAsAdmin,
   subscribeToAuth,
   updateGeneratorAsAdmin,
   updateMeasurementAsAdmin,
   updateUserProfileAsAdmin,
 } from '../../../shared/data/firebaseData'
 import type {
+  EntityLifecycleStatus,
   Generator,
   Measurement,
   UserProfile,
@@ -99,6 +101,7 @@ interface GeneratorFormState {
 interface ModerationListEntry {
   user: UserProfile
   generator: Generator | null
+  status: EntityLifecycleStatus
 }
 
 interface MeasurementFormState {
@@ -175,6 +178,25 @@ function formatScientificVolts(value: number) {
   return `${value.toExponential(3)} V`
 }
 
+function getModerationEntryStatus(
+  user: Pick<UserProfile, 'status'>,
+  generator: Pick<Generator, 'status'> | null,
+): EntityLifecycleStatus {
+  if (user.status === 'deleted' || generator?.status === 'deleted') {
+    return 'deleted'
+  }
+
+  if (user.status === 'blocked' || generator?.status === 'blocked') {
+    return 'blocked'
+  }
+
+  return 'active'
+}
+
+function getLifecycleStatusLabel(status: Exclude<EntityLifecycleStatus, 'active'>) {
+  return status === 'blocked' ? 'Gesperrt' : 'Gelöscht'
+}
+
 export function AdminPage() {
   const navigate = useNavigate()
   const params = useParams()
@@ -241,6 +263,9 @@ export function AdminPage() {
   const [editingGenerator, setEditingGenerator] = useState<Generator | null>(null)
   const [userForm, setUserForm] = useState<UserFormState>(createEmptyUserForm)
   const [generatorForm, setGeneratorForm] = useState<GeneratorFormState>(createEmptyGeneratorForm)
+  const [userLifecycleActionLoading, setUserLifecycleActionLoading] = useState<
+    '' | Exclude<EntityLifecycleStatus, 'active'>
+  >('')
 
   const [formValues, setFormValues] = useState({
     email: '',
@@ -553,6 +578,7 @@ export function AdminPage() {
     return {
       user,
       generator: linkedGenerator,
+      status: getModerationEntryStatus(user, linkedGenerator),
     } satisfies ModerationListEntry
   })
   const filteredModerationEntries = moderationEntries.filter(({ user, generator }) => {
@@ -564,15 +590,19 @@ export function AdminPage() {
       user.name,
       user.email,
       user.role,
+      user.status ?? 'active',
       user.generatorId ?? '',
       generator?.code ?? '',
       generator?.ownerUid ?? '',
       generator?.ownerName ?? '',
+      generator?.status ?? 'active',
     ]
       .join(' ')
       .toLocaleLowerCase('de-DE')
     return haystack.includes(normalizedModerationSearch)
   })
+  const activeModerationEntries = filteredModerationEntries.filter((entry) => entry.status === 'active')
+  const trashedModerationEntries = filteredModerationEntries.filter((entry) => entry.status !== 'active')
 
   function handleModerationMenuOpen(
     event: MouseEvent<HTMLElement>,
@@ -608,6 +638,7 @@ export function AdminPage() {
     setUserDialogOpen(false)
     setEditingUser(null)
     setUserForm(createEmptyUserForm())
+    setUserLifecycleActionLoading('')
   }
 
   async function handleUserSave(event: FormEvent<HTMLFormElement>) {
@@ -629,6 +660,48 @@ export function AdminPage() {
       setModerationError(
         saveIssue instanceof Error ? saveIssue.message : 'Nutzer konnte nicht gespeichert werden.',
       )
+    }
+  }
+
+  async function handleUserLifecycleAction(status: Exclude<EntityLifecycleStatus, 'active'>) {
+    if (!editingUser || userLifecycleActionLoading) {
+      return
+    }
+
+    const actionLabel = status === 'blocked' ? 'sperren' : 'löschen'
+    const confirmed = window.confirm(
+      `Nutzer ${editingUser.name} wirklich ${actionLabel}? Der Eintrag wandert in den Papierkorb und die Messwerte werden nicht mehr normal angezeigt.`,
+    )
+
+    if (!confirmed) {
+      return
+    }
+
+    setUserLifecycleActionLoading(status)
+    setModerationStatus('')
+    setModerationError('')
+
+    try {
+      const linkedEntry = moderationEntries.find((entry) => entry.user.id === editingUser.id)
+      await setUserLifecycleStatusAsAdmin(editingUser, status)
+      await loadModerationEntries()
+
+      if (selectedMeasurementGenerator?.id === linkedEntry?.generator?.id) {
+        handleCloseGeneratorMeasurementsDialog()
+      }
+
+      setModerationStatus(
+        `${editingUser.name} wurde ${status === 'blocked' ? 'gesperrt' : 'gelöscht'} und in den Papierkorb verschoben.`,
+      )
+      handleCloseUserDialog()
+    } catch (actionIssue) {
+      setModerationError(
+        actionIssue instanceof Error
+          ? actionIssue.message
+          : 'Der Nutzerstatus konnte nicht aktualisiert werden.',
+      )
+    } finally {
+      setUserLifecycleActionLoading('')
     }
   }
 
@@ -794,6 +867,203 @@ export function AdminPage() {
     } finally {
       handleCloseModerationMenu()
     }
+  }
+
+  function renderModerationList(
+    entries: ModerationListEntry[],
+    options: {
+      ariaLabel: string
+      emptyPrimary: string
+      emptySecondary: string
+      showStatus?: boolean
+    },
+  ) {
+    return (
+      <Box
+        sx={{
+          borderRadius: 3,
+          overflow: 'hidden',
+          bgcolor: 'background.default',
+          border: (theme) => `1px solid ${theme.palette.divider}`,
+        }}
+      >
+        <Box
+          sx={{
+            display: { xs: 'none', sm: 'grid' },
+            gridTemplateColumns: options.showStatus
+              ? 'minmax(0, 1.2fr) minmax(110px, 140px) minmax(100px, 120px)'
+              : 'minmax(0, 1.4fr) minmax(110px, 140px)',
+            gap: 2,
+            px: 2,
+            py: 1.25,
+            pr: 7,
+            bgcolor: 'rgba(36,28,19,0.05)',
+            borderBottom: entries.length ? (theme) => `1px solid ${theme.palette.divider}` : 'none',
+          }}
+        >
+          <Typography variant="caption" color="text.secondary" fontWeight={700}>
+            Nutzer
+          </Typography>
+          <Typography variant="caption" color="text.secondary" fontWeight={700}>
+            Code
+          </Typography>
+          {options.showStatus ? (
+            <Typography variant="caption" color="text.secondary" fontWeight={700}>
+              Status
+            </Typography>
+          ) : null}
+        </Box>
+        <List disablePadding aria-label={options.ariaLabel}>
+          {entries.length ? (
+            entries.map(({ user, generator, status }, index) => (
+              <ListItem
+                key={user.id}
+                disablePadding
+                divider={index < entries.length - 1}
+                secondaryAction={
+                  <IconButton
+                    edge="end"
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      handleModerationMenuOpen(event, user, generator)
+                    }}
+                    aria-label={`Aktionen für ${user.name}`}
+                    sx={{
+                      width: 34,
+                      height: 34,
+                      borderRadius: 1.75,
+                      border: (theme) => `1px solid ${theme.palette.divider}`,
+                      bgcolor: 'rgba(255,255,255,0.72)',
+                      '&:hover': {
+                        bgcolor: 'rgba(255,255,255,0.96)',
+                      },
+                      '&:focus-visible': {
+                        outline: '2px solid rgba(143,122,81,0.55)',
+                        outlineOffset: 2,
+                      },
+                    }}
+                  >
+                    <MoreVertIcon fontSize="small" />
+                  </IconButton>
+                }
+              >
+                <ListItemButton
+                  disabled={!generator}
+                  aria-label={
+                    generator
+                      ? `Messwerte von ${user.name} mit Code ${generator.code.toUpperCase()} öffnen`
+                      : `${user.name} hat keine verknüpfte Brennstoffzelle`
+                  }
+                  onClick={() => {
+                    if (generator) {
+                      void handleOpenGeneratorMeasurements(generator)
+                    }
+                  }}
+                  sx={{
+                    px: 2,
+                    py: 1.5,
+                    pr: 7,
+                    alignItems: 'stretch',
+                    '&.Mui-disabled': {
+                      opacity: 1,
+                      cursor: 'default',
+                    },
+                    '&:hover': {
+                      bgcolor: generator ? 'rgba(255,255,255,0.22)' : 'transparent',
+                    },
+                    '&:focus-visible': {
+                      outline: '2px solid rgba(143,122,81,0.55)',
+                      outlineOffset: -2,
+                      bgcolor: 'rgba(255,255,255,0.22)',
+                    },
+                  }}
+                >
+                  <Box sx={{ width: '100%' }}>
+                    <Box
+                      sx={{
+                        width: '100%',
+                        display: 'grid',
+                        gridTemplateColumns: {
+                          xs: '1fr',
+                          sm: options.showStatus
+                            ? 'minmax(0, 1.2fr) minmax(110px, 140px) minmax(100px, 120px)'
+                            : 'minmax(0, 1.4fr) minmax(110px, 140px)',
+                        },
+                        gap: { xs: 0.75, sm: 2 },
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Box sx={{ minWidth: 0 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, minWidth: 0 }}>
+                          <Typography variant="body2" fontWeight={700} noWrap>
+                            {user.name}
+                          </Typography>
+                          {user.role === 'admin' ? (
+                            <Box
+                              component="span"
+                              aria-label="Admin"
+                              sx={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: '#8F6410',
+                                flexShrink: 0,
+                              }}
+                            >
+                              <AdminPanelSettingsOutlinedIcon fontSize="small" />
+                            </Box>
+                          ) : null}
+                          {status !== 'active' ? (
+                            <Chip
+                              size="small"
+                              label={getLifecycleStatusLabel(status)}
+                              color={status === 'blocked' ? 'warning' : 'default'}
+                              sx={{ display: { xs: 'inline-flex', sm: 'none' } }}
+                            />
+                          ) : null}
+                        </Box>
+                        <Typography variant="caption" color="text.secondary">
+                          {user.email}
+                        </Typography>
+                      </Box>
+                      <Box>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            fontFamily: '"Consolas", "Courier New", monospace',
+                            fontWeight: 700,
+                          }}
+                        >
+                          {generator ? generator.code.toUpperCase() : '-'}
+                        </Typography>
+                      </Box>
+                      {options.showStatus ? (
+                        <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
+                          {status !== 'active' ? (
+                            <Chip
+                              size="small"
+                              label={getLifecycleStatusLabel(status)}
+                              color={status === 'blocked' ? 'warning' : 'default'}
+                            />
+                          ) : null}
+                        </Box>
+                      ) : null}
+                    </Box>
+                  </Box>
+                </ListItemButton>
+              </ListItem>
+            ))
+          ) : (
+            <ListItem sx={{ py: 2 }}>
+              <ListItemText
+                primary={options.emptyPrimary}
+                secondary={options.emptySecondary}
+              />
+            </ListItem>
+          )}
+        </List>
+      </Box>
+    )
   }
 
   if (!authUserId) {
@@ -1274,7 +1544,7 @@ export function AdminPage() {
                 label="Suchen"
                 value={moderationSearch}
                 onChange={(event) => setModerationSearch(event.target.value)}
-                placeholder="Name, E-Mail, Code oder Rolle"
+                placeholder="Name, E-Mail, Code oder Status"
                 fullWidth
               />
               <Box
@@ -1294,7 +1564,7 @@ export function AdminPage() {
                     py: 1.25,
                     pr: 7,
                     bgcolor: 'rgba(36,28,19,0.05)',
-                    borderBottom: filteredModerationEntries.length
+                    borderBottom: activeModerationEntries.length
                       ? (theme) => `1px solid ${theme.palette.divider}`
                       : 'none',
                   }}
@@ -1307,12 +1577,12 @@ export function AdminPage() {
                   </Typography>
                 </Box>
                 <List disablePadding aria-label="Moderationsliste">
-                  {filteredModerationEntries.length ? (
-                    filteredModerationEntries.map(({ user, generator }, index) => (
+                  {activeModerationEntries.length ? (
+                    activeModerationEntries.map(({ user, generator }, index) => (
                       <ListItem
                         key={user.id}
                         disablePadding
-                        divider={index < filteredModerationEntries.length - 1}
+                        divider={index < activeModerationEntries.length - 1}
                         secondaryAction={
                           <IconButton
                             edge="end"
@@ -1441,6 +1711,17 @@ export function AdminPage() {
                   )}
                 </List>
               </Box>
+              <Stack spacing={1}>
+                <Typography variant="subtitle2" fontWeight={700}>
+                  Papierkorb
+                </Typography>
+                {renderModerationList(trashedModerationEntries, {
+                  ariaLabel: 'Papierkorb',
+                  emptyPrimary: 'Papierkorb leer',
+                  emptySecondary: 'Gesperrte oder gelöschte Nutzer erscheinen hier.',
+                  showStatus: true,
+                })}
+              </Stack>
 
             </Stack>
           </CardContent>
@@ -1558,11 +1839,53 @@ export function AdminPage() {
                 disabled
                 fullWidth
               />
+              <TextField
+                label="Status"
+                value={
+                  editingUser
+                    ? editingUser.status === 'blocked'
+                      ? 'gesperrt'
+                      : editingUser.status === 'deleted'
+                        ? 'gelöscht'
+                        : 'aktiv'
+                    : 'aktiv'
+                }
+                disabled
+                fullWidth
+              />
             </Stack>
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleCloseUserDialog}>Abbrechen</Button>
-            <Button type="submit" variant="contained" startIcon={<SaveIcon />}>
+            <Button
+              onClick={() => void handleUserLifecycleAction('blocked')}
+              disabled={Boolean(userLifecycleActionLoading) || editingUser?.status === 'blocked'}
+            >
+              {userLifecycleActionLoading === 'blocked'
+                ? 'Sperren...'
+                : editingUser?.status === 'blocked'
+                  ? 'Gesperrt'
+                  : 'Sperren'}
+            </Button>
+            <Button
+              color="error"
+              onClick={() => void handleUserLifecycleAction('deleted')}
+              disabled={Boolean(userLifecycleActionLoading) || editingUser?.status === 'deleted'}
+            >
+              {userLifecycleActionLoading === 'deleted'
+                ? 'Löschen...'
+                : editingUser?.status === 'deleted'
+                  ? 'Gelöscht'
+                  : 'Löschen'}
+            </Button>
+            <Button onClick={handleCloseUserDialog} disabled={Boolean(userLifecycleActionLoading)}>
+              Abbrechen
+            </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              startIcon={<SaveIcon />}
+              disabled={Boolean(userLifecycleActionLoading)}
+            >
               Speichern
             </Button>
           </DialogActions>

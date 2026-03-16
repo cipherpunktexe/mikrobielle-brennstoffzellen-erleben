@@ -14,6 +14,10 @@ service cloud.firestore {
       return isSignedIn() && userDoc().data.role == 'admin';
     }
 
+    function isActiveStatus(data) {
+      return !('status' in data) || data.status == 'active';
+    }
+
     function isSelf(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
@@ -25,11 +29,13 @@ service cloud.firestore {
         && request.resource.data.role == 'user'
         && request.resource.data.email is string
         && request.resource.data.name is string
+        && isActiveStatus(request.resource.data)
         && (!('generatorId' in request.resource.data) || request.resource.data.generatorId is string);
 
       allow update: if isAdmin() || (
         isSelf(userId)
         && request.resource.data.role == resource.data.role
+        && request.resource.data.status == resource.data.status
         && request.resource.data.createdAt == resource.data.createdAt
         && request.resource.data.generatorId == resource.data.generatorId
       );
@@ -42,7 +48,8 @@ service cloud.firestore {
 
       allow create: if isSignedIn()
         && request.resource.data.ownerUid == request.auth.uid
-        && request.resource.data.code is string;
+        && request.resource.data.code is string
+        && isActiveStatus(request.resource.data);
 
       allow update: if (
         isAdmin()
@@ -55,6 +62,8 @@ service cloud.firestore {
         && resource.data.ownerUid == request.auth.uid
         && request.resource.data.ownerUid == resource.data.ownerUid
         && request.resource.data.code == resource.data.code
+        && request.resource.data.status == resource.data.status
+        && isActiveStatus(resource.data)
         && request.resource.data.createdAt == resource.data.createdAt
       );
 
@@ -68,7 +77,8 @@ service cloud.firestore {
         && request.resource.data.generatorId is string
         && request.resource.data.value is number
         && request.resource.data.enteredBy is string
-        && exists(/databases/$(database)/documents/generators/$(request.resource.data.generatorId));
+        && exists(/databases/$(database)/documents/generators/$(request.resource.data.generatorId))
+        && isActiveStatus(get(/databases/$(database)/documents/generators/$(request.resource.data.generatorId)).data);
 
       allow update: if isAdmin()
         && request.resource.data.generatorId == resource.data.generatorId

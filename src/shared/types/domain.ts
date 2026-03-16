@@ -1,14 +1,18 @@
 import type { Timestamp } from 'firebase/firestore'
 
 export type UserRole = 'user' | 'admin'
+export type EntityLifecycleStatus = 'active' | 'blocked' | 'deleted'
 
 export interface UserProfile {
   id: string
   name: string
   email: string
   role: UserRole
+  status?: EntityLifecycleStatus
   generatorId?: string
   createdAt?: Timestamp | null
+  archivedAt?: Timestamp | null
+  archivedBy?: string | null
 }
 
 export interface Generator {
@@ -16,8 +20,11 @@ export interface Generator {
   ownerUid: string
   code: string
   ownerName?: string
+  status?: EntityLifecycleStatus
   createdAt?: Timestamp | null
   updatedAt?: Timestamp | null
+  archivedAt?: Timestamp | null
+  archivedBy?: string | null
 }
 
 export interface Measurement {

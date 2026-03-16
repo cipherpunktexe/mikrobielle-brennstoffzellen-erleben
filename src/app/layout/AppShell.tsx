@@ -70,10 +70,19 @@ export function AppShell() {
   const menuOpen = Boolean(menuAnchor)
   const accountName = profile?.name || authEmail || 'Gast'
   const accountEmail = profile?.email || authEmail || 'Nicht angemeldet'
-  const accountRole = profile?.role === 'admin' ? 'Admin' : profile?.role === 'user' ? 'User' : 'Kein Konto'
+  const accountRole =
+    profile?.status === 'blocked'
+      ? 'Gesperrt'
+      : profile?.status === 'deleted'
+        ? 'Gelöscht'
+        : profile?.role === 'admin'
+          ? 'Admin'
+          : profile?.role === 'user'
+            ? 'User'
+            : 'Kein Konto'
   const avatarLabel = accountName.charAt(0).toUpperCase() || 'G'
   const visibleNavigationItems =
-    profile?.role === 'admin'
+    profile?.role === 'admin' && profile?.status !== 'blocked' && profile?.status !== 'deleted'
       ? [...navigationItems, { label: 'Admin', to: '/admin', icon: <ScienceIcon fontSize="small" /> }]
       : navigationItems
 
