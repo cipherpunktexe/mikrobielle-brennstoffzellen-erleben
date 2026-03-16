@@ -1,8 +1,8 @@
+import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined'
+import BiotechOutlinedIcon from '@mui/icons-material/BiotechOutlined'
+import ElectricBoltOutlinedIcon from '@mui/icons-material/ElectricBoltOutlined'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
 import LogoutIcon from '@mui/icons-material/Logout'
-import QrCode2Icon from '@mui/icons-material/QrCode2'
-import ScienceIcon from '@mui/icons-material/Science'
-import SpaIcon from '@mui/icons-material/Spa'
 import {
   AppBar,
   Avatar,
@@ -25,8 +25,8 @@ import { getUserProfile, logout, subscribeToAuth } from '../../shared/data/fireb
 import type { UserProfile } from '../../shared/types/domain'
 
 const navigationItems = [
-  { label: 'Projekt', to: '/', icon: <SpaIcon fontSize="small" /> },
-  { label: 'Deine Brennstoffzelle', to: '/user', icon: <QrCode2Icon fontSize="small" /> },
+  { label: 'Projekt', to: '/', icon: <BiotechOutlinedIcon fontSize="small" /> },
+  { label: 'Deine Brennstoffzelle', to: '/user', icon: <ElectricBoltOutlinedIcon fontSize="small" /> },
   { label: 'Leaderboard', to: '/leaderboard', icon: <EmojiEventsIcon fontSize="small" /> },
 ]
 
@@ -83,7 +83,7 @@ export function AppShell() {
   const avatarLabel = accountName.charAt(0).toUpperCase() || 'G'
   const visibleNavigationItems =
     profile?.role === 'admin' && profile?.status !== 'blocked' && profile?.status !== 'deleted'
-      ? [...navigationItems, { label: 'Admin', to: '/admin', icon: <ScienceIcon fontSize="small" /> }]
+      ? [...navigationItems, { label: 'Admin', to: '/admin', icon: <AdminPanelSettingsOutlinedIcon fontSize="small" /> }]
       : navigationItems
 
   function handleOpenMenu(event: MouseEvent<HTMLElement>) {
