@@ -1145,13 +1145,12 @@ export function AdminPage() {
                     }}
                     aria-label={`Aktionen für ${user.name}`}
                     sx={{
-                      width: 32,
-                      height: 32,
+                      width: 36,
+                      height: 36,
                       borderRadius: 1.75,
-                      border: '1px solid rgba(121,101,66,0.14)',
-                      bgcolor: 'rgba(255,250,242,0.92)',
+                      color: 'rgba(110,103,95,0.92)',
                       '&:hover': {
-                        bgcolor: 'rgba(255,255,255,1)',
+                        bgcolor: 'rgba(121,101,66,0.08)',
                       },
                       '&:focus-visible': {
                         outline: '2px solid rgba(143,122,81,0.55)',
@@ -1940,11 +1939,10 @@ export function AdminPage() {
                     width: 44,
                     height: 44,
                     borderRadius: 2.25,
-                    border: '1px solid rgba(121,101,66,0.14)',
-                    bgcolor: 'rgba(255,250,242,0.92)',
                     flexShrink: 0,
+                    color: 'rgba(110,103,95,0.92)',
                     '&:hover': {
-                      bgcolor: 'rgba(255,255,255,1)',
+                      bgcolor: 'rgba(121,101,66,0.08)',
                     },
                   }}
                 >
@@ -1993,13 +1991,12 @@ export function AdminPage() {
                             }}
                             aria-label={`Aktionen für ${user.name}`}
                             sx={{
-                              width: 32,
-                              height: 32,
+                              width: 36,
+                              height: 36,
                               borderRadius: 1.75,
-                              border: '1px solid rgba(121,101,66,0.14)',
-                              bgcolor: 'rgba(255,250,242,0.92)',
+                              color: 'rgba(110,103,95,0.92)',
                               '&:hover': {
-                                bgcolor: 'rgba(255,255,255,1)',
+                                bgcolor: 'rgba(121,101,66,0.08)',
                               },
                               '&:focus-visible': {
                                 outline: '2px solid rgba(143,122,81,0.55)',
