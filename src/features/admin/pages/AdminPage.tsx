@@ -1,4 +1,5 @@
 import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined'
+import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined'
 import EditNoteIcon from '@mui/icons-material/EditNote'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
@@ -237,6 +238,8 @@ export function AdminPage() {
   const [moderationStatus, setModerationStatus] = useState('')
   const [moderationError, setModerationError] = useState('')
   const [moderationSearch, setModerationSearch] = useState('')
+  const [trashMenuAnchorEl, setTrashMenuAnchorEl] = useState<HTMLElement | null>(null)
+  const [trashDialogOpen, setTrashDialogOpen] = useState(false)
   const [moderationMenuAnchorEl, setModerationMenuAnchorEl] = useState<HTMLElement | null>(null)
   const [menuUser, setMenuUser] = useState<UserProfile | null>(null)
   const [menuGenerator, setMenuGenerator] = useState<Generator | null>(null)
@@ -631,6 +634,23 @@ export function AdminPage() {
     setMenuGenerator(null)
   }
 
+  function handleOpenTrashMenu(event: MouseEvent<HTMLElement>) {
+    setTrashMenuAnchorEl(event.currentTarget)
+  }
+
+  function handleCloseTrashMenu() {
+    setTrashMenuAnchorEl(null)
+  }
+
+  function handleOpenTrashDialog() {
+    setTrashDialogOpen(true)
+    handleCloseTrashMenu()
+  }
+
+  function handleCloseTrashDialog() {
+    setTrashDialogOpen(false)
+  }
+
   function handleOpenUserDialog(user: UserProfile) {
     setModerationStatus('')
     setModerationError('')
@@ -841,7 +861,7 @@ export function AdminPage() {
     options: {
       ariaLabel: string
       emptyPrimary: string
-      emptySecondary: string
+      emptySecondary?: string
       showStatus?: boolean
     },
   ) {
@@ -1040,7 +1060,7 @@ export function AdminPage() {
     options: {
       ariaLabel: string
       emptyPrimary: string
-      emptySecondary: string
+      emptySecondary?: string
       showStatus?: boolean
     },
   ) {
@@ -1725,13 +1745,32 @@ export function AdminPage() {
                 </Stack>
               ) : null}
 
-              <TextField
-                label="Suchen"
-                value={moderationSearch}
-                onChange={(event) => setModerationSearch(event.target.value)}
-                placeholder="Name, E-Mail, Code oder Status"
-                fullWidth
-              />
+              <Stack direction="row" spacing={1} alignItems="center">
+                <TextField
+                  label="Suchen"
+                  value={moderationSearch}
+                  onChange={(event) => setModerationSearch(event.target.value)}
+                  placeholder="Name, E-Mail, Code oder Status"
+                  fullWidth
+                />
+                <IconButton
+                  aria-label={`Papierkorb${trashedModerationEntries.length ? ` (${trashedModerationEntries.length})` : ''}`}
+                  onClick={handleOpenTrashMenu}
+                  sx={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 2.25,
+                    border: '1px solid rgba(121,101,66,0.14)',
+                    bgcolor: 'rgba(255,250,242,0.92)',
+                    flexShrink: 0,
+                    '&:hover': {
+                      bgcolor: 'rgba(255,255,255,1)',
+                    },
+                  }}
+                >
+                  <DeleteOutlineOutlinedIcon fontSize="small" />
+                </IconButton>
+              </Stack>
               <Box
                 sx={{
                   borderRadius: 4,
@@ -1918,22 +1957,36 @@ export function AdminPage() {
                   )}
                 </List>
               </Box>
-              <Stack spacing={1}>
-                <Typography variant="subtitle2" fontWeight={700}>
-                  Papierkorb
-                </Typography>
-                {renderModerationList(trashedModerationEntries, {
-                  ariaLabel: 'Papierkorb',
-                  emptyPrimary: 'Papierkorb leer',
-                  emptySecondary: 'Gesperrte oder gelöschte Nutzer erscheinen hier.',
-                  showStatus: true,
-                })}
-              </Stack>
 
             </Stack>
           </CardContent>
         </Card>
       </TabPanel>
+
+      <Menu
+        anchorEl={trashMenuAnchorEl}
+        open={Boolean(trashMenuAnchorEl)}
+        onClose={handleCloseTrashMenu}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        PaperProps={{
+          sx: {
+            mt: 1,
+            minWidth: 210,
+            overflow: 'hidden',
+            borderRadius: 3,
+            border: (theme) => `1px solid ${theme.palette.divider}`,
+            boxShadow: '0 22px 44px rgba(36,28,19,0.16)',
+          },
+        }}
+      >
+        <MenuItem onClick={handleOpenTrashDialog} sx={{ gap: 1.25 }}>
+          <DeleteOutlineOutlinedIcon fontSize="small" />
+          {trashedModerationEntries.length
+            ? `Papierkorb (${trashedModerationEntries.length})`
+            : 'Papierkorb'}
+        </MenuItem>
+      </Menu>
 
       <Menu
         anchorEl={moderationMenuAnchorEl}
@@ -2086,6 +2139,21 @@ export function AdminPage() {
             </Button>
           </DialogActions>
         </Box>
+      </Dialog>
+
+      <Dialog open={trashDialogOpen} onClose={handleCloseTrashDialog} fullWidth maxWidth="md">
+        <DialogTitle>Papierkorb</DialogTitle>
+        <DialogContent>
+          {renderModerationList(trashedModerationEntries, {
+            ariaLabel: 'Papierkorb',
+            emptyPrimary: 'Papierkorb leer',
+            emptySecondary: 'Gesperrte oder gelöschte Nutzer erscheinen hier.',
+            showStatus: true,
+          })}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseTrashDialog}>Schließen</Button>
+        </DialogActions>
       </Dialog>
 
       <Dialog
