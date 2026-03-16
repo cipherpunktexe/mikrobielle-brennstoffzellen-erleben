@@ -2,7 +2,6 @@ import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettin
 import EditNoteIcon from '@mui/icons-material/EditNote'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
-import PersonOutlineIcon from '@mui/icons-material/PersonOutline'
 import QrCode2Icon from '@mui/icons-material/QrCode2'
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner'
 import SaveIcon from '@mui/icons-material/Save'
@@ -1372,18 +1371,16 @@ export function AdminPage() {
                             >
                               <Box
                                 component="span"
-                                aria-label={user.role === 'admin' ? 'Admin' : 'Nutzer'}
+                                aria-label={user.role === 'admin' ? 'Admin' : undefined}
                                 sx={{
                                   display: 'inline-flex',
                                   alignItems: 'center',
-                                  color: user.role === 'admin' ? '#8F6410' : 'text.secondary',
+                                  color: '#8F6410',
                                 }}
                               >
                                 {user.role === 'admin' ? (
                                   <AdminPanelSettingsOutlinedIcon fontSize="small" />
-                                ) : (
-                                  <PersonOutlineIcon fontSize="small" />
-                                )}
+                                ) : null}
                               </Box>
                             </Box>
                             <Typography
