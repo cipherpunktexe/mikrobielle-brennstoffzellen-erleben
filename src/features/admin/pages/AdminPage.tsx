@@ -1763,6 +1763,11 @@ export function AdminPage() {
                     fullWidth
                     slotProps={{
                       input: {
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <SearchIcon fontSize="small" />
+                          </InputAdornment>
+                        ),
                         endAdornment: (
                           <InputAdornment position="end">
                             <IconButton
