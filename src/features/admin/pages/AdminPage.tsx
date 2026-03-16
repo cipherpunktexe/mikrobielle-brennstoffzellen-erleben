@@ -197,16 +197,25 @@ function getLifecycleStatusLabel(status: Exclude<EntityLifecycleStatus, 'active'
   return status === 'blocked' ? 'Gesperrt' : 'Gelöscht'
 }
 
+function isAdminTabValue(value: string | undefined): value is AdminTabValue {
+  return value === 'qr' || value === 'scan' || value === 'moderation'
+}
+
 export function AdminPage() {
   const navigate = useNavigate()
   const params = useParams()
   const routeCode = formatCode(params.code ?? '')
+  const routeTab = params.tab
+  const activeTab: AdminTabValue = isAdminTabValue(routeTab)
+    ? routeTab
+    : routeCode
+      ? 'scan'
+      : 'qr'
 
   const [authUserId, setAuthUserId] = useState('')
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [authError, setAuthError] = useState('')
   const [authLoading, setAuthLoading] = useState(false)
-  const [activeTab, setActiveTab] = useState<AdminTabValue>(routeCode ? 'scan' : 'qr')
 
   const [exportCount, setExportCount] = useState('1')
   const [exportQrSize, setExportQrSize] = useState('42')
@@ -292,9 +301,21 @@ export function AdminPage() {
       return
     }
 
-    setActiveTab('scan')
     setScanCode(routeCode)
   }, [routeCode])
+
+  useEffect(() => {
+    if (routeCode) {
+      if (routeTab !== 'scan') {
+        navigate(`/admin/scan/generator/${routeCode}`, { replace: true })
+      }
+      return
+    }
+
+    if (!isAdminTabValue(routeTab)) {
+      navigate(`/admin/${activeTab}`, { replace: true })
+    }
+  }, [activeTab, navigate, routeCode, routeTab])
 
   useEffect(() => {
     if (activeTab !== 'moderation') {
@@ -359,7 +380,12 @@ export function AdminPage() {
   }, [activeTab, authUserId, profile?.email])
 
   function handleAdminTabChange(_event: SyntheticEvent, value: AdminTabValue) {
-    setActiveTab(value)
+    if (value === 'scan' && routeCode) {
+      navigate(`/admin/scan/generator/${routeCode}`)
+      return
+    }
+
+    navigate(`/admin/${value}`)
   }
 
   function toggleExportStep(step: QrExportStepKey) {
@@ -489,11 +515,10 @@ export function AdminPage() {
     }
 
     setScannerOpen(false)
-    setActiveTab('scan')
     setScanCode(code)
     setScanError('')
     setScanStatus(`QR-Code erkannt: ${code}`)
-    navigate(`/admin/generator/${code}`)
+    navigate(`/admin/scan/generator/${code}`)
     openScanMeasurementDialog(code, true)
   }
 
