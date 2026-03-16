@@ -1,41 +1,10 @@
-import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined'
-import CloseIcon from '@mui/icons-material/Close'
-import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined'
-import EditNoteIcon from '@mui/icons-material/EditNote'
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
-import MoreVertIcon from '@mui/icons-material/MoreVert'
-import QrCode2Icon from '@mui/icons-material/QrCode2'
-import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner'
-import PersonOutlineIcon from '@mui/icons-material/PersonOutline'
-import SaveIcon from '@mui/icons-material/Save'
-import SearchIcon from '@mui/icons-material/Search'
-import ShowChartIcon from '@mui/icons-material/ShowChart'
 import {
   Alert,
-  Box,
   Button,
   Card,
   CardContent,
-  Chip,
-  Collapse,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Divider,
   Grid,
-  IconButton,
-  InputBase,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemText,
-  Menu,
-  MenuItem,
   Stack,
-  Tab,
-  Tabs,
-  TextField,
   Typography,
   useMediaQuery,
   useTheme,
@@ -43,17 +12,23 @@ import {
 import {
   useEffect,
   useState,
-  type ReactElement,
   type FormEvent,
   type MouseEvent,
-  type ReactNode,
   type SyntheticEvent,
 } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { QrLayoutPreview } from '../components/QrLayoutPreview'
+import { AdminNavigation } from '../components/navigation/AdminNavigation'
+import { AdminQrSection } from '../components/qr/AdminQrSection'
+import { AdminScanSection } from '../components/scan/AdminScanSection'
+import { AdminModerationSection } from '../components/moderation/AdminModerationSection'
+import { ModerationMenus } from '../components/dialogs/ModerationMenus'
+import { EditUserDialog } from '../components/dialogs/EditUserDialog'
+import { TrashDialog } from '../components/dialogs/TrashDialog'
+import { GeneratorMeasurementsDialog } from '../components/dialogs/GeneratorMeasurementsDialog'
+import { ScanMeasurementDialog } from '../components/dialogs/ScanMeasurementDialog'
 import { AuthCard } from '../../../shared/ui/AuthCard'
 import { QrScannerDialog } from '../../../shared/qr/QrScannerDialog'
-import { formatCode, formatMeasurement, formatTimestamp } from '../../../shared/utils/format'
+import { formatCode } from '../../../shared/utils/format'
 import {
   buildGeneratorQrValue,
   downloadQrPdf,
@@ -63,9 +38,9 @@ import {
 import type { QrPdfPageSize } from '../../../shared/utils/qr'
 import {
   addMeasurementByCode,
-  getNextGeneratorCodePreview,
   getGeneratorByCode,
   getMeasurementsForAdmin,
+  getNextGeneratorCodePreview,
   getRecentMeasurementsEnteredBy,
   getUserProfile,
   listGeneratorsForAdmin,
@@ -73,64 +48,28 @@ import {
   login,
   logout,
   reserveNextGeneratorCodes,
-  signInWithGoogle,
   setUserLifecycleStatusAsAdmin,
+  signInWithGoogle,
   subscribeToAuth,
   updateMeasurementAsAdmin,
   updateUserProfileAsAdmin,
 } from '../../../shared/data/firebaseData'
+import type { AdminRecentMeasurementItem } from '../../../shared/data/firebaseData'
 import type {
   EntityLifecycleStatus,
   Generator,
   Measurement,
   UserProfile,
-  UserRole,
 } from '../../../shared/types/domain'
-import type { AdminRecentMeasurementItem } from '../../../shared/data/firebaseData'
-
-type AdminTabValue = 'qr' | 'scan' | 'moderation'
-type MeasurementUnit = 'uV' | 'mV' | 'V' | 'kV'
-
-interface UserFormState {
-  name: string
-  email: string
-  role: UserRole
-}
-
-interface ModerationListEntry {
-  user: UserProfile
-  generator: Generator | null
-  status: EntityLifecycleStatus
-}
-
-interface MeasurementFormState {
-  value: string
-  enteredBy: string
-}
-
-type QrExportStepKey = 'count' | 'layout' | 'number' | 'export'
-
-const adminTabItems: { value: AdminTabValue; label: string; icon: ReactElement }[] = [
-  { value: 'scan', label: 'Scannen', icon: <QrCodeScannerIcon fontSize="small" /> },
-  { value: 'qr', label: 'QR erstellen', icon: <QrCode2Icon fontSize="small" /> },
-  { value: 'moderation', label: 'Moderieren', icon: <EditNoteIcon fontSize="small" /> },
-]
-
-function TabPanel({
-  active,
-  value,
-  children,
-}: {
-  active: string
-  value: string
-  children: ReactNode
-}) {
-  return (
-    <Box role="tabpanel" hidden={active !== value}>
-      {active === value ? children : null}
-    </Box>
-  )
-}
+import type {
+  AdminTabValue,
+  MeasurementFormState,
+  MeasurementUnit,
+  ModerationListEntry,
+  QrExportStepKey,
+  UserFormState,
+} from '../types'
+import { formatMutedDecimal, formatScientificVolts } from '../utils'
 
 function createEmptyUserForm(): UserFormState {
   return {
@@ -167,14 +106,6 @@ function convertMeasurementToVolts(value: number, unit: MeasurementUnit) {
   }
 }
 
-function formatMutedDecimal(sequence: number) {
-  return sequence.toString(10)
-}
-
-function formatScientificVolts(value: number) {
-  return `${value.toExponential(3)} V`
-}
-
 function getModerationEntryStatus(
   user: Pick<UserProfile, 'status'>,
   generator: Pick<Generator, 'status'> | null,
@@ -190,10 +121,6 @@ function getModerationEntryStatus(
   return 'active'
 }
 
-function getLifecycleStatusLabel(status: Exclude<EntityLifecycleStatus, 'active'>) {
-  return status === 'blocked' ? 'Gesperrt' : 'Gelöscht'
-}
-
 function isAdminTabValue(value: string | undefined): value is AdminTabValue {
   return value === 'qr' || value === 'scan' || value === 'moderation'
 }
@@ -205,11 +132,7 @@ export function AdminPage() {
   const params = useParams()
   const routeCode = formatCode(params.code ?? '')
   const routeTab = params.tab
-  const activeTab: AdminTabValue = isAdminTabValue(routeTab)
-    ? routeTab
-    : routeCode
-      ? 'scan'
-      : 'scan'
+  const activeTab: AdminTabValue = isAdminTabValue(routeTab) ? routeTab : 'scan'
 
   const [authUserId, setAuthUserId] = useState('')
   const [profile, setProfile] = useState<UserProfile | null>(null)
@@ -268,7 +191,9 @@ export function AdminPage() {
     null,
   )
   const [editingMeasurementId, setEditingMeasurementId] = useState('')
-  const [measurementForm, setMeasurementForm] = useState<MeasurementFormState>(createEmptyMeasurementForm)
+  const [measurementForm, setMeasurementForm] = useState<MeasurementFormState>(
+    createEmptyMeasurementForm,
+  )
   const [measurementSaving, setMeasurementSaving] = useState(false)
   const [measurementError, setMeasurementError] = useState('')
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null)
@@ -350,6 +275,16 @@ export function AdminPage() {
       })
   }, [profile?.role, exportDigits])
 
+  useEffect(() => {
+    const enteredBy = profile?.email?.trim() || authUserId
+
+    if (activeTab !== 'scan' || !enteredBy) {
+      return
+    }
+
+    void loadRecentMeasurements(enteredBy)
+  }, [activeTab, authUserId, profile?.email])
+
   const parsedExportCount = Number.parseInt(exportCount, 10)
   const requestedQrSize = Number.parseFloat(exportQrSize)
   const parsedExportDigits = Number.parseInt(exportDigits, 10)
@@ -358,6 +293,7 @@ export function AdminPage() {
     Number.isFinite(parsedScanMeasurementInput) && scanMeasurementUnit !== 'V'
       ? convertMeasurementToVolts(parsedScanMeasurementInput, scanMeasurementUnit)
       : null
+
   let exportLayoutPreview: ReturnType<typeof getQrPdfLayoutPreview> | null = null
 
   if (Number.isFinite(parsedExportCount) && parsedExportCount > 0) {
@@ -372,17 +308,49 @@ export function AdminPage() {
     }
   }
 
-  const previewTotalCards = Number.isFinite(parsedExportCount) && parsedExportCount > 0 ? parsedExportCount : 1
+  const previewTotalCards =
+    Number.isFinite(parsedExportCount) && parsedExportCount > 0 ? parsedExportCount : 1
 
-  useEffect(() => {
-    const enteredBy = profile?.email?.trim() || authUserId
+  const normalizedModerationSearch = moderationSearch.trim().toLocaleLowerCase('de-DE')
+  const moderationEntries = moderationUsers.map((user) => {
+    const linkedGenerator =
+      moderationGenerators.find((generator) => generator.id === user.generatorId) ??
+      moderationGenerators.find((generator) => generator.ownerUid === user.id) ??
+      null
 
-    if (activeTab !== 'scan' || !enteredBy) {
-      return
+    return {
+      user,
+      generator: linkedGenerator,
+      status: getModerationEntryStatus(user, linkedGenerator),
+    } satisfies ModerationListEntry
+  })
+  const filteredModerationEntries = moderationEntries.filter(({ user, generator }) => {
+    if (!normalizedModerationSearch) {
+      return true
     }
 
-    void loadRecentMeasurements(enteredBy)
-  }, [activeTab, authUserId, profile?.email])
+    const haystack = [
+      user.name,
+      user.email,
+      user.role,
+      user.status ?? 'active',
+      user.generatorId ?? '',
+      generator?.code ?? '',
+      generator?.ownerUid ?? '',
+      generator?.ownerName ?? '',
+      generator?.status ?? 'active',
+    ]
+      .join(' ')
+      .toLocaleLowerCase('de-DE')
+
+    return haystack.includes(normalizedModerationSearch)
+  })
+  const activeModerationEntries = filteredModerationEntries.filter((entry) => entry.status === 'active')
+  const trashedModerationEntries = filteredModerationEntries.filter((entry) => entry.status !== 'active')
+  const editingUserGenerator =
+    editingUser
+      ? moderationEntries.find((entry) => entry.user.id === editingUser.id)?.generator ?? null
+      : null
 
   function navigateToAdminTab(value: AdminTabValue) {
     setMobileAdminNavOpen(false)
@@ -599,54 +567,12 @@ export function AdminPage() {
       setModerationGenerators(generators)
     } catch (loadIssue) {
       setModerationError(
-        loadIssue instanceof Error
-          ? loadIssue.message
-          : 'Die Liste konnte nicht geladen werden.',
+        loadIssue instanceof Error ? loadIssue.message : 'Die Liste konnte nicht geladen werden.',
       )
     } finally {
       setModerationLoading(false)
     }
   }
-
-  const normalizedModerationSearch = moderationSearch.trim().toLocaleLowerCase('de-DE')
-  const moderationEntries = moderationUsers.map((user) => {
-    const linkedGenerator =
-      moderationGenerators.find((generator) => generator.id === user.generatorId) ??
-      moderationGenerators.find((generator) => generator.ownerUid === user.id) ??
-      null
-
-    return {
-      user,
-      generator: linkedGenerator,
-      status: getModerationEntryStatus(user, linkedGenerator),
-    } satisfies ModerationListEntry
-  })
-  const filteredModerationEntries = moderationEntries.filter(({ user, generator }) => {
-    if (!normalizedModerationSearch) {
-      return true
-    }
-
-    const haystack = [
-      user.name,
-      user.email,
-      user.role,
-      user.status ?? 'active',
-      user.generatorId ?? '',
-      generator?.code ?? '',
-      generator?.ownerUid ?? '',
-      generator?.ownerName ?? '',
-      generator?.status ?? 'active',
-    ]
-      .join(' ')
-      .toLocaleLowerCase('de-DE')
-    return haystack.includes(normalizedModerationSearch)
-  })
-  const activeModerationEntries = filteredModerationEntries.filter((entry) => entry.status === 'active')
-  const trashedModerationEntries = filteredModerationEntries.filter((entry) => entry.status !== 'active')
-  const editingUserGenerator =
-    editingUser
-      ? moderationEntries.find((entry) => entry.user.id === editingUser.id)?.generator ?? null
-      : null
 
   function handleModerationMenuOpen(
     event: MouseEvent<HTMLElement>,
@@ -852,9 +778,7 @@ export function AdminPage() {
       handleCloseMeasurementEditor()
     } catch (saveIssue) {
       setMeasurementError(
-        saveIssue instanceof Error
-          ? saveIssue.message
-          : 'Messwert konnte nicht gespeichert werden.',
+        saveIssue instanceof Error ? saveIssue.message : 'Messwert konnte nicht gespeichert werden.',
       )
     } finally {
       setMeasurementSaving(false)
@@ -887,402 +811,6 @@ export function AdminPage() {
     } finally {
       handleCloseModerationMenu()
     }
-  }
-
-  function renderModerationList(
-    entries: ModerationListEntry[],
-    options: {
-      ariaLabel: string
-      emptyPrimary: string
-      emptySecondary?: string
-      showStatus?: boolean
-    },
-  ) {
-    return renderModerationCards(entries, options)
-
-    return (
-      <Box
-        sx={{
-          borderRadius: 3,
-          overflow: 'hidden',
-          bgcolor: 'background.default',
-          border: (theme) => `1px solid ${theme.palette.divider}`,
-        }}
-      >
-        <Box
-          sx={{
-            display: { xs: 'none', sm: 'grid' },
-            gridTemplateColumns: options.showStatus
-              ? 'minmax(0, 1.2fr) minmax(110px, 140px) minmax(100px, 120px)'
-              : 'minmax(0, 1.4fr) minmax(110px, 140px)',
-            gap: 2,
-            px: 2,
-            py: 1.25,
-            pr: 7,
-            bgcolor: 'rgba(36,28,19,0.05)',
-            borderBottom: entries.length ? (theme) => `1px solid ${theme.palette.divider}` : 'none',
-          }}
-        >
-          <Typography variant="caption" color="text.secondary" fontWeight={700}>
-            Nutzer
-          </Typography>
-          <Typography variant="caption" color="text.secondary" fontWeight={700}>
-            Code
-          </Typography>
-          {options.showStatus ? (
-            <Typography variant="caption" color="text.secondary" fontWeight={700}>
-              Status
-            </Typography>
-          ) : null}
-        </Box>
-        <List disablePadding aria-label={options.ariaLabel}>
-          {entries.length ? (
-            entries.map(({ user, generator, status }, index) => (
-              <ListItem
-                key={user.id}
-                disablePadding
-                divider={index < entries.length - 1}
-                secondaryAction={
-                  <IconButton
-                    edge="end"
-                    onClick={(event) => {
-                      event.stopPropagation()
-                      handleModerationMenuOpen(event, user, generator)
-                    }}
-                    aria-label={`Aktionen für ${user.name}`}
-                    sx={{
-                      width: 34,
-                      height: 34,
-                      borderRadius: 1.75,
-                      border: (theme) => `1px solid ${theme.palette.divider}`,
-                      bgcolor: 'rgba(255,255,255,0.72)',
-                      '&:hover': {
-                        bgcolor: 'rgba(255,255,255,0.96)',
-                      },
-                      '&:focus-visible': {
-                        outline: '2px solid rgba(143,122,81,0.55)',
-                        outlineOffset: 2,
-                      },
-                    }}
-                  >
-                    <MoreVertIcon fontSize="small" />
-                  </IconButton>
-                }
-              >
-                <ListItemButton
-                  disabled={!generator}
-                  aria-label={
-                    generator
-                      ? `Messwerte von ${user.name} mit Code ${generator.code.toUpperCase()} öffnen`
-                      : `${user.name} hat keine verknüpfte Brennstoffzelle`
-                  }
-                  onClick={() => {
-                    if (generator) {
-                      void handleOpenGeneratorMeasurements(generator)
-                    }
-                  }}
-                  sx={{
-                    px: 2,
-                    py: 1.5,
-                    pr: 7,
-                    alignItems: 'stretch',
-                    '&.Mui-disabled': {
-                      opacity: 1,
-                      cursor: 'default',
-                    },
-                    '&:hover': {
-                      bgcolor: generator ? 'rgba(255,255,255,0.22)' : 'transparent',
-                    },
-                    '&:focus-visible': {
-                      outline: '2px solid rgba(143,122,81,0.55)',
-                      outlineOffset: -2,
-                      bgcolor: 'rgba(255,255,255,0.22)',
-                    },
-                  }}
-                >
-                  <Box sx={{ width: '100%' }}>
-                    <Box
-                      sx={{
-                        width: '100%',
-                        display: 'grid',
-                        gridTemplateColumns: {
-                          xs: '1fr',
-                          sm: options.showStatus
-                            ? 'minmax(0, 1.2fr) minmax(110px, 140px) minmax(100px, 120px)'
-                            : 'minmax(0, 1.4fr) minmax(110px, 140px)',
-                        },
-                        gap: { xs: 0.75, sm: 2 },
-                        alignItems: 'center',
-                      }}
-                    >
-                      <Box sx={{ minWidth: 0 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, minWidth: 0 }}>
-                          <Typography variant="body2" fontWeight={700} noWrap>
-                            {user.name}
-                          </Typography>
-                          {user.role === 'admin' ? (
-                            <Box
-                              component="span"
-                              aria-label="Admin"
-                              sx={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                color: '#8F6410',
-                                flexShrink: 0,
-                              }}
-                            >
-                              <AdminPanelSettingsOutlinedIcon fontSize="small" />
-                            </Box>
-                          ) : null}
-                          {status !== 'active' ? (
-                            <Chip
-                              size="small"
-                              label={getLifecycleStatusLabel(status)}
-                              color={status === 'blocked' ? 'warning' : 'default'}
-                              sx={{ display: { xs: 'inline-flex', sm: 'none' } }}
-                            />
-                          ) : null}
-                        </Box>
-                        <Typography variant="caption" color="text.secondary">
-                          {user.email}
-                        </Typography>
-                      </Box>
-                      <Box>
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            fontFamily: '"Consolas", "Courier New", monospace',
-                            fontWeight: 700,
-                          }}
-                        >
-                          {generator ? generator.code.toUpperCase() : '-'}
-                        </Typography>
-                      </Box>
-                      {options.showStatus ? (
-                        <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
-                          {status !== 'active' ? (
-                            <Chip
-                              size="small"
-                              label={getLifecycleStatusLabel(status)}
-                              color={status === 'blocked' ? 'warning' : 'default'}
-                            />
-                          ) : null}
-                        </Box>
-                      ) : null}
-                    </Box>
-                  </Box>
-                </ListItemButton>
-              </ListItem>
-            ))
-          ) : (
-            <ListItem sx={{ py: 2 }}>
-              <ListItemText
-                primary={options.emptyPrimary}
-                secondary={options.emptySecondary}
-              />
-            </ListItem>
-          )}
-        </List>
-      </Box>
-    )
-  }
-
-  function renderModerationCards(
-    entries: ModerationListEntry[],
-    options: {
-      ariaLabel: string
-      emptyPrimary: string
-      emptySecondary?: string
-      showStatus?: boolean
-    },
-  ) {
-    return (
-      <Box
-        sx={{
-          borderRadius: 2.5,
-          overflow: 'hidden',
-          border: '1px solid rgba(121,101,66,0.14)',
-        }}
-      >
-        <Box
-          sx={{
-            display: { xs: 'none', sm: 'grid' },
-            gridTemplateColumns: options.showStatus
-              ? 'minmax(0, 1.2fr) 124px 112px'
-              : 'minmax(0, 1.4fr) 124px',
-            gap: 1.5,
-            px: 2,
-            py: 1,
-            pr: 6,
-            borderBottom: entries.length ? '1px solid rgba(121,101,66,0.1)' : 'none',
-          }}
-        >
-          <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ letterSpacing: '0.04em' }}>
-            Nutzer
-          </Typography>
-          <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ letterSpacing: '0.04em' }}>
-            Code
-          </Typography>
-          {options.showStatus ? (
-            <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ letterSpacing: '0.04em' }}>
-              Status
-            </Typography>
-          ) : null}
-        </Box>
-        <List disablePadding aria-label={options.ariaLabel}>
-          {entries.length ? (
-            entries.map(({ user, generator, status }, index) => (
-              <ListItem
-                key={user.id}
-                disablePadding
-                secondaryAction={
-                  <IconButton
-                    edge="end"
-                    onClick={(event) => {
-                      event.stopPropagation()
-                      handleModerationMenuOpen(event, user, generator)
-                    }}
-                    aria-label={`Aktionen für ${user.name}`}
-                    sx={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: 1.75,
-                      color: 'rgba(110,103,95,0.92)',
-                      '&:hover': {
-                        bgcolor: 'rgba(121,101,66,0.08)',
-                      },
-                      '&:focus-visible': {
-                        outline: '2px solid rgba(143,122,81,0.55)',
-                        outlineOffset: 2,
-                      },
-                    }}
-                  >
-                    <MoreVertIcon fontSize="small" />
-                  </IconButton>
-                }
-                sx={{
-                  borderBottom: index < entries.length - 1 ? '1px solid rgba(121,101,66,0.1)' : 'none',
-                }}
-              >
-                <ListItemButton
-                  disabled={!generator}
-                  aria-label={
-                    generator
-                      ? `Messwerte von ${user.name} mit Code ${generator.code.toUpperCase()} öffnen`
-                      : `${user.name} hat keine verknüpfte Brennstoffzelle`
-                  }
-                  onClick={() => {
-                    if (generator) {
-                      void handleOpenGeneratorMeasurements(generator)
-                    }
-                  }}
-                  sx={{
-                    px: { xs: 1.5, sm: 1.75 },
-                    py: 1.3,
-                    pr: 6,
-                    alignItems: 'center',
-                    borderRadius: 0,
-                    '&.Mui-disabled': {
-                      opacity: 1,
-                      cursor: 'default',
-                    },
-                    '&:hover': {
-                      bgcolor: generator ? 'rgba(255,255,255,0.34)' : 'transparent',
-                    },
-                    '&:focus-visible': {
-                      outline: '2px solid rgba(143,122,81,0.55)',
-                      outlineOffset: -2,
-                      bgcolor: 'rgba(255,255,255,0.34)',
-                    },
-                  }}
-                >
-                  <Box sx={{ width: '100%' }}>
-                    <Box
-                      sx={{
-                        width: '100%',
-                        display: 'grid',
-                        gridTemplateColumns: {
-                          xs: '1fr',
-                          sm: options.showStatus
-                            ? 'minmax(0, 1.2fr) 124px 112px'
-                            : 'minmax(0, 1.4fr) 124px',
-                        },
-                        gap: { xs: 1, sm: 1.5 },
-                        alignItems: 'center',
-                      }}
-                    >
-                      <Box sx={{ minWidth: 0 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, minWidth: 0 }}>
-                          <Typography variant="body2" fontWeight={700} noWrap>
-                            {user.name}
-                          </Typography>
-                          {user.role === 'admin' ? (
-                            <Box
-                              component="span"
-                              aria-label="Admin"
-                              sx={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                color: '#8F6410',
-                                flexShrink: 0,
-                              }}
-                            >
-                              <AdminPanelSettingsOutlinedIcon fontSize="small" />
-                            </Box>
-                          ) : null}
-                          {status !== 'active' ? (
-                            <Chip
-                              size="small"
-                              label={getLifecycleStatusLabel(status)}
-                              color={status === 'blocked' ? 'warning' : 'default'}
-                              sx={{ display: { xs: 'inline-flex', sm: 'none' } }}
-                            />
-                          ) : null}
-                        </Box>
-                        <Typography variant="caption" color="text.secondary">
-                          {user.email}
-                        </Typography>
-                      </Box>
-                      <Box sx={{ minWidth: 0, justifySelf: 'start', width: '100%' }}>
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            fontFamily: '"Consolas", "Courier New", monospace',
-                            fontWeight: 700,
-                            letterSpacing: '0.03em',
-                            whiteSpace: 'nowrap',
-                            textAlign: 'left',
-                          }}
-                        >
-                          {generator ? generator.code.toUpperCase() : '-'}
-                        </Typography>
-                      </Box>
-                      {options.showStatus ? (
-                        <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
-                          {status !== 'active' ? (
-                            <Chip
-                              size="small"
-                              label={getLifecycleStatusLabel(status)}
-                              color={status === 'blocked' ? 'warning' : 'default'}
-                            />
-                          ) : null}
-                        </Box>
-                      ) : null}
-                    </Box>
-                  </Box>
-                </ListItemButton>
-              </ListItem>
-            ))
-          ) : (
-            <ListItem sx={{ px: 1, py: 1 }}>
-              <ListItemText primary={options.emptyPrimary} secondary={options.emptySecondary} />
-            </ListItem>
-          )}
-        </List>
-      </Box>
-    )
   }
 
   if (!authUserId) {
@@ -1343,1122 +871,130 @@ export function AdminPage() {
     )
   }
 
-  const activeAdminTabItem =
-    adminTabItems.find((item) => item.value === activeTab) ?? adminTabItems[0]
-
   return (
     <Stack spacing={{ xs: 2.5, md: 3 }}>
-      <Card>
-        {isMobileViewport ? (
-          <Box sx={{ p: 1.25 }}>
-            <Stack spacing={1}>
-              <Button
-                type="button"
-                variant="outlined"
-                color="inherit"
-                onClick={() => setMobileAdminNavOpen((current) => !current)}
-                endIcon={
-                  <ExpandMoreIcon
-                    sx={{
-                      transform: mobileAdminNavOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                      transition: 'transform 180ms ease',
-                    }}
-                  />
-                }
-                sx={{
-                  justifyContent: 'space-between',
-                  px: 1.5,
-                  py: 1.15,
-                  borderRadius: 999,
-                  borderColor: 'rgba(61,177,236,0.38)',
-                }}
-              >
-                <Stack direction="row" spacing={1.25} alignItems="center" sx={{ minWidth: 0 }}>
-                  {activeAdminTabItem.icon}
-                  <Typography fontWeight={700} noWrap>
-                    {activeAdminTabItem.label}
-                  </Typography>
-                </Stack>
-              </Button>
-              <Collapse in={mobileAdminNavOpen}>
-                <Box
-                  sx={{
-                    borderRadius: 4,
-                    border: '1px solid rgba(121,101,66,0.14)',
-                    overflow: 'hidden',
-                    bgcolor: 'rgba(255,255,255,0.82)',
-                  }}
-                >
-                  <List disablePadding>
-                    {adminTabItems.map((item, index) => (
-                      <ListItemButton
-                        key={item.value}
-                        selected={item.value === activeTab}
-                        onClick={() => navigateToAdminTab(item.value)}
-                        sx={{
-                          px: 2,
-                          py: 1.5,
-                          borderBottom:
-                            index < adminTabItems.length - 1 ? '1px solid rgba(121,101,66,0.08)' : 'none',
-                          '&.Mui-selected': {
-                            bgcolor: 'rgba(61,177,236,0.08)',
-                            borderRight: '3px solid #0B6E69',
-                          },
-                          '&.Mui-selected:hover': {
-                            bgcolor: 'rgba(61,177,236,0.12)',
-                          },
-                        }}
-                      >
-                        <Stack direction="row" spacing={1.25} alignItems="center" sx={{ minWidth: 0 }}>
-                          {item.icon}
-                          <Typography fontWeight={item.value === activeTab ? 700 : 600} noWrap>
-                            {item.label}
-                          </Typography>
-                        </Stack>
-                      </ListItemButton>
-                    ))}
-                  </List>
-                </Box>
-              </Collapse>
-            </Stack>
-          </Box>
-        ) : (
-          <Tabs
-            value={activeTab}
-            onChange={handleAdminTabChange}
-            variant="scrollable"
-            scrollButtons="auto"
-            sx={{ px: { xs: 1, sm: 2 }, pt: 1 }}
-          >
-            {adminTabItems.map((item) => (
-              <Tab
-                key={item.value}
-                value={item.value}
-                label={item.label}
-                icon={item.icon}
-                iconPosition="start"
-              />
-            ))}
-          </Tabs>
-        )}
-      </Card>
+      <AdminNavigation
+        activeTab={activeTab}
+        isMobileViewport={isMobileViewport}
+        mobileAdminNavOpen={mobileAdminNavOpen}
+        onToggleMobileNav={() => setMobileAdminNavOpen((current) => !current)}
+        onTabChange={handleAdminTabChange}
+        onNavigateToTab={navigateToAdminTab}
+      />
 
-      <TabPanel active={activeTab} value="qr">
-        <Grid container spacing={{ xs: 2, md: 3 }}>
-          <Grid size={{ xs: 12, lg: 4 }}>
-            <Card sx={{ height: '100%' }}>
-              <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
-                <Stack spacing={3}>
-                  <Box>
-                    <Typography variant="h4" sx={{ fontSize: { xs: '1.45rem', sm: '2rem' } }}>
-                      QR-Export
-                    </Typography>
-                  </Box>
-                  {exportStatus ? <Alert severity="success">{exportStatus}</Alert> : null}
-                  {exportError ? <Alert severity="error">{exportError}</Alert> : null}
-                  <Stack spacing={2}>
-                    <Stack direction="row" spacing={1.5} alignItems="flex-start">
-                      <Chip
-                        label="1"
-                        color="primary"
-                        sx={{ minWidth: 36, height: 36, borderRadius: 999 }}
-                      />
-                      <Card variant="outlined" sx={{ flex: 1 }}>
-                        <CardContent sx={{ p: 2 }}>
-                          <Stack spacing={1.5}>
-                            <Stack direction="row" alignItems="center" justifyContent="space-between">
-                              <Typography fontWeight={700}>Anzahl</Typography>
-                              <IconButton
-                                size="small"
-                                onClick={() => toggleExportStep('count')}
-                                aria-label="Step 1 ein- oder ausklappen"
-                              >
-                                <ExpandMoreIcon
-                                  sx={{
-                                    transform: exportStepOpen.count ? 'rotate(180deg)' : 'rotate(0deg)',
-                                    transition: 'transform 0.2s ease',
-                                  }}
-                                />
-                              </IconButton>
-                            </Stack>
-                            <Collapse in={exportStepOpen.count}>
-                              <TextField
-                                label="Anzahl"
-                                type="number"
-                                value={exportCount}
-                                onChange={(event) => setExportCount(event.target.value)}
-                                fullWidth
-                              />
-                            </Collapse>
-                          </Stack>
-                        </CardContent>
-                      </Card>
-                    </Stack>
-                    <Stack direction="row" spacing={1.5} alignItems="flex-start">
-                      <Chip
-                        label="2"
-                        color="primary"
-                        sx={{ minWidth: 36, height: 36, borderRadius: 999 }}
-                      />
-                      <Card variant="outlined" sx={{ flex: 1 }}>
-                        <CardContent sx={{ p: 2 }}>
-                          <Stack spacing={1.5}>
-                            <Stack direction="row" alignItems="center" justifyContent="space-between">
-                              <Typography fontWeight={700}>Größe und Format</Typography>
-                              <IconButton
-                                size="small"
-                                onClick={() => toggleExportStep('layout')}
-                                aria-label="Step 2 ein- oder ausklappen"
-                              >
-                                <ExpandMoreIcon
-                                  sx={{
-                                    transform: exportStepOpen.layout ? 'rotate(180deg)' : 'rotate(0deg)',
-                                    transition: 'transform 0.2s ease',
-                                  }}
-                                />
-                              </IconButton>
-                            </Stack>
-                            <Collapse in={exportStepOpen.layout}>
-                              <Stack spacing={1.5}>
-                                <TextField
-                                  label="QR-Größe in mm"
-                                  type="number"
-                                  value={exportQrSize}
-                                  onChange={(event) => setExportQrSize(event.target.value)}
-                                  fullWidth
-                                />
-                                <TextField
-                                  label="Seitenformat"
-                                  select
-                                  value={exportPageSize}
-                                  onChange={(event) => setExportPageSize(event.target.value as QrPdfPageSize)}
-                                  fullWidth
-                                  SelectProps={{ native: true }}
-                                >
-                                  <option value="a4">A4</option>
-                                  <option value="a5">A5</option>
-                                  <option value="a6">A6</option>
-                                  <option value="qr">QR-Code</option>
-                                </TextField>
-                              </Stack>
-                            </Collapse>
-                          </Stack>
-                        </CardContent>
-                      </Card>
-                    </Stack>
-                    <Stack direction="row" spacing={1.5} alignItems="flex-start">
-                      <Chip
-                        label="3"
-                        color="primary"
-                        sx={{ minWidth: 36, height: 36, borderRadius: 999 }}
-                      />
-                      <Card variant="outlined" sx={{ flex: 1 }}>
-                        <CardContent sx={{ p: 2 }}>
-                          <Stack spacing={1.5}>
-                            <Stack direction="row" alignItems="center" justifyContent="space-between">
-                              <Typography fontWeight={700}>Nummer</Typography>
-                              <IconButton
-                                size="small"
-                                onClick={() => toggleExportStep('number')}
-                                aria-label="Step 3 ein- oder ausklappen"
-                              >
-                                <ExpandMoreIcon
-                                  sx={{
-                                    transform: exportStepOpen.number ? 'rotate(180deg)' : 'rotate(0deg)',
-                                    transition: 'transform 0.2s ease',
-                                  }}
-                                />
-                              </IconButton>
-                            </Stack>
-                            <Collapse in={exportStepOpen.number}>
-                              <Stack spacing={2}>
-                                <TextField
-                                  label="Stellen"
-                                  type="number"
-                                  value={exportDigits}
-                                  onChange={(event) => setExportDigits(event.target.value)}
-                                  fullWidth
-                                />
-                                <Box>
-                                  <Typography
-                                    variant="h3"
-                                    sx={{
-                                      fontFamily: '"Consolas", "Courier New", monospace',
-                                      fontSize: { xs: '1.9rem', sm: '2.4rem' },
-                                      letterSpacing: '0.08em',
-                                      lineHeight: 1,
-                                    }}
-                                  >
-                                    {exportNextCode || '-'}
-                                  </Typography>
-                                  <Typography variant="body2" color="text.secondary">
-                                    {exportNextSequence === null
-                                      ? '-'
-                                      : formatMutedDecimal(exportNextSequence)}
-                                  </Typography>
-                                </Box>
-                              </Stack>
-                            </Collapse>
-                          </Stack>
-                        </CardContent>
-                      </Card>
-                    </Stack>
-                    <Stack direction="row" spacing={1.5} alignItems="flex-start">
-                      <Chip
-                        label="4"
-                        color="primary"
-                        sx={{ minWidth: 36, height: 36, borderRadius: 999 }}
-                      />
-                      <Card variant="outlined" sx={{ flex: 1 }}>
-                        <CardContent sx={{ p: 2 }}>
-                          <Stack spacing={1.5}>
-                            <Stack direction="row" alignItems="center" justifyContent="space-between">
-                              <Typography fontWeight={700}>Export</Typography>
-                              <IconButton
-                                size="small"
-                                onClick={() => toggleExportStep('export')}
-                                aria-label="Step 4 ein- oder ausklappen"
-                              >
-                                <ExpandMoreIcon
-                                  sx={{
-                                    transform: exportStepOpen.export ? 'rotate(180deg)' : 'rotate(0deg)',
-                                    transition: 'transform 0.2s ease',
-                                  }}
-                                />
-                              </IconButton>
-                            </Stack>
-                            <Collapse in={exportStepOpen.export}>
-                              <Button
-                                variant="contained"
-                                onClick={() => void handleExport()}
-                                startIcon={<SaveIcon />}
-                                fullWidth
-                              >
-                                PDF herunterladen
-                              </Button>
-                            </Collapse>
-                          </Stack>
-                        </CardContent>
-                      </Card>
-                    </Stack>
-                  </Stack>
-                </Stack>
-              </CardContent>
-            </Card>
-          </Grid>
+      {activeTab === 'qr' ? (
+        <AdminQrSection
+          exportStatus={exportStatus}
+          exportError={exportError}
+          exportStepOpen={exportStepOpen}
+          exportCount={exportCount}
+          exportQrSize={exportQrSize}
+          exportPageSize={exportPageSize}
+          exportDigits={exportDigits}
+          exportNextCode={exportNextCode}
+          exportNextSequence={exportNextSequence}
+          parsedExportDigits={parsedExportDigits}
+          previewTotalCards={previewTotalCards}
+          exportLayoutPreview={exportLayoutPreview}
+          onToggleExportStep={toggleExportStep}
+          onSetExportCount={setExportCount}
+          onSetExportQrSize={setExportQrSize}
+          onSetExportPageSize={setExportPageSize}
+          onSetExportDigits={setExportDigits}
+          onExport={() => void handleExport()}
+          formatMutedDecimal={formatMutedDecimal}
+        />
+      ) : null}
 
-          <Grid size={{ xs: 12, lg: 8 }}>
-            <Card sx={{ height: '100%' }}>
-              <CardContent sx={{ p: { xs: 2.25, sm: 3 }, height: '100%' }}>
-                <Stack spacing={2.5} sx={{ height: '100%' }}>
-                  <Stack
-                    direction={{ xs: 'column', sm: 'row' }}
-                    justifyContent="space-between"
-                    alignItems={{ xs: 'flex-start', sm: 'center' }}
-                    spacing={1.5}
-                  >
-                    <Box>
-                      <Typography variant="h4" sx={{ fontSize: { xs: '1.45rem', sm: '2rem' } }}>
-                        Vorschau
-                      </Typography>
-                    </Box>
-                  </Stack>
-                  <QrLayoutPreview
-                    layout={exportLayoutPreview}
-                    totalCards={previewTotalCards}
-                    digits={Number.isFinite(parsedExportDigits) && parsedExportDigits > 0 ? parsedExportDigits : 4}
-                    startSequence={exportNextSequence}
-                  />
-                </Stack>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-      </TabPanel>
-      <TabPanel active={activeTab} value="scan">
-        <Grid container spacing={{ xs: 2, md: 3 }}>
-          <Grid size={{ xs: 12, lg: 5 }}>
-            <Card sx={{ height: '100%' }}>
-              <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
-                <Stack spacing={2.5}>
-                  <Typography variant="h4" sx={{ fontSize: { xs: '1.45rem', sm: '2rem' } }}>
-                    Messwerte erfassen
-                  </Typography>
-                  <Typography color="text.secondary">
-                    Scanne einen QR-Code oder trage einen Messwert manuell ein.
-                  </Typography>
-                  {scanStatus ? <Alert severity="success">{scanStatus}</Alert> : null}
-                  {scanError ? <Alert severity="error">{scanError}</Alert> : null}
-                  <Button
-                    variant="contained"
-                    startIcon={<QrCodeScannerIcon />}
-                    onClick={() => setScannerOpen(true)}
-                    fullWidth
-                  >
-                    Scanner öffnen
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    startIcon={<EditNoteIcon />}
-                    onClick={handleOpenManualMeasurementDialog}
-                    fullWidth
-                  >
-                    Manuell Messwert hinzufügen
-                  </Button>
-                </Stack>
-              </CardContent>
-            </Card>
-          </Grid>
+      {activeTab === 'scan' ? (
+        <AdminScanSection
+          scanStatus={scanStatus}
+          scanError={scanError}
+          recentMeasurements={recentMeasurements}
+          onOpenScanner={() => setScannerOpen(true)}
+          onOpenManualMeasurementDialog={handleOpenManualMeasurementDialog}
+        />
+      ) : null}
 
-          <Grid size={{ xs: 12, lg: 7 }}>
-            <Card sx={{ height: '100%' }}>
-              <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
-                <Stack spacing={2}>
-                  <Typography variant="h4" sx={{ fontSize: { xs: '1.45rem', sm: '2rem' } }}>
-                    Letzte eigene Einträge
-                  </Typography>
-                  <Typography color="text.secondary">
-                    Hier siehst du die zuletzt von dir eingetragenen Messwerte.
-                  </Typography>
-                  <Box
-                    sx={{
-                      borderRadius: 3,
-                      overflow: 'hidden',
-                      bgcolor: 'background.default',
-                      border: (theme) => `1px solid ${theme.palette.divider}`,
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        display: { xs: 'none', sm: 'grid' },
-                        gridTemplateColumns: 'minmax(96px, 120px) minmax(110px, 140px) minmax(0, 1fr)',
-                        gap: 2,
-                        px: 2,
-                        py: 1.25,
-                        bgcolor: 'rgba(36,28,19,0.05)',
-                        borderBottom: recentMeasurements.length
-                          ? (theme) => `1px solid ${theme.palette.divider}`
-                          : 'none',
-                      }}
-                    >
-                      <Typography variant="caption" color="text.secondary" fontWeight={700}>
-                        Code
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary" fontWeight={700}>
-                        Wert
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary" fontWeight={700}>
-                        Zeitpunkt
-                      </Typography>
-                    </Box>
-                    <List disablePadding>
-                      {recentMeasurements.length ? (
-                        recentMeasurements.map((item, index) => (
-                          <ListItem
-                            key={item.id}
-                            divider={index < recentMeasurements.length - 1}
-                            sx={{ px: 2, py: 1.5 }}
-                          >
-                            <Box
-                              sx={{
-                                width: '100%',
-                                display: 'grid',
-                                gridTemplateColumns: {
-                                  xs: '1fr',
-                                  sm: 'minmax(96px, 120px) minmax(110px, 140px) minmax(0, 1fr)',
-                                },
-                                gap: { xs: 0.75, sm: 2 },
-                                alignItems: 'center',
-                              }}
-                            >
-                              <Box>
-                                <Typography
-                                  variant="body2"
-                                  sx={{ fontFamily: '"Consolas", "Courier New", monospace', fontWeight: 700 }}
-                                >
-                                  {item.generatorCode.toUpperCase()}
-                                </Typography>
-                                {item.ownerName ? (
-                                  <Typography
-                                    variant="caption"
-                                    color="text.secondary"
-                                    sx={{ display: { sm: 'none' } }}
-                                  >
-                                    {item.ownerName}
-                                  </Typography>
-                                ) : null}
-                              </Box>
-                              <Typography variant="body2" fontWeight={600}>
-                                {formatMeasurement(item.value)}
-                              </Typography>
-                              <Box>
-                                <Typography variant="body2">
-                                  {formatTimestamp(item.createdAt)}
-                                </Typography>
-                                {item.ownerName ? (
-                                  <Typography
-                                    variant="caption"
-                                    color="text.secondary"
-                                    sx={{ display: { xs: 'none', sm: 'block' } }}
-                                  >
-                                    {item.ownerName}
-                                  </Typography>
-                                ) : null}
-                              </Box>
-                            </Box>
-                          </ListItem>
-                        ))
-                      ) : (
-                        <ListItem sx={{ px: 2, py: 2 }}>
-                          <ListItemText
-                            primary="Noch keine eigenen Messwerte"
-                            secondary="Sobald du Werte speicherst, erscheinen sie hier."
-                          />
-                        </ListItem>
-                      )}
-                    </List>
-                  </Box>
-                </Stack>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-      </TabPanel>
-
-      <TabPanel active={activeTab} value="moderation">
-        <Card>
-          <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
-            <Stack spacing={2}>
-              {moderationStatus ? <Alert severity="success">{moderationStatus}</Alert> : null}
-              {moderationError ? <Alert severity="error">{moderationError}</Alert> : null}
-
-              {moderationLoading ? (
-                <Stack alignItems="center" justifyContent="center" sx={{ py: 6 }}>
-                  <Typography color="text.secondary">Einträge werden geladen...</Typography>
-                </Stack>
-              ) : null}
-
-              <Stack direction="row" spacing={1} alignItems="center">
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    flex: moderationSearchOpen ? 1 : '0 0 58px',
-                    width: moderationSearchOpen ? 'auto' : 58,
-                    height: 54,
-                    minWidth: 0,
-                    border: '1px solid',
-                    borderColor: moderationSearchOpen ? 'rgba(11,110,105,0.46)' : 'rgba(121,101,66,0.18)',
-                    borderRadius: 999,
-                    bgcolor: 'rgba(255,255,255,0.92)',
-                    overflow: 'hidden',
-                    boxShadow: moderationSearchOpen ? '0 10px 24px rgba(36,28,19,0.08)' : '0 2px 8px rgba(36,28,19,0.04)',
-                    transition:
-                      'flex-basis 240ms ease, width 240ms ease, border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease',
-                  }}
-                >
-                  <IconButton
-                    aria-label={moderationSearchOpen ? 'Suche einklappen' : 'Suche ausklappen'}
-                    onClick={() => {
-                      setModerationSearchOpen((current) => !current)
-                    }}
-                    sx={{
-                      width: 54,
-                      height: 54,
-                      borderRadius: 999,
-                      ml: 0.25,
-                      color: moderationSearchOpen ? '#0B6E69' : 'rgba(110,103,95,0.92)',
-                      flexShrink: 0,
-                      transition: 'color 180ms ease, background-color 180ms ease',
-                      '&:hover': {
-                        bgcolor: 'rgba(11,110,105,0.08)',
-                      },
-                    }}
-                  >
-                    <SearchIcon sx={{ fontSize: 30 }} />
-                  </IconButton>
-                  <Box
-                    sx={{
-                      flex: 1,
-                      minWidth: 0,
-                      opacity: moderationSearchOpen ? 1 : 0,
-                      maxWidth: moderationSearchOpen ? '100%' : 0,
-                      transform: moderationSearchOpen ? 'translateX(0)' : 'translateX(-10px)',
-                      transition: 'max-width 240ms ease, opacity 180ms ease, transform 220ms ease',
-                      pointerEvents: moderationSearchOpen ? 'auto' : 'none',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    <InputBase
-                      value={moderationSearch}
-                      onChange={(event) => setModerationSearch(event.target.value)}
-                      placeholder="Suche"
-                      inputProps={{ 'aria-label': 'Suchen' }}
-                      sx={{
-                        width: '100%',
-                        color: 'rgba(60,48,33,0.96)',
-                        fontSize: '1.05rem',
-                        px: 0.5,
-                        py: 1.2,
-                        '& input::placeholder': {
-                          color: 'rgba(110,103,95,0.9)',
-                          opacity: 1,
-                        },
-                      }}
-                    />
-                  </Box>
-                  <IconButton
-                    aria-label={moderationSearch ? 'Suche leeren' : 'Suche einklappen'}
-                    size="small"
-                    onClick={() => {
-                      if (moderationSearch) {
-                        setModerationSearch('')
-                        return
-                      }
-
-                      setModerationSearchOpen(false)
-                    }}
-                    sx={{
-                      mr: 0.75,
-                      color: 'rgba(110,103,95,0.9)',
-                      opacity: moderationSearchOpen ? 1 : 0,
-                      pointerEvents: moderationSearchOpen ? 'auto' : 'none',
-                      transition: 'opacity 180ms ease, color 180ms ease',
-                      '&:hover': {
-                        bgcolor: 'rgba(121,101,66,0.08)',
-                      },
-                    }}
-                  >
-                    <CloseIcon fontSize="small" />
-                  </IconButton>
-                </Box>
-                <IconButton
-                  aria-label={`Weitere Aktionen${trashedModerationEntries.length ? ` (${trashedModerationEntries.length})` : ''}`}
-                  onClick={handleOpenTrashMenu}
-                  sx={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 2.25,
-                    flexShrink: 0,
-                    color: 'rgba(110,103,95,0.92)',
-                    '&:hover': {
-                      bgcolor: 'rgba(121,101,66,0.08)',
-                    },
-                  }}
-                >
-                  <MoreVertIcon fontSize="small" />
-                </IconButton>
-              </Stack>
-              <Box
-                sx={{
-                  borderRadius: 2.5,
-                  overflow: 'hidden',
-                  border: '1px solid rgba(121,101,66,0.14)',
-                }}
-              >
-                <Box
-                  sx={{
-                    display: { xs: 'none', sm: 'grid' },
-                    gridTemplateColumns: 'minmax(0, 1.4fr) 124px',
-                    gap: 1.5,
-                    px: 2,
-                    py: 1,
-                    pr: 6,
-                    borderBottom: activeModerationEntries.length
-                      ? '1px solid rgba(121,101,66,0.1)'
-                      : 'none',
-                  }}
-                >
-                  <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ letterSpacing: '0.04em' }}>
-                    Nutzer
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ letterSpacing: '0.04em' }}>
-                    Code
-                  </Typography>
-                </Box>
-                <List disablePadding aria-label="Moderationsliste">
-                  {activeModerationEntries.length ? (
-                    activeModerationEntries.map(({ user, generator }, index) => (
-                      <ListItem
-                        key={user.id}
-                        disablePadding
-                        secondaryAction={
-                          <IconButton
-                            edge="end"
-                            onClick={(event) => {
-                              event.stopPropagation()
-                              handleModerationMenuOpen(event, user, generator)
-                            }}
-                            aria-label={`Aktionen für ${user.name}`}
-                            sx={{
-                              width: 36,
-                              height: 36,
-                              borderRadius: 1.75,
-                              color: 'rgba(110,103,95,0.92)',
-                              '&:hover': {
-                                bgcolor: 'rgba(121,101,66,0.08)',
-                              },
-                              '&:focus-visible': {
-                                outline: '2px solid rgba(143,122,81,0.55)',
-                                outlineOffset: 2,
-                              },
-                            }}
-                          >
-                            <MoreVertIcon fontSize="small" />
-                          </IconButton>
-                        }
-                        sx={{
-                          borderBottom:
-                            index < activeModerationEntries.length - 1
-                              ? '1px solid rgba(121,101,66,0.1)'
-                              : 'none',
-                        }}
-                      >
-                        <ListItemButton
-                          disabled={!generator}
-                          aria-label={
-                            generator
-                              ? `Messwerte von ${user.name} mit Code ${generator.code.toUpperCase()} öffnen`
-                              : `${user.name} hat keine verknüpfte Brennstoffzelle`
-                          }
-                          onClick={() => {
-                            if (generator) {
-                              void handleOpenGeneratorMeasurements(generator)
-                            }
-                          }}
-                          sx={{
-                            px: { xs: 1.5, sm: 1.75 },
-                            py: 1.3,
-                            pr: 6,
-                            alignItems: 'center',
-                            borderRadius: 0,
-                            '&.Mui-disabled': {
-                              opacity: 1,
-                              cursor: 'default',
-                            },
-                            '&:hover': {
-                              bgcolor: generator ? 'rgba(255,255,255,0.34)' : 'transparent',
-                            },
-                            '&:focus-visible': {
-                              outline: '2px solid rgba(143,122,81,0.55)',
-                              outlineOffset: -2,
-                              bgcolor: 'rgba(255,255,255,0.34)',
-                            },
-                          }}
-                        >
-                          <Box sx={{ width: '100%' }}>
-                            <Box
-                              sx={{
-                                width: '100%',
-                                display: 'grid',
-                                gridTemplateColumns: {
-                                  xs: '1fr',
-                                  sm: 'minmax(0, 1.4fr) 124px',
-                                },
-                                gap: { xs: 1, sm: 1.5 },
-                                alignItems: 'center',
-                              }}
-                            >
-                              <Box sx={{ minWidth: 0 }}>
-                                <Box
-                                  sx={{ display: 'flex', alignItems: 'center', gap: 0.75, minWidth: 0 }}
-                                >
-                                  <Typography variant="body2" fontWeight={700} noWrap>
-                                    {user.name}
-                                  </Typography>
-                                  {user.role === 'admin' ? (
-                                    <Box
-                                      component="span"
-                                      aria-label="Admin"
-                                      sx={{
-                                        display: 'inline-flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        color: '#8F6410',
-                                        flexShrink: 0,
-                                      }}
-                                    >
-                                      <AdminPanelSettingsOutlinedIcon fontSize="small" />
-                                    </Box>
-                                  ) : null}
-                                </Box>
-                                <Typography variant="caption" color="text.secondary">
-                                  {user.email}
-                                </Typography>
-                              </Box>
-                              <Box sx={{ minWidth: 0, justifySelf: 'start', width: '100%' }}>
-                                <Typography
-                                  variant="body2"
-                                  sx={{
-                                    fontFamily: '"Consolas", "Courier New", monospace',
-                                    fontWeight: 700,
-                                    letterSpacing: '0.03em',
-                                    whiteSpace: 'nowrap',
-                                    textAlign: 'left',
-                                  }}
-                                >
-                                  {generator ? generator.code.toUpperCase() : '-'}
-                                </Typography>
-                              </Box>
-                            </Box>
-                          </Box>
-                        </ListItemButton>
-                      </ListItem>
-                    ))
-                  ) : (
-                    <ListItem sx={{ py: 2 }}>
-                      <ListItemText
-                        primary={moderationEntries.length ? 'Keine Treffer' : 'Noch keine Einträge'}
-                        secondary={
-                          moderationEntries.length
-                            ? 'Passe den Suchbegriff an, um weitere Einträge zu sehen.'
-                            : 'Registrierte Konten erscheinen hier automatisch.'
-                        }
-                      />
-                    </ListItem>
-                  )}
-                </List>
-              </Box>
-
-            </Stack>
-          </CardContent>
-        </Card>
-      </TabPanel>
-
-      <Menu
-        anchorEl={trashMenuAnchorEl}
-        open={Boolean(trashMenuAnchorEl)}
-        onClose={handleCloseTrashMenu}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-        PaperProps={{
-          sx: {
-            mt: 1,
-            minWidth: 210,
-            overflow: 'hidden',
-            borderRadius: 3,
-            border: (theme) => `1px solid ${theme.palette.divider}`,
-            boxShadow: '0 22px 44px rgba(36,28,19,0.16)',
-          },
-        }}
-      >
-        <MenuItem onClick={handleOpenTrashDialog} sx={{ gap: 1.25 }}>
-          <DeleteOutlineOutlinedIcon fontSize="small" />
-          {trashedModerationEntries.length
-            ? `Papierkorb (${trashedModerationEntries.length})`
-            : 'Papierkorb'}
-        </MenuItem>
-      </Menu>
-
-      <Menu
-        anchorEl={moderationMenuAnchorEl}
-        open={Boolean(moderationMenuAnchorEl)}
-        onClose={handleCloseModerationMenu}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-        PaperProps={{
-          sx: {
-            mt: 1,
-            minWidth: 250,
-            overflow: 'hidden',
-            borderRadius: 3,
-            border: (theme) => `1px solid ${theme.palette.divider}`,
-            boxShadow: '0 22px 44px rgba(36,28,19,0.16)',
-          },
-        }}
-        MenuListProps={{
-          dense: true,
-          sx: { p: 0.75 },
-        }}
-      >
-        <MenuItem
-          onClick={() => {
-            if (menuUser) {
-              handleOpenUserDialog(menuUser)
-            }
+      {activeTab === 'moderation' ? (
+        <AdminModerationSection
+          moderationStatus={moderationStatus}
+          moderationError={moderationError}
+          moderationLoading={moderationLoading}
+          moderationSearch={moderationSearch}
+          moderationSearchOpen={moderationSearchOpen}
+          moderationEntriesCount={moderationEntries.length}
+          trashedModerationEntriesCount={trashedModerationEntries.length}
+          activeModerationEntries={activeModerationEntries}
+          onSetModerationSearch={setModerationSearch}
+          onSetModerationSearchOpen={setModerationSearchOpen}
+          onOpenTrashMenu={handleOpenTrashMenu}
+          onOpenActions={handleModerationMenuOpen}
+          onOpenMeasurements={(generator) => {
+            void handleOpenGeneratorMeasurements(generator)
           }}
-          sx={{ gap: 1.25, borderRadius: 2, mx: 0.5, my: 0.25 }}
-        >
-          <PersonOutlineIcon fontSize="small" />
-          Nutzer bearbeiten
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            if (menuGenerator) {
-              void handleOpenGeneratorMeasurements(menuGenerator)
-              handleCloseModerationMenu()
-            }
-          }}
-          disabled={!menuGenerator}
-          sx={{ gap: 1.25, borderRadius: 2, mx: 0.5, my: 0.25 }}
-        >
-          <ShowChartIcon fontSize="small" />
-          Messwerte
-        </MenuItem>
-        <Divider sx={{ my: 0.5 }} />
-        <MenuItem
-          onClick={() => void handlePromoteUserToAdmin()}
-          disabled={menuUser?.role === 'admin'}
-          sx={{ gap: 1.25, borderRadius: 2, mx: 0.5, my: 0.25 }}
-        >
-          <AdminPanelSettingsOutlinedIcon fontSize="small" />
-          {menuUser?.role === 'admin' ? 'Bereits Admin' : 'Zum Admin machen'}
-        </MenuItem>
-      </Menu>
+        />
+      ) : null}
 
-      <Dialog open={userDialogOpen} onClose={handleCloseUserDialog} fullWidth maxWidth="sm">
-        <DialogTitle>Nutzer bearbeiten</DialogTitle>
-        <Box component="form" onSubmit={handleUserSave}>
-          <DialogContent>
-            <Stack spacing={2}>
-              <TextField
-                label="Name"
-                value={userForm.name}
-                onChange={(event) =>
-                  setUserForm((current) => ({ ...current, name: event.target.value }))
-                }
-                fullWidth
-              />
-              <TextField
-                label="E-Mail"
-                value={userForm.email}
-                onChange={(event) =>
-                  setUserForm((current) => ({ ...current, email: event.target.value }))
-                }
-                fullWidth
-              />
-              <TextField
-                label="Rolle"
-                select
-                value={userForm.role}
-                onChange={(event) =>
-                  setUserForm((current) => ({
-                    ...current,
-                    role: event.target.value as UserRole,
-                  }))
-                }
-                fullWidth
-                SelectProps={{ native: true }}
-              >
-                <option value="user">user</option>
-                <option value="admin">admin</option>
-              </TextField>
-              <TextField
-                label="Verknüpfte Brennstoffzelle"
-                InputLabelProps={{ shrink: true }}
-                value={editingUserGenerator?.code ?? 'Keine'}
-                disabled
-                fullWidth
-              />
-              <Box>
-                <Button
-                  type="button"
-                  color="inherit"
-                  endIcon={
-                    <ExpandMoreIcon
-                      sx={{
-                        transform: userDangerOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                        transition: 'transform 160ms ease',
-                      }}
-                    />
-                  }
-                  onClick={() => setUserDangerOpen((current) => !current)}
-                  sx={{ px: 0, minWidth: 0 }}
-                >
-                  Sperren / Loeschen
-                </Button>
-                <Collapse in={userDangerOpen}>
-                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ pt: 1.25 }}>
-                    <Button
-                      type="button"
-                      onClick={() => void handleUserLifecycleAction('blocked')}
-                      disabled={Boolean(userLifecycleActionLoading) || editingUser?.status === 'blocked'}
-                    >
-                      {userLifecycleActionLoading === 'blocked'
-                        ? 'Sperren...'
-                        : editingUser?.status === 'blocked'
-                          ? 'Gesperrt'
-                          : 'Sperren'}
-                    </Button>
-                    <Button
-                      type="button"
-                      color="error"
-                      onClick={() => void handleUserLifecycleAction('deleted')}
-                      disabled={Boolean(userLifecycleActionLoading) || editingUser?.status === 'deleted'}
-                    >
-                      {userLifecycleActionLoading === 'deleted'
-                        ? 'Loeschen...'
-                        : editingUser?.status === 'deleted'
-                          ? 'Geloescht'
-                          : 'Loeschen'}
-                    </Button>
-                  </Stack>
-                </Collapse>
-              </Box>
-            </Stack>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleCloseUserDialog} disabled={Boolean(userLifecycleActionLoading)}>
-              Abbrechen
-            </Button>
-            <Button
-              type="submit"
-              variant="contained"
-              startIcon={<SaveIcon />}
-              disabled={Boolean(userLifecycleActionLoading)}
-            >
-              Speichern
-            </Button>
-          </DialogActions>
-        </Box>
-      </Dialog>
+      <ModerationMenus
+        trashMenuAnchorEl={trashMenuAnchorEl}
+        moderationMenuAnchorEl={moderationMenuAnchorEl}
+        trashedModerationEntriesCount={trashedModerationEntries.length}
+        menuUser={menuUser}
+        menuGenerator={menuGenerator}
+        onCloseTrashMenu={handleCloseTrashMenu}
+        onOpenTrashDialog={handleOpenTrashDialog}
+        onCloseModerationMenu={handleCloseModerationMenu}
+        onOpenUserDialog={handleOpenUserDialog}
+        onOpenGeneratorMeasurements={(generator) => {
+          void handleOpenGeneratorMeasurements(generator)
+        }}
+        onPromoteUserToAdmin={() => void handlePromoteUserToAdmin()}
+      />
 
-      <Dialog open={trashDialogOpen} onClose={handleCloseTrashDialog} fullWidth maxWidth="md">
-        <DialogTitle>Papierkorb</DialogTitle>
-        <DialogContent>
-          {renderModerationList(trashedModerationEntries, {
-            ariaLabel: 'Papierkorb',
-            emptyPrimary: 'Papierkorb leer',
-            emptySecondary: 'Gesperrte oder gelöschte Nutzer erscheinen hier.',
-            showStatus: true,
-          })}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseTrashDialog}>Schließen</Button>
-        </DialogActions>
-      </Dialog>
+      <EditUserDialog
+        open={userDialogOpen}
+        editingUser={editingUser}
+        editingUserGenerator={editingUserGenerator}
+        userForm={userForm}
+        userDangerOpen={userDangerOpen}
+        userLifecycleActionLoading={userLifecycleActionLoading}
+        onClose={handleCloseUserDialog}
+        onSubmit={handleUserSave}
+        onSetUserForm={setUserForm}
+        onSetUserDangerOpen={setUserDangerOpen}
+        onUserLifecycleAction={(status) => {
+          void handleUserLifecycleAction(status)
+        }}
+      />
 
-      <Dialog
+      <TrashDialog
+        open={trashDialogOpen}
+        entries={trashedModerationEntries}
+        onClose={handleCloseTrashDialog}
+        onOpenActions={handleModerationMenuOpen}
+        onOpenMeasurements={(generator) => {
+          void handleOpenGeneratorMeasurements(generator)
+        }}
+      />
+
+      <GeneratorMeasurementsDialog
         open={generatorMeasurementsDialogOpen}
+        selectedMeasurementGenerator={selectedMeasurementGenerator}
+        measurementError={measurementError}
+        generatorMeasurementsLoading={generatorMeasurementsLoading}
+        generatorMeasurements={generatorMeasurements}
+        editingMeasurementId={editingMeasurementId}
+        measurementForm={measurementForm}
+        measurementSaving={measurementSaving}
         onClose={handleCloseGeneratorMeasurementsDialog}
-        fullWidth
-        maxWidth="sm"
-      >
-        <DialogTitle>
-          {selectedMeasurementGenerator
-            ? `Messwerte für ${selectedMeasurementGenerator.ownerName?.trim() || selectedMeasurementGenerator.code}`
-            : 'Messwerte'}
-        </DialogTitle>
-        <DialogContent>
-          <Stack spacing={2}>
-            {selectedMeasurementGenerator ? (
-              <Typography color="text.secondary">
-                {selectedMeasurementGenerator.code} | {selectedMeasurementGenerator.ownerUid}
-              </Typography>
-            ) : null}
-
-            {measurementError ? <Alert severity="error">{measurementError}</Alert> : null}
-
-            {generatorMeasurementsLoading ? (
-              <Typography color="text.secondary">Messwerte werden geladen...</Typography>
-            ) : (
-              <List
-                disablePadding
-                sx={{
-                  borderRadius: 3,
-                  overflow: 'hidden',
-                  bgcolor: 'background.default',
-                  border: (theme) => `1px solid ${theme.palette.divider}`,
-                }}
-              >
-                {generatorMeasurements.length ? (
-                  generatorMeasurements.map((measurement, index) => (
-                    <ListItem
-                      key={measurement.id}
-                      divider={index < generatorMeasurements.length - 1}
-                      sx={{ py: 1.5 }}
-                    >
-                      {editingMeasurementId === measurement.id ? (
-                        <Stack spacing={1.5} sx={{ width: '100%' }}>
-                          <TextField
-                            label="Wert in V"
-                            value={measurementForm.value}
-                            onChange={(event) =>
-                              setMeasurementForm((current) => ({
-                                ...current,
-                                value: event.target.value,
-                              }))
-                            }
-                            fullWidth
-                          />
-                          <TextField
-                            label="Eingetragen von"
-                            value={measurementForm.enteredBy}
-                            onChange={(event) =>
-                              setMeasurementForm((current) => ({
-                                ...current,
-                                enteredBy: event.target.value,
-                              }))
-                            }
-                            fullWidth
-                          />
-                          <Stack direction="row" spacing={1}>
-                            <Button
-                              size="small"
-                              variant="contained"
-                              onClick={() => void handleMeasurementSave(measurement.id)}
-                              disabled={measurementSaving}
-                            >
-                              Speichern
-                            </Button>
-                            <Button
-                              size="small"
-                              onClick={handleCloseMeasurementEditor}
-                              disabled={measurementSaving}
-                            >
-                              Abbrechen
-                            </Button>
-                          </Stack>
-                        </Stack>
-                      ) : (
-                        <Stack
-                          direction="row"
-                          spacing={1.5}
-                          justifyContent="space-between"
-                          alignItems="flex-start"
-                          sx={{ width: '100%' }}
-                        >
-                          <ListItemText
-                            primary={formatMeasurement(measurement.value)}
-                            secondary={`${measurement.enteredBy} | ${formatTimestamp(measurement.createdAt)}`}
-                          />
-                          <IconButton
-                            size="small"
-                            aria-label="Messwert bearbeiten"
-                            onClick={() => handleOpenMeasurementEditor(measurement)}
-                            sx={{
-                              width: 34,
-                              height: 34,
-                              borderRadius: 1.75,
-                              border: (theme) => `1px solid ${theme.palette.divider}`,
-                              bgcolor: 'rgba(255,255,255,0.72)',
-                              '&:hover': {
-                                bgcolor: 'rgba(255,255,255,0.96)',
-                              },
-                            }}
-                          >
-                            <EditNoteIcon fontSize="small" />
-                          </IconButton>
-                        </Stack>
-                      )}
-                    </ListItem>
-                  ))
-                ) : (
-                  <ListItem>
-                    <ListItemText
-                      primary="Noch keine Messwerte"
-                      secondary="Für diese Brennstoffzelle wurden noch keine Werte eingetragen."
-                    />
-                  </ListItem>
-                )}
-              </List>
-            )}
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseGeneratorMeasurementsDialog}>Schließen</Button>
-        </DialogActions>
-      </Dialog>
+        onSetMeasurementForm={setMeasurementForm}
+        onSaveMeasurement={(measurementId) => {
+          void handleMeasurementSave(measurementId)
+        }}
+        onCloseMeasurementEditor={handleCloseMeasurementEditor}
+        onOpenMeasurementEditor={handleOpenMeasurementEditor}
+      />
 
       <QrScannerDialog
         open={scannerOpen}
@@ -2466,74 +1002,24 @@ export function AdminPage() {
         onDetected={handleDetectedQrValue}
       />
 
-      <Dialog
+      <ScanMeasurementDialog
         open={scanMeasurementDialogOpen}
+        scanCode={scanCode}
+        scanMeasurementCodeLocked={scanMeasurementCodeLocked}
+        scanMeasurementInput={scanMeasurementInput}
+        scanMeasurementUnit={scanMeasurementUnit}
+        scanMeasurementDateTime={scanMeasurementDateTime}
+        scanMeasurementSaving={scanMeasurementSaving}
+        scanMeasurementError={scanMeasurementError}
+        convertedScanMeasurementVolts={convertedScanMeasurementVolts}
         onClose={handleCloseScanMeasurementDialog}
-        fullWidth
-        maxWidth="xs"
-      >
-        <DialogTitle>Messwert eintragen</DialogTitle>
-        <Box component="form" onSubmit={handleScanMeasurementSubmit}>
-          <DialogContent>
-            <Stack spacing={2}>
-              <TextField
-                label="Brennstoffzellen-Code"
-                value={scanCode}
-                onChange={(event) => setScanCode(formatCode(event.target.value))}
-                disabled={scanMeasurementCodeLocked}
-                fullWidth
-              />
-              <Stack spacing={1}>
-                <Stack direction="row" spacing={1.25} alignItems="flex-start">
-                  <TextField
-                    label="Wert"
-                    value={scanMeasurementInput}
-                    onChange={(event) => setScanMeasurementInput(event.target.value)}
-                    autoFocus
-                    fullWidth
-                  />
-                  <TextField
-                    label="Einheit"
-                    select
-                    value={scanMeasurementUnit}
-                    onChange={(event) => setScanMeasurementUnit(event.target.value as MeasurementUnit)}
-                    sx={{ width: 112, flexShrink: 0 }}
-                    SelectProps={{ native: true }}
-                  >
-                    <option value="uV">uV</option>
-                    <option value="mV">mV</option>
-                    <option value="V">V</option>
-                    <option value="kV">kV</option>
-                  </TextField>
-                </Stack>
-                {convertedScanMeasurementVolts !== null ? (
-                  <Typography variant="body2" color="text.secondary">
-                    {formatScientificVolts(convertedScanMeasurementVolts)}
-                  </Typography>
-                ) : null}
-              </Stack>
-              <TextField
-                label="Datum und Uhrzeit"
-                type="datetime-local"
-                value={scanMeasurementDateTime}
-                onChange={(event) => setScanMeasurementDateTime(event.target.value)}
-                fullWidth
-                InputLabelProps={{ shrink: true }}
-              />
-              {scanMeasurementError ? <Alert severity="error">{scanMeasurementError}</Alert> : null}
-            </Stack>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleCloseScanMeasurementDialog} disabled={scanMeasurementSaving}>
-              Abbrechen
-            </Button>
-            <Button type="submit" variant="contained" disabled={scanMeasurementSaving}>
-              Speichern
-            </Button>
-          </DialogActions>
-        </Box>
-      </Dialog>
-
+        onSubmit={handleScanMeasurementSubmit}
+        onSetScanCode={(value) => setScanCode(formatCode(value))}
+        onSetScanMeasurementInput={setScanMeasurementInput}
+        onSetScanMeasurementUnit={setScanMeasurementUnit}
+        onSetScanMeasurementDateTime={setScanMeasurementDateTime}
+        formatScientificVolts={formatScientificVolts}
+      />
     </Stack>
   )
 }
