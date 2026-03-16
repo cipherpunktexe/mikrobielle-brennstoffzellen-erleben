@@ -1284,7 +1284,7 @@ export function AdminPage() {
                 <Box
                   sx={{
                     display: { xs: 'none', sm: 'grid' },
-                    gridTemplateColumns: 'minmax(0, 1.4fr) minmax(110px, 140px) 44px',
+                    gridTemplateColumns: 'minmax(0, 1.4fr) minmax(110px, 140px)',
                     gap: 2,
                     px: 2,
                     py: 1.25,
@@ -1300,14 +1300,6 @@ export function AdminPage() {
                   </Typography>
                   <Typography variant="caption" color="text.secondary" fontWeight={700}>
                     Code
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    fontWeight={700}
-                    sx={{ textAlign: 'center' }}
-                  >
-                    Aktionen
                   </Typography>
                 </Box>
                 <List disablePadding>
@@ -1345,7 +1337,7 @@ export function AdminPage() {
                             display: 'grid',
                             gridTemplateColumns: {
                               xs: '1fr',
-                              sm: 'minmax(0, 1.4fr) minmax(110px, 140px) 44px',
+                              sm: 'minmax(0, 1.4fr) minmax(110px, 140px)',
                             },
                             gap: { xs: 0.75, sm: 2 },
                             alignItems: 'center',
@@ -1389,9 +1381,6 @@ export function AdminPage() {
                             >
                               {generator ? generator.code.toUpperCase() : '-'}
                             </Typography>
-                          </Box>
-                          <Box>
-                            <Box sx={{ minHeight: 24 }} />
                           </Box>
                         </Box>
                       </ListItem>
