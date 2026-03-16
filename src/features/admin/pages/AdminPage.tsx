@@ -4,7 +4,10 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import QrCode2Icon from '@mui/icons-material/QrCode2'
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner'
+import PersonOutlineIcon from '@mui/icons-material/PersonOutline'
+import ScienceOutlinedIcon from '@mui/icons-material/ScienceOutlined'
 import SaveIcon from '@mui/icons-material/Save'
+import SolarPowerOutlinedIcon from '@mui/icons-material/SolarPowerOutlined'
 import {
   Alert,
   Box,
@@ -17,7 +20,6 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  Divider,
   Grid,
   IconButton,
   List,
@@ -1426,15 +1428,6 @@ export function AdminPage() {
           sx: { p: 0.75 },
         }}
       >
-        <Box sx={{ px: 1.25, pt: 1, pb: 1.1 }}>
-          <Typography variant="subtitle2" fontWeight={700} noWrap>
-            {menuUser?.name ?? 'Eintrag'}
-          </Typography>
-          <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block' }}>
-            {menuGenerator?.code?.toUpperCase() ?? menuUser?.email ?? ''}
-          </Typography>
-        </Box>
-        <Divider />
         <MenuItem
           onClick={() => {
             if (menuUser) {
@@ -1443,7 +1436,7 @@ export function AdminPage() {
           }}
           sx={{ gap: 1.25, borderRadius: 2, mx: 0.5, my: 0.25 }}
         >
-          <EditNoteIcon fontSize="small" />
+          <PersonOutlineIcon fontSize="small" />
           Nutzer bearbeiten
         </MenuItem>
         <MenuItem
@@ -1455,7 +1448,7 @@ export function AdminPage() {
           disabled={!menuGenerator}
           sx={{ gap: 1.25, borderRadius: 2, mx: 0.5, my: 0.25 }}
         >
-          <QrCode2Icon fontSize="small" />
+          <SolarPowerOutlinedIcon fontSize="small" />
           Brennstoffzelle bearbeiten
         </MenuItem>
         <MenuItem
@@ -1468,10 +1461,9 @@ export function AdminPage() {
           disabled={!menuGenerator}
           sx={{ gap: 1.25, borderRadius: 2, mx: 0.5, my: 0.25 }}
         >
-          <QrCodeScannerIcon fontSize="small" />
+          <ScienceOutlinedIcon fontSize="small" />
           Messwerte
         </MenuItem>
-        <Divider sx={{ my: 0.5 }} />
         <MenuItem
           onClick={() => void handlePromoteUserToAdmin()}
           disabled={menuUser?.role === 'admin'}
