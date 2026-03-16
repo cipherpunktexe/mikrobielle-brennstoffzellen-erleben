@@ -1283,7 +1283,7 @@ export function AdminPage() {
                 <Box
                   sx={{
                     display: { xs: 'none', sm: 'grid' },
-                    gridTemplateColumns: 'minmax(0, 1.4fr) minmax(110px, 140px) minmax(90px, 110px)',
+                    gridTemplateColumns: 'minmax(0, 1.4fr) minmax(110px, 140px) 44px',
                     gap: 2,
                     px: 2,
                     py: 1.25,
@@ -1326,7 +1326,7 @@ export function AdminPage() {
                             display: 'grid',
                             gridTemplateColumns: {
                               xs: '1fr',
-                              sm: 'minmax(0, 1.4fr) minmax(110px, 140px) minmax(90px, 110px)',
+                              sm: 'minmax(0, 1.4fr) minmax(110px, 140px) 44px',
                             },
                             gap: { xs: 0.75, sm: 2 },
                             alignItems: 'center',
@@ -1338,13 +1338,33 @@ export function AdminPage() {
                             }
                           }}
                         >
-                          <Box>
-                            <Typography variant="body2" fontWeight={700}>
-                              {user.name}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              {user.email}
-                            </Typography>
+                          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+                            <Box
+                              component="span"
+                              aria-label={user.role === 'admin' ? 'Admin' : undefined}
+                              sx={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: '#8F6410',
+                                minWidth: 18,
+                                minHeight: 20,
+                                mt: 0.15,
+                                flexShrink: 0,
+                              }}
+                            >
+                              {user.role === 'admin' ? (
+                                <AdminPanelSettingsOutlinedIcon fontSize="small" />
+                              ) : null}
+                            </Box>
+                            <Box sx={{ minWidth: 0 }}>
+                              <Typography variant="body2" fontWeight={700}>
+                                {user.name}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                {user.email}
+                              </Typography>
+                            </Box>
                           </Box>
                           <Box>
                             <Typography
@@ -1353,36 +1373,9 @@ export function AdminPage() {
                             >
                               {generator ? generator.code.toUpperCase() : '-'}
                             </Typography>
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                              sx={{ display: { sm: 'none' } }}
-                            >
-                              {user.role}
-                            </Typography>
                           </Box>
                           <Box>
-                            <Box
-                              sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                minHeight: 24,
-                              }}
-                            >
-                              <Box
-                                component="span"
-                                aria-label={user.role === 'admin' ? 'Admin' : undefined}
-                                sx={{
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  color: '#8F6410',
-                                }}
-                              >
-                                {user.role === 'admin' ? (
-                                  <AdminPanelSettingsOutlinedIcon fontSize="small" />
-                                ) : null}
-                              </Box>
-                            </Box>
+                            <Box sx={{ minHeight: 24 }} />
                           </Box>
                         </Box>
                       </ListItem>
