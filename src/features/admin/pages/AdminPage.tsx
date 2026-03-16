@@ -244,6 +244,7 @@ export function AdminPage() {
   const [menuUser, setMenuUser] = useState<UserProfile | null>(null)
   const [menuGenerator, setMenuGenerator] = useState<Generator | null>(null)
   const [userDialogOpen, setUserDialogOpen] = useState(false)
+  const [userDangerOpen, setUserDangerOpen] = useState(false)
   const [generatorMeasurementsDialogOpen, setGeneratorMeasurementsDialogOpen] = useState(false)
   const [generatorMeasurementsLoading, setGeneratorMeasurementsLoading] = useState(false)
   const [generatorMeasurements, setGeneratorMeasurements] = useState<Measurement[]>([])
@@ -654,6 +655,7 @@ export function AdminPage() {
   function handleOpenUserDialog(user: UserProfile) {
     setModerationStatus('')
     setModerationError('')
+    setUserDangerOpen(false)
     setEditingUser(user)
     setUserForm({
       name: user.name,
@@ -666,6 +668,7 @@ export function AdminPage() {
 
   function handleCloseUserDialog() {
     setUserDialogOpen(false)
+    setUserDangerOpen(false)
     setEditingUser(null)
     setUserForm(createEmptyUserForm())
     setUserLifecycleActionLoading('')
@@ -2053,44 +2056,54 @@ export function AdminPage() {
                 disabled
                 fullWidth
               />
-              <TextField
-                label="Status"
-                value={
-                  editingUser
-                    ? editingUser.status === 'blocked'
-                      ? 'gesperrt'
-                      : editingUser.status === 'deleted'
-                        ? 'gelöscht'
-                        : 'aktiv'
-                    : 'aktiv'
-                }
-                disabled
-                fullWidth
-              />
+              <Box>
+                <Button
+                  type="button"
+                  color="inherit"
+                  endIcon={
+                    <ExpandMoreIcon
+                      sx={{
+                        transform: userDangerOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                        transition: 'transform 160ms ease',
+                      }}
+                    />
+                  }
+                  onClick={() => setUserDangerOpen((current) => !current)}
+                  sx={{ px: 0, minWidth: 0 }}
+                >
+                  Sperren / Loeschen
+                </Button>
+                <Collapse in={userDangerOpen}>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ pt: 1.25 }}>
+                    <Button
+                      type="button"
+                      onClick={() => void handleUserLifecycleAction('blocked')}
+                      disabled={Boolean(userLifecycleActionLoading) || editingUser?.status === 'blocked'}
+                    >
+                      {userLifecycleActionLoading === 'blocked'
+                        ? 'Sperren...'
+                        : editingUser?.status === 'blocked'
+                          ? 'Gesperrt'
+                          : 'Sperren'}
+                    </Button>
+                    <Button
+                      type="button"
+                      color="error"
+                      onClick={() => void handleUserLifecycleAction('deleted')}
+                      disabled={Boolean(userLifecycleActionLoading) || editingUser?.status === 'deleted'}
+                    >
+                      {userLifecycleActionLoading === 'deleted'
+                        ? 'Loeschen...'
+                        : editingUser?.status === 'deleted'
+                          ? 'Geloescht'
+                          : 'Loeschen'}
+                    </Button>
+                  </Stack>
+                </Collapse>
+              </Box>
             </Stack>
           </DialogContent>
           <DialogActions>
-            <Button
-              onClick={() => void handleUserLifecycleAction('blocked')}
-              disabled={Boolean(userLifecycleActionLoading) || editingUser?.status === 'blocked'}
-            >
-              {userLifecycleActionLoading === 'blocked'
-                ? 'Sperren...'
-                : editingUser?.status === 'blocked'
-                  ? 'Gesperrt'
-                  : 'Sperren'}
-            </Button>
-            <Button
-              color="error"
-              onClick={() => void handleUserLifecycleAction('deleted')}
-              disabled={Boolean(userLifecycleActionLoading) || editingUser?.status === 'deleted'}
-            >
-              {userLifecycleActionLoading === 'deleted'
-                ? 'Löschen...'
-                : editingUser?.status === 'deleted'
-                  ? 'Gelöscht'
-                  : 'Löschen'}
-            </Button>
             <Button onClick={handleCloseUserDialog} disabled={Boolean(userLifecycleActionLoading)}>
               Abbrechen
             </Button>
