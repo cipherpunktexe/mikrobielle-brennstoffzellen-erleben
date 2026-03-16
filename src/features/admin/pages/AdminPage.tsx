@@ -1735,19 +1735,76 @@ export function AdminPage() {
               ) : null}
 
               <Stack direction="row" spacing={1} alignItems="center">
-                {!moderationSearchOpen ? (
+                <Box
+                  sx={{
+                    position: 'relative',
+                    flex: moderationSearchOpen ? 1 : '0 0 44px',
+                    width: moderationSearchOpen ? 'auto' : 44,
+                    minWidth: moderationSearchOpen ? 0 : 44,
+                    transition: 'flex-basis 220ms ease, width 220ms ease',
+                    overflow: 'hidden',
+                  }}
+                >
+                  <Box
+                    sx={{
+                      opacity: moderationSearchOpen ? 1 : 0,
+                      transform: moderationSearchOpen ? 'translateX(0)' : 'translateX(-12px)',
+                      transition: 'opacity 180ms ease, transform 220ms ease',
+                      pointerEvents: moderationSearchOpen ? 'auto' : 'none',
+                    }}
+                  >
+                    <TextField
+                      label="Suchen"
+                      value={moderationSearch}
+                      onChange={(event) => setModerationSearch(event.target.value)}
+                      placeholder="Name, E-Mail, Code oder Status"
+                      fullWidth
+                      slotProps={{
+                        input: {
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <SearchIcon fontSize="small" />
+                            </InputAdornment>
+                          ),
+                          endAdornment: (
+                            <InputAdornment position="end">
+                              <IconButton
+                                aria-label={moderationSearch ? 'Suche leeren' : 'Suche einklappen'}
+                                edge="end"
+                                size="small"
+                                onClick={() => {
+                                  if (moderationSearch) {
+                                    setModerationSearch('')
+                                    return
+                                  }
+
+                                  setModerationSearchOpen(false)
+                                }}
+                              >
+                                <CloseIcon fontSize="small" />
+                              </IconButton>
+                            </InputAdornment>
+                          ),
+                        },
+                      }}
+                    />
+                  </Box>
                   <IconButton
                     aria-label="Suche ausklappen"
                     onClick={() => {
                       setModerationSearchOpen(true)
                     }}
                     sx={{
+                      position: 'absolute',
+                      inset: 0,
                       width: 44,
                       height: 44,
                       borderRadius: 2.25,
                       border: '1px solid rgba(121,101,66,0.14)',
                       bgcolor: 'rgba(255,250,242,0.92)',
-                      flexShrink: 0,
+                      opacity: moderationSearchOpen ? 0 : 1,
+                      pointerEvents: moderationSearchOpen ? 'none' : 'auto',
+                      transition: 'opacity 140ms ease',
                       '&:hover': {
                         bgcolor: 'rgba(255,255,255,1)',
                       },
@@ -1755,44 +1812,7 @@ export function AdminPage() {
                   >
                     <SearchIcon fontSize="small" />
                   </IconButton>
-                ) : null}
-                <Collapse in={moderationSearchOpen} orientation="horizontal" sx={{ flex: 1, minWidth: 0 }}>
-                  <TextField
-                    label="Suchen"
-                    value={moderationSearch}
-                    onChange={(event) => setModerationSearch(event.target.value)}
-                    placeholder="Name, E-Mail, Code oder Status"
-                    fullWidth
-                    slotProps={{
-                      input: {
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <SearchIcon fontSize="small" />
-                          </InputAdornment>
-                        ),
-                        endAdornment: (
-                          <InputAdornment position="end">
-                            <IconButton
-                              aria-label={moderationSearch ? 'Suche leeren' : 'Suche einklappen'}
-                              edge="end"
-                              size="small"
-                              onClick={() => {
-                                if (moderationSearch) {
-                                  setModerationSearch('')
-                                  return
-                                }
-
-                                setModerationSearchOpen(false)
-                              }}
-                            >
-                              <CloseIcon fontSize="small" />
-                            </IconButton>
-                          </InputAdornment>
-                        ),
-                      },
-                    }}
-                  />
-                </Collapse>
+                </Box>
                 <IconButton
                   aria-label={`Weitere Aktionen${trashedModerationEntries.length ? ` (${trashedModerationEntries.length})` : ''}`}
                   onClick={handleOpenTrashMenu}
