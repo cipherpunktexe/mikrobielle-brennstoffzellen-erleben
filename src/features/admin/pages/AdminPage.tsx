@@ -1,4 +1,5 @@
 import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined'
+import CloseIcon from '@mui/icons-material/Close'
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined'
 import EditNoteIcon from '@mui/icons-material/EditNote'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
@@ -7,6 +8,7 @@ import QrCode2Icon from '@mui/icons-material/QrCode2'
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner'
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline'
 import SaveIcon from '@mui/icons-material/Save'
+import SearchIcon from '@mui/icons-material/Search'
 import ShowChartIcon from '@mui/icons-material/ShowChart'
 import {
   Alert,
@@ -23,6 +25,7 @@ import {
   Divider,
   Grid,
   IconButton,
+  InputAdornment,
   List,
   ListItem,
   ListItemButton,
@@ -238,6 +241,7 @@ export function AdminPage() {
   const [moderationStatus, setModerationStatus] = useState('')
   const [moderationError, setModerationError] = useState('')
   const [moderationSearch, setModerationSearch] = useState('')
+  const [moderationSearchOpen, setModerationSearchOpen] = useState(false)
   const [trashMenuAnchorEl, setTrashMenuAnchorEl] = useState<HTMLElement | null>(null)
   const [trashDialogOpen, setTrashDialogOpen] = useState(false)
   const [moderationMenuAnchorEl, setModerationMenuAnchorEl] = useState<HTMLElement | null>(null)
@@ -1730,13 +1734,51 @@ export function AdminPage() {
               ) : null}
 
               <Stack direction="row" spacing={1} alignItems="center">
-                <TextField
-                  label="Suchen"
-                  value={moderationSearch}
-                  onChange={(event) => setModerationSearch(event.target.value)}
-                  placeholder="Name, E-Mail, Code oder Status"
-                  fullWidth
-                />
+                <IconButton
+                  aria-label={moderationSearchOpen ? 'Suche einklappen' : 'Suche ausklappen'}
+                  onClick={() => {
+                    setModerationSearchOpen((current) => !current)
+                  }}
+                  sx={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 2.25,
+                    border: '1px solid rgba(121,101,66,0.14)',
+                    bgcolor: 'rgba(255,250,242,0.92)',
+                    flexShrink: 0,
+                    '&:hover': {
+                      bgcolor: 'rgba(255,255,255,1)',
+                    },
+                  }}
+                >
+                  <SearchIcon fontSize="small" />
+                </IconButton>
+                <Collapse in={moderationSearchOpen} orientation="horizontal" sx={{ flex: 1, minWidth: 0 }}>
+                  <TextField
+                    label="Suchen"
+                    value={moderationSearch}
+                    onChange={(event) => setModerationSearch(event.target.value)}
+                    placeholder="Name, E-Mail, Code oder Status"
+                    fullWidth
+                    slotProps={{
+                      input: {
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              aria-label="Suche leeren"
+                              edge="end"
+                              size="small"
+                              onClick={() => setModerationSearch('')}
+                              disabled={!moderationSearch}
+                            >
+                              <CloseIcon fontSize="small" />
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      },
+                    }}
+                  />
+                </Collapse>
                 <IconButton
                   aria-label={`Papierkorb${trashedModerationEntries.length ? ` (${trashedModerationEntries.length})` : ''}`}
                   onClick={handleOpenTrashMenu}
