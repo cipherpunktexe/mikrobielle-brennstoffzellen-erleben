@@ -983,8 +983,8 @@ export function AdminPage() {
 
           <Grid size={{ xs: 12, lg: 8 }}>
             <Card sx={{ height: '100%' }}>
-              <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
-                <Stack spacing={2.5}>
+              <CardContent sx={{ p: { xs: 2.25, sm: 3 }, height: '100%' }}>
+                <Stack spacing={2.5} sx={{ height: '100%' }}>
                   <Stack
                     direction={{ xs: 'column', sm: 'row' }}
                     justifyContent="space-between"

@@ -76,7 +76,7 @@ export function QrLayoutPreview({ layout, totalCards, digits, startSequence }: Q
   }
 
   return (
-    <Stack spacing={2}>
+    <Stack spacing={2} sx={{ height: '100%' }}>
       {error ? <Alert severity="error">{error}</Alert> : null}
       <Box
         sx={{
@@ -84,12 +84,15 @@ export function QrLayoutPreview({ layout, totalCards, digits, startSequence }: Q
           borderRadius: 4,
           bgcolor: 'rgba(36,28,19,0.06)',
           border: (theme) => `1px solid ${theme.palette.divider}`,
+          display: 'flex',
+          flex: 1,
+          minHeight: { xs: 240, sm: 360 },
         }}
       >
         <Box
           sx={{
             width: '100%',
-            height: { xs: 220, sm: 320 },
+            height: '100%',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
@@ -101,6 +104,7 @@ export function QrLayoutPreview({ layout, totalCards, digits, startSequence }: Q
               height: '100%',
               width: 'auto',
               maxWidth: '100%',
+              maxHeight: '100%',
               aspectRatio: `${layout.pageWidthMm} / ${layout.pageHeightMm}`,
               bgcolor: '#fffdf8',
               borderRadius: 2,
