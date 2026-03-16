@@ -290,9 +290,19 @@ export function UserDashboardPage() {
         <IconButton
           aria-label="Optionen für Anzeigenamen"
           onClick={handleOpenProfileMenu}
-          sx={{ alignSelf: 'flex-start' }}
+          sx={{
+            alignSelf: 'flex-start',
+            width: 34,
+            height: 34,
+            borderRadius: 1.75,
+            border: (theme) => `1px solid ${theme.palette.divider}`,
+            bgcolor: 'rgba(255,255,255,0.72)',
+            '&:hover': {
+              bgcolor: 'rgba(255,255,255,0.96)',
+            },
+          }}
         >
-          <MoreVertIcon />
+          <MoreVertIcon fontSize="small" />
         </IconButton>
       </Stack>
 
