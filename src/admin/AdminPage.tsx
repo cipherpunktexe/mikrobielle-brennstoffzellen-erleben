@@ -27,15 +27,15 @@ import { TrashDialog } from './moderate/TrashDialog'
 import { GeneratorMeasurementsDialog } from './createQr/GeneratorMeasurementsDialog'
 import { ScanMeasurementDialog } from './createQr/ScanMeasurementDialog'
 import { AuthCard } from '../common/AuthCard'
-import { QrScannerDialog } from '../common/QrScannerDialog'
-import { formatCode } from '../app/format'
+import { QrScannerDialog } from '../common/qr/QrScannerDialog'
+import { formatCode } from '../common/format'
 import {
   buildGeneratorQrValue,
   downloadQrPdf,
   extractGeneratorCodeFromQrValue,
   getQrPdfLayoutPreview,
-} from '../app/qr'
-import type { QrPdfPageSize } from '../app/qr'
+} from '../common/qr/qr'
+import type { QrPdfPageSize } from '../common/qr/qr'
 import {
   addMeasurementByCode,
   getGeneratorByCode,
@@ -53,14 +53,14 @@ import {
   subscribeToAuth,
   updateMeasurementAsAdmin,
   updateUserProfileAsAdmin,
-} from '../app/firebaseData'
-import type { AdminRecentMeasurementItem } from '../app/firebaseData'
+} from '../data/firebaseData'
+import type { AdminRecentMeasurementItem } from '../data/firebaseData'
 import type {
   EntityLifecycleStatus,
   Generator,
   Measurement,
   UserProfile,
-} from '../app/domain'
+} from '../data/domain'
 import type {
   AdminTabValue,
   MeasurementFormState,

@@ -3,7 +3,7 @@ import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline'
 import ShowChartIcon from '@mui/icons-material/ShowChart'
 import { Divider, Menu, MenuItem } from '@mui/material'
-import type { Generator, UserProfile } from '../../app/domain'
+import type { Generator, UserProfile } from '../../data/domain'
 
 interface ModerationMenusProps {
   trashMenuAnchorEl: HTMLElement | null

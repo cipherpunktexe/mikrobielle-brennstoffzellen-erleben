@@ -1,6 +1,5 @@
 import { jsPDF } from 'jspdf'
 import QRCode from 'qrcode'
-import { formatCode } from './format'
 
 export interface QrCardDefinition {
   code: string
@@ -57,6 +56,10 @@ export interface QrPdfLayoutPreview {
   startYmm: number
   gapXmm: number
   gapYmm: number
+}
+
+function formatCode(code: string) {
+  return code.trim().toLowerCase()
 }
 
 const QR_PREFIX = 'mbz:generator:'

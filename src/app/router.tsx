@@ -33,7 +33,7 @@ const ImpressumPage = lazy(() =>
   })),
 )
 const AboutPage = lazy(() =>
-  import('../landing/AboutPage').then((module) => ({ default: module.AboutPage })),
+  import('../legal/AboutPage').then((module) => ({ default: module.AboutPage })),
 )
 const DatenschutzPage = lazy(() =>
   import('../legal/DatenschutzPage').then((module) => ({

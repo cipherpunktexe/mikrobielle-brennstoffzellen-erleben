@@ -1,4 +1,4 @@
-import type { Generator, UserProfile, UserRole, EntityLifecycleStatus } from '../app/domain'
+import type { Generator, UserProfile, UserRole, EntityLifecycleStatus } from '../data/domain'
 
 export type AdminTabValue = 'qr' | 'scan' | 'moderation'
 export type MeasurementUnit = 'uV' | 'mV' | 'V' | 'kV'

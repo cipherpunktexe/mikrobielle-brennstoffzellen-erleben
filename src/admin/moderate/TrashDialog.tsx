@@ -1,7 +1,7 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material'
 import { ModerationList } from './ModerationList'
 import type { ModerationListEntry } from '../types'
-import type { Generator, UserProfile } from '../../app/domain'
+import type { Generator, UserProfile } from '../../data/domain'
 import type { MouseEvent } from 'react'
 
 interface TrashDialogProps {

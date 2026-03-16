@@ -15,7 +15,7 @@ import {
   Typography,
 } from '@mui/material'
 import { QrLayoutPreview } from './QrLayoutPreview'
-import type { QrPdfPageSize } from '../../app/qr'
+import type { QrPdfPageSize } from '../../common/qr/qr'
 import type { QrExportStepKey } from '../types'
 
 interface AdminQrSectionProps {
@@ -30,7 +30,7 @@ interface AdminQrSectionProps {
   exportNextSequence: number | null
   parsedExportDigits: number
   previewTotalCards: number
-  exportLayoutPreview: ReturnType<typeof import('../../app/qr').getQrPdfLayoutPreview> | null
+  exportLayoutPreview: ReturnType<typeof import('../../common/qr/qr').getQrPdfLayoutPreview> | null
   onToggleExportStep: (step: QrExportStepKey) => void
   onSetExportCount: (value: string) => void
   onSetExportQrSize: (value: string) => void

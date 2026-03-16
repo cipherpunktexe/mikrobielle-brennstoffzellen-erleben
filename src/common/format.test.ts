@@ -1,0 +1,30 @@
+import { describe, expect, test } from 'vitest'
+import type { Timestamp } from 'firebase/firestore'
+import { formatCode, formatMeasurement, formatTimestamp } from './format'
+
+describe('format utils', () => {
+  test('formats empty timestamp and measurement placeholders', () => {
+    expect(formatTimestamp()).toBe('Noch kein Zeitstempel')
+    expect(formatMeasurement()).toBe('Noch kein Messwert')
+  })
+
+  test('formats measurement with 2 decimals', () => {
+    expect(formatMeasurement(1.234)).toBe('1.23 V')
+    expect(formatMeasurement(1)).toBe('1.00 V')
+  })
+
+  test('normalizes generator codes', () => {
+    expect(formatCode('  A1B2  ')).toBe('a1b2')
+  })
+
+  test('formats timestamp via german locale formatter', () => {
+    const fakeTimestamp = {
+      toDate: () => new Date('2024-01-01T12:00:00.000Z'),
+    } as Timestamp
+
+    const formatted = formatTimestamp(fakeTimestamp)
+
+    expect(formatted).not.toBe('Noch kein Zeitstempel')
+    expect(formatted).toContain('2024')
+  })
+})

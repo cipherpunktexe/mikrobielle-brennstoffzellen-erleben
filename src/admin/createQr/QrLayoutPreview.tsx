@@ -1,7 +1,7 @@
 import { Alert, Box, Stack, Typography } from '@mui/material'
 import { useEffect, useState } from 'react'
-import { buildGeneratorQrValue, generateQrDataUrl, getQrBadgeLabel } from '../../app/qr'
-import type { QrPdfLayoutPreview } from '../../app/qr'
+import { buildGeneratorQrValue, generateQrDataUrl, getQrBadgeLabel } from '../../common/qr/qr'
+import type { QrPdfLayoutPreview } from '../../common/qr/qr'
 
 interface QrLayoutPreviewProps {
   layout: QrPdfLayoutPreview | null

@@ -5,7 +5,7 @@ import { Alert, Box, Card, CardContent, IconButton, InputBase, Stack, Typography
 import type { MouseEvent } from 'react'
 import type { ModerationListEntry } from '../types'
 import { ModerationList } from './ModerationList'
-import type { Generator, UserProfile } from '../../app/domain'
+import type { Generator, UserProfile } from '../../data/domain'
 
 interface AdminModerationSectionProps {
   moderationStatus: string

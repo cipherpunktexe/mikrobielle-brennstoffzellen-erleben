@@ -39,9 +39,9 @@ import { useEffect, useState, type FormEvent, type MouseEvent } from 'react'
 import { Link as RouterLink } from 'react-router-dom'
 import { MeasurementChart } from '../common/MeasurementChart'
 import { AuthCard } from '../common/AuthCard'
-import { QrScannerDialog } from '../common/QrScannerDialog'
-import { formatMeasurement, formatTimestamp } from '../app/format'
-import { extractGeneratorCodeFromQrValue } from '../app/qr'
+import { QrScannerDialog } from '../common/qr/QrScannerDialog'
+import { formatMeasurement, formatTimestamp } from '../common/format'
+import { extractGeneratorCodeFromQrValue } from '../common/qr/qr'
 import {
   linkCurrentUserToGeneratorByCode,
   login,
@@ -52,13 +52,13 @@ import {
   subscribeToMeasurements,
   subscribeToUserProfile,
   updateCurrentUserDisplayName,
-} from '../app/firebaseData'
+} from '../data/firebaseData'
 import type {
   Generator,
   LeaderboardEntry,
   Measurement,
   UserProfile,
-} from '../app/domain'
+} from '../data/domain'
 
 type MeasurementViewMode = 'chart' | 'list'
 
