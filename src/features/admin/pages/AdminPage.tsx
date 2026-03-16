@@ -1,6 +1,5 @@
 import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined'
 import EditNoteIcon from '@mui/icons-material/EditNote'
-import ElectricBoltOutlinedIcon from '@mui/icons-material/ElectricBoltOutlined'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import QrCode2Icon from '@mui/icons-material/QrCode2'
@@ -70,7 +69,6 @@ import {
   signInWithGoogle,
   setUserLifecycleStatusAsAdmin,
   subscribeToAuth,
-  updateGeneratorAsAdmin,
   updateMeasurementAsAdmin,
   updateUserProfileAsAdmin,
 } from '../../../shared/data/firebaseData'
@@ -90,12 +88,6 @@ interface UserFormState {
   name: string
   email: string
   role: UserRole
-}
-
-interface GeneratorFormState {
-  code: string
-  ownerUid: string
-  ownerName: string
 }
 
 interface ModerationListEntry {
@@ -132,14 +124,6 @@ function createEmptyUserForm(): UserFormState {
     name: '',
     email: '',
     role: 'user',
-  }
-}
-
-function createEmptyGeneratorForm(): GeneratorFormState {
-  return {
-    code: '',
-    ownerUid: '',
-    ownerName: '',
   }
 }
 
@@ -257,7 +241,6 @@ export function AdminPage() {
   const [menuUser, setMenuUser] = useState<UserProfile | null>(null)
   const [menuGenerator, setMenuGenerator] = useState<Generator | null>(null)
   const [userDialogOpen, setUserDialogOpen] = useState(false)
-  const [generatorDialogOpen, setGeneratorDialogOpen] = useState(false)
   const [generatorMeasurementsDialogOpen, setGeneratorMeasurementsDialogOpen] = useState(false)
   const [generatorMeasurementsLoading, setGeneratorMeasurementsLoading] = useState(false)
   const [generatorMeasurements, setGeneratorMeasurements] = useState<Measurement[]>([])
@@ -269,9 +252,7 @@ export function AdminPage() {
   const [measurementSaving, setMeasurementSaving] = useState(false)
   const [measurementError, setMeasurementError] = useState('')
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null)
-  const [editingGenerator, setEditingGenerator] = useState<Generator | null>(null)
   const [userForm, setUserForm] = useState<UserFormState>(createEmptyUserForm)
-  const [generatorForm, setGeneratorForm] = useState<GeneratorFormState>(createEmptyGeneratorForm)
   const [userLifecycleActionLoading, setUserLifecycleActionLoading] = useState<
     '' | Exclude<EntityLifecycleStatus, 'active'>
   >('')
@@ -628,6 +609,10 @@ export function AdminPage() {
   })
   const activeModerationEntries = filteredModerationEntries.filter((entry) => entry.status === 'active')
   const trashedModerationEntries = filteredModerationEntries.filter((entry) => entry.status !== 'active')
+  const editingUserGenerator =
+    editingUser
+      ? moderationEntries.find((entry) => entry.user.id === editingUser.id)?.generator ?? null
+      : null
 
   function handleModerationMenuOpen(
     event: MouseEvent<HTMLElement>,
@@ -727,49 +712,6 @@ export function AdminPage() {
       )
     } finally {
       setUserLifecycleActionLoading('')
-    }
-  }
-
-  function handleOpenGeneratorDialog(generator: Generator) {
-    setModerationStatus('')
-    setModerationError('')
-    setEditingGenerator(generator)
-    setGeneratorForm({
-      code: generator.code,
-      ownerUid: generator.ownerUid,
-      ownerName: generator.ownerName ?? '',
-    })
-    setGeneratorDialogOpen(true)
-    handleCloseModerationMenu()
-  }
-
-  function handleCloseGeneratorDialog() {
-    setGeneratorDialogOpen(false)
-    setEditingGenerator(null)
-    setGeneratorForm(createEmptyGeneratorForm())
-  }
-
-  async function handleGeneratorSave(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-
-    if (!editingGenerator) {
-      return
-    }
-
-    setModerationStatus('')
-    setModerationError('')
-
-    try {
-      await updateGeneratorAsAdmin(editingGenerator.id, generatorForm)
-      await loadModerationEntries()
-      setModerationStatus(`Brennstoffzelle ${formatCode(generatorForm.code)} aktualisiert.`)
-      handleCloseGeneratorDialog()
-    } catch (saveIssue) {
-      setModerationError(
-        saveIssue instanceof Error
-          ? saveIssue.message
-          : 'Brennstoffzelle konnte nicht gespeichert werden.',
-      )
     }
   }
 
@@ -2028,18 +1970,6 @@ export function AdminPage() {
         <MenuItem
           onClick={() => {
             if (menuGenerator) {
-              handleOpenGeneratorDialog(menuGenerator)
-            }
-          }}
-          disabled={!menuGenerator}
-          sx={{ gap: 1.25, borderRadius: 2, mx: 0.5, my: 0.25 }}
-        >
-          <ElectricBoltOutlinedIcon fontSize="small" />
-          Brennstoffzelle bearbeiten
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            if (menuGenerator) {
               void handleOpenGeneratorMeasurements(menuGenerator)
               handleCloseModerationMenu()
             }
@@ -2100,7 +2030,8 @@ export function AdminPage() {
               </TextField>
               <TextField
                 label="Verknüpfte Brennstoffzelle"
-                value={editingUser?.generatorId ?? 'Keine'}
+                InputLabelProps={{ shrink: true }}
+                value={editingUserGenerator?.code ?? 'Keine'}
                 disabled
                 fullWidth
               />
@@ -2151,60 +2082,6 @@ export function AdminPage() {
               startIcon={<SaveIcon />}
               disabled={Boolean(userLifecycleActionLoading)}
             >
-              Speichern
-            </Button>
-          </DialogActions>
-        </Box>
-      </Dialog>
-
-      <Dialog
-        open={generatorDialogOpen}
-        onClose={handleCloseGeneratorDialog}
-        fullWidth
-        maxWidth="sm"
-      >
-        <Box component="form" onSubmit={handleGeneratorSave}>
-          <DialogTitle>Brennstoffzelle bearbeiten</DialogTitle>
-          <DialogContent>
-            <Stack spacing={2}>
-              <TextField
-                label="Code"
-                value={generatorForm.code}
-                onChange={(event) =>
-                  setGeneratorForm((current) => ({
-                    ...current,
-                    code: formatCode(event.target.value),
-                  }))
-                }
-                fullWidth
-              />
-              <TextField
-                label="Owner UID"
-                value={generatorForm.ownerUid}
-                onChange={(event) =>
-                  setGeneratorForm((current) => ({
-                    ...current,
-                    ownerUid: event.target.value,
-                  }))
-                }
-                fullWidth
-              />
-              <TextField
-                label="Anzeigename"
-                value={generatorForm.ownerName}
-                onChange={(event) =>
-                  setGeneratorForm((current) => ({
-                    ...current,
-                    ownerName: event.target.value,
-                  }))
-                }
-                fullWidth
-              />
-            </Stack>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleCloseGeneratorDialog}>Abbrechen</Button>
-            <Button type="submit" variant="contained" startIcon={<SaveIcon />}>
               Speichern
             </Button>
           </DialogActions>
