@@ -1383,13 +1383,6 @@ export function AdminPage() {
                                 ) : null}
                               </Box>
                             </Box>
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                              sx={{ display: { xs: 'none', sm: 'block' } }}
-                            >
-                              {generator ? 'Messwerte anzeigen' : 'Kein Generator'}
-                            </Typography>
                           </Box>
                         </Box>
                       </ListItem>
