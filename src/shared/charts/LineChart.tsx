@@ -17,6 +17,7 @@ interface LineChartProps {
   valueFormatter?: (value: number) => string
   detailLabelTitle?: string
   valueLabelTitle?: string
+  showActiveSummary?: boolean
 }
 
 export function LineChart({
@@ -25,6 +26,7 @@ export function LineChart({
   valueFormatter = (value) => String(value),
   detailLabelTitle = 'Punkt',
   valueLabelTitle = 'Wert',
+  showActiveSummary = true,
 }: LineChartProps) {
   const theme = useTheme()
   const isMobileViewport = useMediaQuery(theme.breakpoints.down('sm'))
@@ -125,13 +127,13 @@ export function LineChart({
     const nextIndex = getNearestIndex(clientX)
 
     if (nextIndex !== null) {
-      setActiveIndex(nextIndex)
+      setActiveIndex((current) => (current === nextIndex ? current : nextIndex))
     }
   }
 
   function clearActiveIndex() {
     if (!isMobileViewport) {
-      setActiveIndex(null)
+      setActiveIndex((current) => (current === null ? current : null))
     }
   }
 
@@ -149,7 +151,7 @@ export function LineChart({
 
   return (
     <Stack spacing={1.5}>
-      {activePoint ? (
+      {showActiveSummary && activePoint ? (
         <Stack
           direction={{ xs: 'column', sm: 'row' }}
           justifyContent="space-between"

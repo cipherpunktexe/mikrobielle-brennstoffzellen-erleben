@@ -157,6 +157,7 @@ export function MeasurementChart({
         detailLabelTitle="Zeitpunkt"
         valueLabelTitle="Wert"
         valueFormatter={formatMeasurement}
+        showActiveSummary={summaryVariant !== 'compact'}
       />
 
       {summaryVariant === 'default' ? (
