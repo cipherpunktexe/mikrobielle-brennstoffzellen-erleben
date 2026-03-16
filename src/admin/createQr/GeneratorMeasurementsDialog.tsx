@@ -14,9 +14,9 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import type { Generator, Measurement } from '../common/domain'
-import type { MeasurementFormState } from './types'
-import { formatMeasurement, formatTimestamp } from '../common/format'
+import type { Generator, Measurement } from '../../app/domain'
+import type { MeasurementFormState } from '../types'
+import { formatMeasurement, formatTimestamp } from '../../app/format'
 
 interface GeneratorMeasurementsDialogProps {
   open: boolean

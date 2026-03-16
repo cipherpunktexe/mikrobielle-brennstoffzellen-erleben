@@ -18,24 +18,24 @@ import {
 } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { AdminNavigation } from './AdminNavigation'
-import { AdminQrSection } from './AdminQrSection'
-import { AdminScanSection } from './AdminScanSection'
-import { AdminModerationSection } from './AdminModerationSection'
-import { ModerationMenus } from './ModerationMenus'
-import { EditUserDialog } from './EditUserDialog'
-import { TrashDialog } from './TrashDialog'
-import { GeneratorMeasurementsDialog } from './GeneratorMeasurementsDialog'
-import { ScanMeasurementDialog } from './ScanMeasurementDialog'
+import { AdminQrSection } from './createQr/AdminQrSection'
+import { AdminScanSection } from './scan/AdminScanSection'
+import { AdminModerationSection } from './moderate/AdminModerationSection'
+import { ModerationMenus } from './moderate/ModerationMenus'
+import { EditUserDialog } from './createQr/EditUserDialog'
+import { TrashDialog } from './moderate/TrashDialog'
+import { GeneratorMeasurementsDialog } from './createQr/GeneratorMeasurementsDialog'
+import { ScanMeasurementDialog } from './createQr/ScanMeasurementDialog'
 import { AuthCard } from '../common/AuthCard'
 import { QrScannerDialog } from '../common/QrScannerDialog'
-import { formatCode } from '../common/format'
+import { formatCode } from '../app/format'
 import {
   buildGeneratorQrValue,
   downloadQrPdf,
   extractGeneratorCodeFromQrValue,
   getQrPdfLayoutPreview,
-} from '../common/qr'
-import type { QrPdfPageSize } from '../common/qr'
+} from '../app/qr'
+import type { QrPdfPageSize } from '../app/qr'
 import {
   addMeasurementByCode,
   getGeneratorByCode,
@@ -53,14 +53,14 @@ import {
   subscribeToAuth,
   updateMeasurementAsAdmin,
   updateUserProfileAsAdmin,
-} from '../common/firebaseData'
-import type { AdminRecentMeasurementItem } from '../common/firebaseData'
+} from '../app/firebaseData'
+import type { AdminRecentMeasurementItem } from '../app/firebaseData'
 import type {
   EntityLifecycleStatus,
   Generator,
   Measurement,
   UserProfile,
-} from '../common/domain'
+} from '../app/domain'
 import type {
   AdminTabValue,
   MeasurementFormState,

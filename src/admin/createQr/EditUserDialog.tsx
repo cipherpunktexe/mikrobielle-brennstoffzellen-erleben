@@ -2,8 +2,8 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import SaveIcon from '@mui/icons-material/Save'
 import { Box, Button, Collapse, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField } from '@mui/material'
 import type { FormEvent } from 'react'
-import type { EntityLifecycleStatus, Generator, UserProfile } from '../common/domain'
-import type { UserFormState } from './types'
+import type { EntityLifecycleStatus, Generator, UserProfile } from '../../app/domain'
+import type { UserFormState } from '../types'
 
 interface EditUserDialogProps {
   open: boolean

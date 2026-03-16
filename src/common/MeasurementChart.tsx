@@ -1,8 +1,8 @@
 import { Box, Stack, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { LineChart } from './LineChart'
-import { formatMeasurement, formatTimestamp } from './format'
-import type { Measurement } from './domain'
+import { formatMeasurement, formatTimestamp } from '../app/format'
+import type { Measurement } from '../app/domain'
 
 interface MeasurementChartProps {
   measurements: Measurement[]

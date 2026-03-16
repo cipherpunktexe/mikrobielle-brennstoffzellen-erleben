@@ -13,8 +13,8 @@ import {
   Stack,
   Typography,
 } from '@mui/material'
-import { formatMeasurement, formatTimestamp } from '../common/format'
-import type { AdminRecentMeasurementItem } from '../common/firebaseData'
+import { formatMeasurement, formatTimestamp } from '../../app/format'
+import type { AdminRecentMeasurementItem } from '../../app/firebaseData'
 
 interface AdminScanSectionProps {
   scanStatus: string

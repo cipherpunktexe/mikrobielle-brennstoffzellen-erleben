@@ -3,9 +3,9 @@ import MoreVertIcon from '@mui/icons-material/MoreVert'
 import SearchIcon from '@mui/icons-material/Search'
 import { Alert, Box, Card, CardContent, IconButton, InputBase, Stack, Typography } from '@mui/material'
 import type { MouseEvent } from 'react'
-import type { ModerationListEntry } from './types'
+import type { ModerationListEntry } from '../types'
 import { ModerationList } from './ModerationList'
-import type { Generator, UserProfile } from '../common/domain'
+import type { Generator, UserProfile } from '../../app/domain'
 
 interface AdminModerationSectionProps {
   moderationStatus: string

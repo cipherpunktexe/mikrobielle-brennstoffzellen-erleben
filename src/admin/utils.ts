@@ -1,4 +1,4 @@
-import type { EntityLifecycleStatus } from '../common/domain'
+import type { EntityLifecycleStatus } from '../app/domain'
 
 export function formatMutedDecimal(sequence: number) {
   return sequence.toString(10)

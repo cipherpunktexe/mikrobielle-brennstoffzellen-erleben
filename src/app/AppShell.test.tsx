@@ -12,7 +12,7 @@ const { subscribeToAuthMock, getUserProfileMock, logoutMock } = vi.hoisted(() =>
   logoutMock: vi.fn(),
 }))
 
-vi.mock('../common/firebaseData', () => ({
+vi.mock('../app/firebaseData', () => ({
   subscribeToAuth: subscribeToAuthMock,
   getUserProfile: getUserProfileMock,
   logout: logoutMock,

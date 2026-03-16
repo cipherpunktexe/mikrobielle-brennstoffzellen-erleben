@@ -40,8 +40,8 @@ import { Link as RouterLink } from 'react-router-dom'
 import { MeasurementChart } from '../common/MeasurementChart'
 import { AuthCard } from '../common/AuthCard'
 import { QrScannerDialog } from '../common/QrScannerDialog'
-import { formatMeasurement, formatTimestamp } from '../common/format'
-import { extractGeneratorCodeFromQrValue } from '../common/qr'
+import { formatMeasurement, formatTimestamp } from '../app/format'
+import { extractGeneratorCodeFromQrValue } from '../app/qr'
 import {
   linkCurrentUserToGeneratorByCode,
   login,
@@ -52,13 +52,13 @@ import {
   subscribeToMeasurements,
   subscribeToUserProfile,
   updateCurrentUserDisplayName,
-} from '../common/firebaseData'
+} from '../app/firebaseData'
 import type {
   Generator,
   LeaderboardEntry,
   Measurement,
   UserProfile,
-} from '../common/domain'
+} from '../app/domain'
 
 type MeasurementViewMode = 'chart' | 'list'
 

@@ -27,12 +27,12 @@ import {
 } from '@mui/material'
 import { useEffect, useState, type KeyboardEvent } from 'react'
 import { MeasurementChart } from '../common/MeasurementChart'
-import { formatMeasurement } from '../common/format'
+import { formatMeasurement } from '../app/format'
 import {
   subscribeToLeaderboard,
   subscribeToMeasurements,
-} from '../common/firebaseData'
-import type { LeaderboardEntry, Measurement } from '../common/domain'
+} from '../app/firebaseData'
+import type { LeaderboardEntry, Measurement } from '../app/domain'
 
 const rankStyles = [
   {

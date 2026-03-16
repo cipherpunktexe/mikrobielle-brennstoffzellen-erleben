@@ -11,9 +11,9 @@ import {
   Typography,
 } from '@mui/material'
 import type { MouseEvent } from 'react'
-import { getLifecycleStatusLabel } from './utils'
-import type { ModerationListEntry } from './types'
-import type { Generator, UserProfile } from '../common/domain'
+import { getLifecycleStatusLabel } from '../utils'
+import type { ModerationListEntry } from '../types'
+import type { Generator, UserProfile } from '../../app/domain'
 
 interface ModerationListProps {
   entries: ModerationListEntry[]

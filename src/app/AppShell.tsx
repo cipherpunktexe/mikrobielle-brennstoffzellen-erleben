@@ -21,8 +21,8 @@ import {
 } from '@mui/material'
 import { useEffect, useState, type MouseEvent } from 'react'
 import { Link as RouterLink, Outlet, useLocation } from 'react-router-dom'
-import { getUserProfile, logout, subscribeToAuth } from '../common/firebaseData'
-import type { UserProfile } from '../common/domain'
+import { getUserProfile, logout, subscribeToAuth } from '../app/firebaseData'
+import type { UserProfile } from '../app/domain'
 
 const navigationItems = [
   { label: 'Projekt', to: '/', icon: <BiotechOutlinedIcon fontSize="small" /> },

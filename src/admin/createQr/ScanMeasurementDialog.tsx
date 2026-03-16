@@ -1,6 +1,6 @@
 import { Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField, Typography } from '@mui/material'
 import type { FormEvent } from 'react'
-import type { MeasurementUnit } from './types'
+import type { MeasurementUnit } from '../types'
 
 interface ScanMeasurementDialogProps {
   open: boolean
