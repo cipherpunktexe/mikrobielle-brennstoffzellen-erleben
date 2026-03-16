@@ -1781,7 +1781,7 @@ export function AdminPage() {
                   />
                 </Collapse>
                 <IconButton
-                  aria-label={`Papierkorb${trashedModerationEntries.length ? ` (${trashedModerationEntries.length})` : ''}`}
+                  aria-label={`Weitere Aktionen${trashedModerationEntries.length ? ` (${trashedModerationEntries.length})` : ''}`}
                   onClick={handleOpenTrashMenu}
                   sx={{
                     width: 44,
@@ -1795,7 +1795,7 @@ export function AdminPage() {
                     },
                   }}
                 >
-                  <DeleteOutlineOutlinedIcon fontSize="small" />
+                  <MoreVertIcon fontSize="small" />
                 </IconButton>
               </Stack>
               <Box
