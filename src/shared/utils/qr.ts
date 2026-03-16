@@ -60,6 +60,7 @@ export interface QrPdfLayoutPreview {
 }
 
 const QR_PREFIX = 'mbz:generator:'
+const DEFAULT_PUBLIC_APP_ORIGIN = resolvePublicAppOrigin()
 const PAGE_FORMATS: Record<StaticQrPdfPageSize, PageFormat[]> = {
   a4: [
     { size: 'a4', widthMm: 210, heightMm: 297, orientation: 'portrait' },
@@ -93,6 +94,20 @@ const QR_CENTER_BADGE_PADDING_RATIO = 0.18
 export function getQrBadgeLabel(code: string) {
   const normalizedCode = formatCode(code) || code.trim() || '000'
   return normalizedCode.toUpperCase()
+}
+
+function resolvePublicAppOrigin() {
+  const configuredOrigin = import.meta.env.VITE_PUBLIC_APP_URL?.trim()
+
+  if (!configuredOrigin) {
+    return 'https://mikrobielle-brennstoffzellen.web.app'
+  }
+
+  try {
+    return new URL(configuredOrigin).origin
+  } catch {
+    return 'https://mikrobielle-brennstoffzellen.web.app'
+  }
 }
 
 function getQrCenterLabel(value: string) {
@@ -238,7 +253,7 @@ export function buildGeneratorQrValue(code: string) {
     return ''
   }
 
-  return new URL(`/register/${encodeURIComponent(normalizedCode)}`, window.location.origin).toString()
+  return new URL(`/register/${encodeURIComponent(normalizedCode)}`, DEFAULT_PUBLIC_APP_ORIGIN).toString()
 }
 
 export async function generateQrDataUrl(value: string, badgeLabel?: string) {

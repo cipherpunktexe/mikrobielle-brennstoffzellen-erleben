@@ -130,6 +130,7 @@ describe('LeaderboardPage', () => {
 
     expect(await screen.findByText('Messverlauf: Julia')).toBeInTheDocument()
     expect(screen.getByLabelText('Diagramm der Messwerthistorie')).toBeInTheDocument()
-    expect(screen.getByText('Aktueller Messwert: 1.42 V')).toBeInTheDocument()
+    expect(screen.getByText('Aktueller Messwert')).toBeInTheDocument()
+    expect((await screen.findAllByText('1.42 V')).length).toBeGreaterThan(0)
   })
 })
