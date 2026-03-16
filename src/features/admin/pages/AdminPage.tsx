@@ -154,6 +154,10 @@ function formatMutedDecimal(sequence: number) {
   return sequence.toString(10)
 }
 
+function formatScientificVolts(value: number) {
+  return `${value.toExponential(3)} V`
+}
+
 export function AdminPage() {
   const navigate = useNavigate()
   const params = useParams()
@@ -277,6 +281,11 @@ export function AdminPage() {
   const parsedExportCount = Number.parseInt(exportCount, 10)
   const requestedQrSize = Number.parseFloat(exportQrSize)
   const parsedExportDigits = Number.parseInt(exportDigits, 10)
+  const parsedScanMeasurementInput = Number.parseFloat(scanMeasurementInput)
+  const convertedScanMeasurementVolts =
+    Number.isFinite(parsedScanMeasurementInput) && scanMeasurementUnit !== 'V'
+      ? convertMeasurementToVolts(parsedScanMeasurementInput, scanMeasurementUnit)
+      : null
   let exportLayoutPreview: ReturnType<typeof getQrPdfLayoutPreview> | null = null
 
   if (Number.isFinite(parsedExportCount) && parsedExportCount > 0) {
@@ -1553,26 +1562,35 @@ export function AdminPage() {
                 disabled={scanMeasurementCodeLocked}
                 fullWidth
               />
-              <TextField
-                label="Wert"
-                value={scanMeasurementInput}
-                onChange={(event) => setScanMeasurementInput(event.target.value)}
-                autoFocus
-                fullWidth
-              />
-              <TextField
-                label="Einheit"
-                select
-                value={scanMeasurementUnit}
-                onChange={(event) => setScanMeasurementUnit(event.target.value as MeasurementUnit)}
-                fullWidth
-                SelectProps={{ native: true }}
-              >
-                <option value="uV">uV</option>
-                <option value="mV">mV</option>
-                <option value="V">V</option>
-                <option value="kV">kV</option>
-              </TextField>
+              <Stack spacing={1}>
+                <Stack direction="row" spacing={1.25} alignItems="flex-start">
+                  <TextField
+                    label="Wert"
+                    value={scanMeasurementInput}
+                    onChange={(event) => setScanMeasurementInput(event.target.value)}
+                    autoFocus
+                    fullWidth
+                  />
+                  <TextField
+                    label="Einheit"
+                    select
+                    value={scanMeasurementUnit}
+                    onChange={(event) => setScanMeasurementUnit(event.target.value as MeasurementUnit)}
+                    sx={{ width: 112, flexShrink: 0 }}
+                    SelectProps={{ native: true }}
+                  >
+                    <option value="uV">uV</option>
+                    <option value="mV">mV</option>
+                    <option value="V">V</option>
+                    <option value="kV">kV</option>
+                  </TextField>
+                </Stack>
+                {convertedScanMeasurementVolts !== null ? (
+                  <Typography variant="body2" color="text.secondary">
+                    {formatScientificVolts(convertedScanMeasurementVolts)}
+                  </Typography>
+                ) : null}
+              </Stack>
               <TextField
                 label="Datum und Uhrzeit"
                 type="datetime-local"
