@@ -29,11 +29,27 @@ export function LineChart({
   const theme = useTheme()
   const isMobileViewport = useMediaQuery(theme.breakpoints.down('sm'))
   const svgRef = useRef<SVGSVGElement | null>(null)
-  const [activeIndex, setActiveIndex] = useState(Math.max(0, data.length - 1))
+  const [activeIndex, setActiveIndex] = useState<number | null>(
+    isMobileViewport && data.length ? Math.max(0, data.length - 1) : null,
+  )
 
   useEffect(() => {
-    setActiveIndex((current) => Math.min(Math.max(0, current), Math.max(0, data.length - 1)))
-  }, [data.length])
+    setActiveIndex((current) => {
+      if (!data.length) {
+        return null
+      }
+
+      if (isMobileViewport) {
+        if (current === null) {
+          return Math.max(0, data.length - 1)
+        }
+
+        return Math.min(Math.max(0, current), Math.max(0, data.length - 1))
+      }
+
+      return null
+    })
+  }, [data.length, isMobileViewport])
 
   const width = 640
   const height = isMobileViewport ? 248 : 292
@@ -65,7 +81,7 @@ export function LineChart({
     return { x, y, point }
   })
 
-  const activePoint = points[activeIndex] ?? null
+  const activePoint = activeIndex === null ? null : points[activeIndex] ?? null
   const linePoints = points.map((point) => `${point.x},${point.y}`).join(' ')
   const areaPoints = [
     `${padding.left},${padding.top + plotHeight}`,
@@ -110,6 +126,12 @@ export function LineChart({
 
     if (nextIndex !== null) {
       setActiveIndex(nextIndex)
+    }
+  }
+
+  function clearActiveIndex() {
+    if (!isMobileViewport) {
+      setActiveIndex(null)
     }
   }
 
@@ -183,6 +205,8 @@ export function LineChart({
           onPointerDown={(event: PointerEvent<SVGSVGElement>) => {
             updateActiveIndex(event.clientX)
           }}
+          onPointerLeave={clearActiveIndex}
+          onPointerCancel={clearActiveIndex}
         >
           <defs>
             <linearGradient id="chart-area-fill" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -348,19 +372,25 @@ export function LineChart({
           <IconButton
             size="small"
             aria-label="Vorherigen Messpunkt anzeigen"
-            onClick={() => setActiveIndex((current) => Math.max(0, current - 1))}
-            disabled={activeIndex === 0}
+            onClick={() =>
+              setActiveIndex((current) => Math.max(0, (current ?? Math.max(0, data.length - 1)) - 1))
+            }
+            disabled={(activeIndex ?? 0) === 0}
           >
             <ChevronLeftIcon />
           </IconButton>
           <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
-            {activeIndex + 1} / {data.length}
+            {(activeIndex ?? 0) + 1} / {data.length}
           </Typography>
           <IconButton
             size="small"
             aria-label="Nächsten Messpunkt anzeigen"
-            onClick={() => setActiveIndex((current) => Math.min(data.length - 1, current + 1))}
-            disabled={activeIndex === data.length - 1}
+            onClick={() =>
+              setActiveIndex((current) =>
+                Math.min(data.length - 1, (current ?? Math.max(0, data.length - 1)) + 1),
+              )
+            }
+            disabled={(activeIndex ?? 0) === data.length - 1}
           >
             <ChevronRightIcon />
           </IconButton>

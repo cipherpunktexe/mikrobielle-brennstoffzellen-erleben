@@ -483,6 +483,7 @@ export function LeaderboardPage() {
             <MeasurementChart
               measurements={selectedMeasurements}
               latestLabel="Aktueller Messwert"
+              summaryVariant="compact"
             />
           )}
         </DialogContent>
