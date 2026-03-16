@@ -1,13 +1,13 @@
 import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined'
 import EditNoteIcon from '@mui/icons-material/EditNote'
+import ElectricBoltOutlinedIcon from '@mui/icons-material/ElectricBoltOutlined'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import QrCode2Icon from '@mui/icons-material/QrCode2'
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner'
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline'
-import ScienceOutlinedIcon from '@mui/icons-material/ScienceOutlined'
 import SaveIcon from '@mui/icons-material/Save'
-import SolarPowerOutlinedIcon from '@mui/icons-material/SolarPowerOutlined'
+import ShowChartIcon from '@mui/icons-material/ShowChart'
 import {
   Alert,
   Box,
@@ -20,6 +20,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Divider,
   Grid,
   IconButton,
   List,
@@ -1448,7 +1449,7 @@ export function AdminPage() {
           disabled={!menuGenerator}
           sx={{ gap: 1.25, borderRadius: 2, mx: 0.5, my: 0.25 }}
         >
-          <SolarPowerOutlinedIcon fontSize="small" />
+          <ElectricBoltOutlinedIcon fontSize="small" />
           Brennstoffzelle bearbeiten
         </MenuItem>
         <MenuItem
@@ -1461,9 +1462,10 @@ export function AdminPage() {
           disabled={!menuGenerator}
           sx={{ gap: 1.25, borderRadius: 2, mx: 0.5, my: 0.25 }}
         >
-          <ScienceOutlinedIcon fontSize="small" />
+          <ShowChartIcon fontSize="small" />
           Messwerte
         </MenuItem>
+        <Divider sx={{ my: 0.5 }} />
         <MenuItem
           onClick={() => void handlePromoteUserToAdmin()}
           disabled={menuUser?.role === 'admin'}
