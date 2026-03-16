@@ -1759,13 +1759,13 @@ export function AdminPage() {
                       onChange={(event) => setModerationSearch(event.target.value)}
                       placeholder="Name, E-Mail, Code oder Status"
                       fullWidth
+                      sx={{
+                        '& .MuiInputBase-root': {
+                          pl: 4.5,
+                        },
+                      }}
                       slotProps={{
                         input: {
-                          startAdornment: (
-                            <InputAdornment position="start">
-                              <SearchIcon fontSize="small" />
-                            </InputAdornment>
-                          ),
                           endAdornment: (
                             <InputAdornment position="end">
                               <IconButton
@@ -1790,23 +1790,24 @@ export function AdminPage() {
                     />
                   </Box>
                   <IconButton
-                    aria-label="Suche ausklappen"
+                    aria-label={moderationSearchOpen ? 'Suche einklappen' : 'Suche ausklappen'}
                     onClick={() => {
-                      setModerationSearchOpen(true)
+                      setModerationSearchOpen((current) => !current)
                     }}
                     sx={{
                       position: 'absolute',
-                      inset: 0,
+                      left: moderationSearchOpen ? 6 : 0,
+                      top: moderationSearchOpen ? '50%' : 0,
                       width: 44,
                       height: 44,
+                      transform: moderationSearchOpen ? 'translateY(-50%)' : 'none',
                       borderRadius: 2.25,
-                      border: '1px solid rgba(121,101,66,0.14)',
-                      bgcolor: 'rgba(255,250,242,0.92)',
-                      opacity: moderationSearchOpen ? 0 : 1,
-                      pointerEvents: moderationSearchOpen ? 'none' : 'auto',
-                      transition: 'opacity 140ms ease',
+                      border: moderationSearchOpen ? 'none' : '1px solid rgba(121,101,66,0.14)',
+                      bgcolor: moderationSearchOpen ? 'transparent' : 'rgba(255,250,242,0.92)',
+                      zIndex: 1,
+                      transition: 'left 220ms ease, top 220ms ease, transform 220ms ease, background-color 180ms ease, border-color 180ms ease',
                       '&:hover': {
-                        bgcolor: 'rgba(255,255,255,1)',
+                        bgcolor: moderationSearchOpen ? 'rgba(255,255,255,0.28)' : 'rgba(255,255,255,1)',
                       },
                     }}
                   >
