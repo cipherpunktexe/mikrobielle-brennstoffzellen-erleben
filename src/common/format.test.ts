@@ -13,6 +13,11 @@ describe('format utils', () => {
     expect(formatMeasurement(1)).toBe('1.00 V')
   })
 
+  test('formats very small measurements in scientific notation', () => {
+    expect(formatMeasurement(0.0000123)).toBe('1.230e-5 V')
+    expect(formatMeasurement(-0.0000123)).toBe('-1.230e-5 V')
+  })
+
   test('normalizes generator codes', () => {
     expect(formatCode('  A1B2  ')).toBe('a1b2')
   })

@@ -16,6 +16,10 @@ export function formatMeasurement(value?: number | null) {
     return 'Noch kein Messwert'
   }
 
+  if (value !== 0 && Math.abs(value) < 0.01) {
+    return `${value.toExponential(3)} V`
+  }
+
   return `${value.toFixed(2)} V`
 }
 

@@ -57,23 +57,32 @@ export function LineChart({
 
   const width = 640
   const height = isMobileViewport ? 248 : 292
-  const padding = {
+  const basePadding = {
     top: 18,
     right: isMobileViewport ? 16 : 22,
     bottom: isMobileViewport ? 34 : 42,
     left: isMobileViewport ? 50 : 64,
   }
-  const plotWidth = width - padding.left - padding.right
-  const plotHeight = height - padding.top - padding.bottom
   const values = data.map((point) => point.value)
   const minValue = Math.min(...values)
   const maxValue = Math.max(...values)
   const rawRange = maxValue - minValue
   const paddedRange = rawRange === 0 ? Math.max(Math.abs(maxValue) * 0.2, 1) : rawRange * 0.18
-  const chartMin = minValue - paddedRange * 0.35
-  const chartMax = maxValue + paddedRange * 0.65
+  const chartMin = minValue >= 0 ? 0 : minValue - paddedRange * 0.35
+  const chartMax = maxValue <= 0 ? 0 : maxValue + paddedRange * 0.65
   const valueRange = chartMax - chartMin || 1
   const yTicks = Array.from({ length: 4 }, (_, index) => chartMax - (valueRange / 3) * index)
+  const tickLabels = yTicks.map((tick) => valueFormatter(tick))
+  const maxTickLabelLength = Math.max(...tickLabels.map((label) => label.length), 0)
+  const padding = {
+    ...basePadding,
+    left: Math.max(
+      basePadding.left,
+      Math.round(maxTickLabelLength * (isMobileViewport ? 6.2 : 6.8) + 16),
+    ),
+  }
+  const plotWidth = width - padding.left - padding.right
+  const plotHeight = height - padding.top - padding.bottom
 
   const points = data.map((point, index) => {
     const x =
@@ -139,7 +148,11 @@ export function LineChart({
     }
   }
 
-  const activeTooltipWidth = isMobileViewport ? 112 : 128
+  const activeValueLabel = activePoint ? valueFormatter(activePoint.point.value) : ''
+  const activeTooltipWidth = Math.max(
+    isMobileViewport ? 112 : 128,
+    Math.round(activeValueLabel.length * (isMobileViewport ? 6.4 : 6.9) + 26),
+  )
   const activeTooltipHeight = 46
   const activeTooltipX = activePoint
     ? Math.min(
