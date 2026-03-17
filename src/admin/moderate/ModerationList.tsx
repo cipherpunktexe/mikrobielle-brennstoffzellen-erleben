@@ -30,6 +30,71 @@ export function ModerationList({
   onOpenActions,
   onOpenMeasurements,
 }: ModerationListProps) {
+  function renderMobileRow(entry: ModerationListEntry) {
+    return (
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: 'minmax(0, 1fr) auto',
+          alignItems: 'start',
+          gap: 1,
+          minWidth: 0,
+          pr: 0.5,
+        }}
+      >
+        <Box sx={{ minWidth: 0 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, minWidth: 0 }}>
+            <Typography variant="body2" fontWeight={700} noWrap>
+              {entry.user.name}
+            </Typography>
+            {entry.user.role === 'admin' ? (
+              <Box
+                component="span"
+                aria-label="Admin"
+                sx={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#8F6410',
+                  flexShrink: 0,
+                }}
+              >
+                <AdminPanelSettingsOutlinedIcon fontSize="small" />
+              </Box>
+            ) : null}
+          </Box>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ display: 'block', mt: 0.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+          >
+            {entry.user.email}
+          </Typography>
+          <Typography
+            variant="body2"
+            sx={{
+              mt: 0.6,
+              fontFamily: '"Consolas", "Courier New", monospace',
+              fontWeight: 700,
+              letterSpacing: '0.03em',
+            }}
+          >
+            {entry.generator ? entry.generator.code.toUpperCase() : '-'}
+          </Typography>
+        </Box>
+
+        {showStatus && entry.status !== 'active' ? (
+          <Chip
+            size="small"
+            label={getLifecycleStatusLabel(entry.status)}
+            color={entry.status === 'blocked' ? 'warning' : 'default'}
+            sx={{ mt: 0.1 }}
+          />
+        ) : null}
+      </Box>
+    )
+  }
+
   const columns: UnifiedListColumn<ModerationListEntry>[] = [
     {
       key: 'user',
@@ -151,6 +216,7 @@ export function ModerationList({
           <MoreVertIcon fontSize="small" />
         </IconButton>
       )}
+      renderMobileRow={renderMobileRow}
     />
   )
 }
