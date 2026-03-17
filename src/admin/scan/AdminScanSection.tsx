@@ -9,6 +9,7 @@ import {
   Button,
   Card,
   CardContent,
+  Chip,
   Grid,
   IconButton,
   Stack,
@@ -67,7 +68,7 @@ export function AdminScanSection({
       header: 'Messwert',
       mobileLabel: 'Messwert',
       width: '84px',
-      align: 'right',
+      align: 'left',
       render: (item) => (
         <Typography variant="body2" fontWeight={600} sx={{ whiteSpace: 'nowrap' }}>
           {formatMeasurement(item.value)}
@@ -80,9 +81,18 @@ export function AdminScanSection({
       mobileLabel: 'Zeit',
       width: '68px',
       render: (item) => (
-        <Typography variant="body2" sx={{ whiteSpace: 'nowrap' }}>
-          {formatElapsedTime(item.createdAt)}
-        </Typography>
+        <Chip
+          size="small"
+          label={formatElapsedTime(item.createdAt)}
+          sx={{
+            height: 24,
+            fontWeight: 600,
+            '& .MuiChip-label': {
+              px: 1,
+              whiteSpace: 'nowrap',
+            },
+          }}
+        />
       ),
     },
     {
