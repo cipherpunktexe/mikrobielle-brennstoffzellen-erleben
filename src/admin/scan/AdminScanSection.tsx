@@ -11,7 +11,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material'
-import { formatElapsedTime, formatMeasurement } from '../../common/format'
+import { formatMeasurement } from '../../common/format'
 import { UnifiedList, type UnifiedListColumn } from '../../common/UnifiedList'
 import type { AdminRecentMeasurementItem } from '../../data/firebaseData'
 
@@ -22,6 +22,58 @@ interface AdminScanSectionProps {
   onOpenScanner: () => void
   onOpenManualMeasurementDialog: () => void
   onEditRecentMeasurement: (measurement: AdminRecentMeasurementItem) => void
+}
+
+function getCreatedAtMs(createdAt: unknown) {
+  if (!createdAt) {
+    return null
+  }
+
+  if (createdAt instanceof Date) {
+    const ms = createdAt.getTime()
+    return Number.isFinite(ms) ? ms : null
+  }
+
+  if (typeof createdAt === 'object') {
+    const withToMillis = createdAt as { toMillis?: () => number }
+
+    if (typeof withToMillis.toMillis === 'function') {
+      const ms = withToMillis.toMillis()
+      return Number.isFinite(ms) ? ms : null
+    }
+
+    const withToDate = createdAt as { toDate?: () => Date }
+
+    if (typeof withToDate.toDate === 'function') {
+      const dateValue = withToDate.toDate()
+      const ms = dateValue.getTime()
+      return Number.isFinite(ms) ? ms : null
+    }
+  }
+
+  return null
+}
+
+function formatElapsedFromMs(createdAtMs: number | null, nowMs: number) {
+  if (createdAtMs === null) {
+    return 'unbekannt'
+  }
+
+  const elapsedMs = Math.max(0, nowMs - createdAtMs)
+  const elapsedMinutes = Math.max(1, Math.round(elapsedMs / 60_000))
+
+  if (elapsedMinutes < 10) {
+    return `${elapsedMinutes}min`
+  }
+
+  const hours = Math.floor(elapsedMinutes / 60)
+  const minutes = elapsedMinutes % 60
+
+  if (minutes === 0) {
+    return `${hours}h`
+  }
+
+  return `${hours}:${minutes.toString().padStart(2, '0')}h`
 }
 
 export function AdminScanSection({
@@ -35,11 +87,13 @@ export function AdminScanSection({
   const sixHoursInMs = 6 * 60 * 60 * 1000
   const nowMs = Date.now()
   const recentMeasurementsInLastSixHours = recentMeasurements.filter((item) => {
-    if (!item.createdAt) {
+    const createdAtMs = getCreatedAtMs(item.createdAt)
+
+    if (createdAtMs === null) {
       return false
     }
 
-    const elapsedMs = nowMs - item.createdAt.toDate().getTime()
+    const elapsedMs = nowMs - createdAtMs
     return elapsedMs >= 0 && elapsedMs <= sixHoursInMs
   })
 
@@ -78,7 +132,7 @@ export function AdminScanSection({
       render: (item) => (
         <Chip
           size="small"
-          label={formatElapsedTime(item.createdAt)}
+          label={formatElapsedFromMs(getCreatedAtMs(item.createdAt), nowMs)}
           sx={{
             height: 24,
             fontWeight: 600,
