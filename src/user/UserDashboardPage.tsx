@@ -478,11 +478,11 @@ export function UserDashboardPage() {
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
-        <MenuItem onClick={handleOpenNameDialog}>Anzeigenamen aendern</MenuItem>
+        <MenuItem onClick={handleOpenNameDialog}>Anzeigenamen ändern</MenuItem>
       </Menu>
 
       <Dialog open={nameDialogOpen} onClose={handleCloseNameDialog} fullWidth maxWidth="xs">
-        <DialogTitle>Anzeigenamen aendern</DialogTitle>
+        <DialogTitle>Anzeigenamen ändern</DialogTitle>
         <Box component="form" onSubmit={handleDisplayNameSubmit}>
           <DialogContent>
             <Stack spacing={2}>

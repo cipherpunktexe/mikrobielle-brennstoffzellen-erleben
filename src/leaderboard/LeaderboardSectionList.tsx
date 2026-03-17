@@ -69,7 +69,7 @@ export function LeaderboardSectionList({
                 {section.title}
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
-                Plaetze {section.startRank}-{section.endRank}
+                Plätze {section.startRank}-{section.endRank}
               </Typography>
             </Stack>
           </AccordionSummary>
@@ -80,9 +80,9 @@ export function LeaderboardSectionList({
               columns={columns}
               getItemKey={(entry) => entry.generatorId}
               ariaLabel={`${section.title} Liste`}
-              emptyPrimary="Keine Eintraege"
+              emptyPrimary="Keine Einträge"
               onItemClick={(entry) => onOpenEntry(entry)}
-              getItemAriaLabel={(entry) => `Messverlauf von ${entry.displayName} oeffnen`}
+              getItemAriaLabel={(entry) => `Messverlauf von ${entry.displayName} öffnen`}
               minDesktopWidth={248}
             />
           </AccordionDetails>

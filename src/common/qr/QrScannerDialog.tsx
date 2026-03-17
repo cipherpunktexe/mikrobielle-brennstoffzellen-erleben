@@ -301,7 +301,7 @@ export function QrScannerDialog({ open, onClose, onDetected }: QrScannerDialogPr
 
     if (!navigator.mediaDevices?.getUserMedia) {
       setCameraState('idle')
-      setError('Dieser Browser unterstuetzt keinen Kamerazugriff.')
+      setError('Dieser Browser unterstützt keinen Kamerazugriff.')
       return
     }
 
@@ -467,7 +467,7 @@ export function QrScannerDialog({ open, onClose, onDetected }: QrScannerDialogPr
       <DialogContent>
         <Stack spacing={2}>
           <Typography color="text.secondary">
-            Richte die Kamera auf den QR-Code deiner Brennstoffzelle. Nach dem Scan startet die Verknuepfung automatisch.
+            Richte die Kamera auf den QR-Code deiner Brennstoffzelle. Nach dem Scan startet die Verknüpfung automatisch.
           </Typography>
 
           <Box
@@ -616,7 +616,7 @@ export function QrScannerDialog({ open, onClose, onDetected }: QrScannerDialogPr
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Schliessen</Button>
+        <Button onClick={onClose}>Schließen</Button>
       </DialogActions>
     </Dialog>
   )

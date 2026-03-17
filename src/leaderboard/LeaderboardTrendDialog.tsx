@@ -49,7 +49,7 @@ export function LeaderboardTrendDialog({
         }}
       >
         {selectedEntry ? `Messverlauf: ${selectedEntry.displayName}` : 'Messverlauf'}
-        <IconButton aria-label="Dialog schliessen" onClick={onClose} sx={{ position: 'absolute', right: 12, top: 12 }}>
+        <IconButton aria-label="Dialog schließen" onClick={onClose} sx={{ position: 'absolute', right: 12, top: 12 }}>
           <CloseIcon />
         </IconButton>
       </DialogTitle>
@@ -66,14 +66,14 @@ export function LeaderboardTrendDialog({
           </Stack>
         ) : selectedMeasurements.length === 0 ? (
           <Typography color="text.secondary">
-            Fuer diese Brennstoffzelle liegen noch keine Messwerte vor.
+            Für diese Brennstoffzelle liegen noch keine Messwerte vor.
           </Typography>
         ) : (
           <MeasurementChart measurements={selectedMeasurements} />
         )}
       </DialogContent>
       <DialogActions sx={{ px: { xs: 2, sm: 3 }, py: { xs: 1.25, sm: 1.5 } }}>
-        <Button onClick={onClose}>Schliessen</Button>
+        <Button onClick={onClose}>Schließen</Button>
       </DialogActions>
     </Dialog>
   )

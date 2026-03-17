@@ -811,7 +811,7 @@ export function AdminPage() {
       const numericValue = Number.parseFloat(recentMeasurementForm.value)
 
       if (Number.isNaN(numericValue)) {
-        throw new Error('Bitte einen gueltigen Messwert eingeben.')
+        throw new Error('Bitte einen gültigen Messwert eingeben.')
       }
 
       await updateMeasurementAsAdmin(editingRecentMeasurement.id, {
@@ -892,7 +892,7 @@ export function AdminPage() {
       const numericValue = Number.parseFloat(measurementForm.value)
 
       if (Number.isNaN(numericValue)) {
-        throw new Error('Bitte einen gueltigen Messwert eingeben.')
+        throw new Error('Bitte einen gültigen Messwert eingeben.')
       }
 
       await updateMeasurementAsAdmin(editingMeasurement.id, {

@@ -79,7 +79,7 @@ export function GeneratorMeasurementsDialog({
       <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
         <DialogTitle>
           {selectedMeasurementGenerator
-            ? `Messwerte fuer ${selectedMeasurementGenerator.ownerName?.trim() || selectedMeasurementGenerator.code}`
+            ? `Messwerte für ${selectedMeasurementGenerator.ownerName?.trim() || selectedMeasurementGenerator.code}`
             : 'Messwerte'}
         </DialogTitle>
         <DialogContent>
@@ -99,9 +99,9 @@ export function GeneratorMeasurementsDialog({
                 items={generatorMeasurements}
                 columns={columns}
                 getItemKey={(measurement) => measurement.id}
-                ariaLabel="Messwerte der ausgewaehlten Brennstoffzelle"
+                ariaLabel="Messwerte der ausgewählten Brennstoffzelle"
                 emptyPrimary="Noch keine Messwerte"
-                emptySecondary="Fuer diese Brennstoffzelle wurden noch keine Werte eingetragen."
+                emptySecondary="Für diese Brennstoffzelle wurden noch keine Werte eingetragen."
                 renderItemAction={(measurement) => (
                   <IconButton
                     size="small"
@@ -126,7 +126,7 @@ export function GeneratorMeasurementsDialog({
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={onClose}>Schliessen</Button>
+          <Button onClick={onClose}>Schließen</Button>
         </DialogActions>
       </Dialog>
 
