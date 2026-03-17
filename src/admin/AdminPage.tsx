@@ -110,20 +110,6 @@ function convertMeasurementToVolts(value: number, unit: MeasurementUnit) {
   }
 }
 
-function convertVoltsToMeasurement(value: number, unit: MeasurementUnit) {
-  switch (unit) {
-    case 'uV':
-      return value * 1_000_000
-    case 'mV':
-      return value * 1_000
-    case 'kV':
-      return value / 1_000
-    case 'V':
-    default:
-      return value
-  }
-}
-
 function getModerationEntryStatus(
   user: Pick<UserProfile, 'status'>,
   generator: Pick<Generator, 'status'> | null,
@@ -1209,24 +1195,7 @@ export function AdminPage() {
         measurementSaving={measurementSaving}
         onClose={handleCloseGeneratorMeasurementsDialog}
         onSetMeasurementForm={setMeasurementForm}
-        onSetMeasurementUnit={(nextUnit) => {
-          setMeasurementForm((current) => {
-            const numericValue = Number.parseFloat(current.value)
-
-            if (Number.isNaN(numericValue)) {
-              return current
-            }
-
-            return {
-              ...current,
-              value: convertVoltsToMeasurement(
-                convertMeasurementToVolts(numericValue, measurementUnit),
-                nextUnit,
-              ).toString(),
-            }
-          })
-          setMeasurementUnit(nextUnit)
-        }}
+        onSetMeasurementUnit={setMeasurementUnit}
         onSaveMeasurement={() => {
           void handleMeasurementSave()
         }}
@@ -1283,24 +1252,7 @@ export function AdminPage() {
         }}
         unitField={{
           value: recentMeasurementUnit,
-          onChange: (nextUnit) => {
-            setRecentMeasurementForm((current) => {
-              const numericValue = Number.parseFloat(current.value)
-
-              if (Number.isNaN(numericValue)) {
-                return current
-              }
-
-              return {
-                ...current,
-                value: convertVoltsToMeasurement(
-                  convertMeasurementToVolts(numericValue, recentMeasurementUnit),
-                  nextUnit,
-                ).toString(),
-              }
-            })
-            setRecentMeasurementUnit(nextUnit)
-          },
+          onChange: setRecentMeasurementUnit,
         }}
         enteredByField={{
           value: recentMeasurementForm.enteredBy,
