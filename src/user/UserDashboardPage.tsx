@@ -27,6 +27,7 @@ import {
   ToggleButtonGroup,
   Typography,
 } from '@mui/material'
+import { alpha } from '@mui/material/styles'
 import { useEffect, useState, type FormEvent, type MouseEvent } from 'react'
 import { Link as RouterLink } from 'react-router-dom'
 import { MeasurementChart } from '../common/MeasurementChart'
@@ -332,9 +333,9 @@ export function UserDashboardPage() {
             height: 34,
             borderRadius: 1.75,
             border: (theme) => `1px solid ${theme.palette.divider}`,
-            bgcolor: (theme) => theme.custom.surface.strong,
+            bgcolor: (theme) => alpha(theme.palette.common.white, 0.72),
             '&:hover': {
-              bgcolor: (theme) => theme.custom.surface.strongHover,
+              bgcolor: (theme) => alpha(theme.palette.common.white, 0.96),
             },
           }}
         >

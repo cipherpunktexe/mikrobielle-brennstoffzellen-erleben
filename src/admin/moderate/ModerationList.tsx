@@ -1,6 +1,7 @@
 import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import { Box, Chip, IconButton, Typography, useMediaQuery, useTheme } from '@mui/material'
+import { alpha } from '@mui/material/styles'
 import type { MouseEvent } from 'react'
 import { UnifiedList, type UnifiedListColumn } from '../../common/UnifiedList'
 import type { Generator, UserProfile } from '../../data/domain'
@@ -148,12 +149,12 @@ export function ModerationList({
             width: 32,
             height: 32,
             borderRadius: 1.75,
-            color: (theme) => theme.custom.text.muted,
+            color: 'text.secondary',
             '&:hover': {
-              bgcolor: (theme) => theme.custom.state.brandSoft,
+              bgcolor: 'action.hover',
             },
             '&:focus-visible': {
-              outline: (theme) => `2px solid ${theme.custom.state.focus}`,
+              outline: (theme) => `2px solid ${alpha(theme.palette.primary.main, 0.55)}`,
               outlineOffset: 2,
             },
           }}

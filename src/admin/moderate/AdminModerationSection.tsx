@@ -8,6 +8,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material'
+import { alpha } from '@mui/material/styles'
 import type { MouseEvent } from 'react'
 import { CollapsibleSearchField } from '../../common/CollapsibleSearchField'
 import type { Generator, UserProfile } from '../../data/domain'
@@ -91,11 +92,11 @@ export function AdminModerationSection({
                   height: 44,
                   borderRadius: 2.25,
                   flexShrink: 0,
-                  color: (theme) => theme.custom.text.muted,
-                  border: (theme) => `1px solid ${theme.custom.border.strong}`,
-                  bgcolor: (theme) => theme.custom.surface.strong,
+                  color: 'text.secondary',
+                  border: (theme) => `1px solid ${alpha(theme.palette.secondary.main, 0.18)}`,
+                  bgcolor: (theme) => alpha(theme.palette.common.white, 0.72),
                   '&:hover': {
-                    bgcolor: (theme) => theme.custom.surface.strongHover,
+                    bgcolor: (theme) => alpha(theme.palette.common.white, 0.96),
                   },
                 }}
               >

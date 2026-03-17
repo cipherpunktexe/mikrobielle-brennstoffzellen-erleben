@@ -1,6 +1,7 @@
 ﻿import CloseIcon from '@mui/icons-material/Close'
 import SearchIcon from '@mui/icons-material/Search'
 import { Box, IconButton, InputBase } from '@mui/material'
+import { alpha } from '@mui/material/styles'
 import { useEffect, useRef } from 'react'
 
 interface CollapsibleSearchFieldProps {
@@ -67,10 +68,9 @@ export function CollapsibleSearchField({
         width: fullWidth ? (open ? '100%' : 44) : 'auto',
         minWidth: 44,
         borderRadius: 999,
-        border: (theme) =>
-          `1px solid ${open ? theme.custom.border.interactive : theme.custom.border.strong}`,
-        bgcolor: (theme) => (open ? theme.custom.surface.elevated : theme.custom.surface.strong),
-        boxShadow: open ? (theme) => theme.custom.shadow.soft : 'none',
+        border: (theme) => `1px solid ${alpha(theme.palette.secondary.main, open ? 0.28 : 0.18)}`,
+        bgcolor: (theme) => alpha(theme.palette.common.white, open ? 0.9 : 0.72),
+        boxShadow: open ? '0 8px 20px rgba(36,28,19,0.1)' : 'none',
         overflow: 'hidden',
         transition:
           'width 220ms ease, background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease',
@@ -84,9 +84,9 @@ export function CollapsibleSearchField({
           height: 42,
           flexShrink: 0,
           borderRadius: 999,
-          color: open ? 'secondary.main' : (theme) => theme.custom.text.muted,
+          color: open ? 'secondary.main' : 'text.secondary',
           '&:hover': {
-            bgcolor: (theme) => (open ? theme.custom.border.default : theme.custom.state.brandSoft),
+            bgcolor: (theme) => open ? alpha(theme.palette.secondary.main, 0.14) : theme.palette.action.hover,
           },
         }}
       >
@@ -114,10 +114,10 @@ export function CollapsibleSearchField({
           sx={{
             flex: 1,
             minWidth: 0,
-            color: (theme) => theme.custom.text.strong,
+            color: 'text.primary',
             fontSize: '1rem',
             '& input::placeholder': {
-              color: (theme) => theme.custom.text.mutedSecondary,
+              color: 'text.secondary',
               opacity: 1,
             },
           }}
@@ -128,10 +128,10 @@ export function CollapsibleSearchField({
           onClick={() => onChange('')}
           sx={{
             ml: 0.35,
-            color: (theme) => theme.custom.text.muted,
+            color: 'text.secondary',
             opacity: value ? 1 : 0.5,
             '&:hover': {
-              bgcolor: (theme) => theme.custom.state.brandSoft,
+              bgcolor: 'action.hover',
             },
           }}
         >

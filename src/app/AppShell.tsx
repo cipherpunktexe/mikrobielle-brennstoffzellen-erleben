@@ -19,6 +19,7 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material'
+import { alpha } from '@mui/material/styles'
 import { useEffect, useState, type MouseEvent } from 'react'
 import { Link as RouterLink, Outlet, useLocation } from 'react-router-dom'
 import { getUserProfile, logout, subscribeToAuth } from '../data/firebaseData'
@@ -136,7 +137,7 @@ export function AppShell() {
                     startIcon={item.icon}
                     sx={{
                       color: 'primary.contrastText',
-                      backgroundColor: active ? (theme) => theme.custom.state.brandSoft : 'transparent',
+                      backgroundColor: active ? 'action.hover' : 'transparent',
                     }}
                   >
                     {item.label}
@@ -155,9 +156,9 @@ export function AppShell() {
                 sx={{
                   width: 38,
                   height: 38,
-                  bgcolor: (theme) => theme.custom.surface.subtle,
+                  bgcolor: (theme) => alpha(theme.palette.common.white, 0.18),
                   color: 'primary.contrastText',
-                  border: (theme) => `1px solid ${theme.custom.border.default}`,
+                  border: (theme) => `1px solid ${alpha(theme.palette.common.white, 0.22)}`,
                   fontWeight: 700,
                 }}
               >
@@ -235,8 +236,8 @@ export function AppShell() {
         component="footer"
         sx={{
           mt: 'auto',
-          borderTop: (theme) => `1px solid ${theme.custom.border.strong}`,
-          background: (theme) => theme.custom.surface.hover,
+          borderTop: (theme) => `1px solid ${theme.palette.divider}`,
+          background: (theme) => alpha(theme.palette.common.white, 0.34),
           backdropFilter: 'blur(14px)',
         }}
       >

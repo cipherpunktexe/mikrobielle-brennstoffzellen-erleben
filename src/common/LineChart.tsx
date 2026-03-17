@@ -31,8 +31,8 @@ export function LineChart({
   showMobileNavigation = true,
 }: LineChartProps) {
   const theme = useTheme()
-  const chartColor = theme.custom.chart.line
-  const chartColorDark = theme.custom.chart.lineDark
+  const chartColor = theme.palette.secondary.main
+  const chartColorDark = theme.palette.text.primary
   const isMobileViewport = useMediaQuery(theme.breakpoints.down('sm'))
   const interactiveAreaRef = useRef<HTMLDivElement | null>(null)
   const svgRef = useRef<SVGSVGElement | null>(null)
@@ -209,7 +209,7 @@ export function LineChart({
             borderRadius: '18px',
             px: 1.75,
             py: 1.5,
-            backgroundColor: alpha(theme.custom.chart.pointFill, 0.48),
+            backgroundColor: alpha(theme.palette.common.white, 0.48),
           }}
         >
           <Box sx={{ minWidth: 0 }}>
@@ -236,7 +236,7 @@ export function LineChart({
         sx={{
           border: `1px solid ${alpha(theme.palette.primary.dark, 0.16)}`,
           borderRadius: '22px',
-          backgroundColor: alpha(theme.custom.chart.pointFill, 0.34),
+          backgroundColor: alpha(theme.palette.common.white, 0.34),
           p: { xs: 1.25, sm: 1.75 },
           touchAction: 'none',
         }}
@@ -270,7 +270,7 @@ export function LineChart({
             width={plotWidth}
             height={plotHeight}
             rx="20"
-            fill={alpha(theme.custom.chart.pointFill, 0.52)}
+            fill={alpha(theme.palette.common.white, 0.52)}
           />
 
           {yTicks.map((tick, index) => {
@@ -368,7 +368,7 @@ export function LineChart({
                   cx={point.x}
                   cy={point.y}
                   r={isActive ? 6.5 : 4.75}
-                  fill={isActive ? chartColor : theme.custom.chart.pointFill}
+                  fill={isActive ? chartColor : theme.palette.common.white}
                   stroke={chartColorDark}
                   strokeWidth={isActive ? '2.5' : '2'}
                 />
@@ -384,7 +384,7 @@ export function LineChart({
                 width={activeTooltipWidth}
                 height={activeTooltipHeight}
                 rx="14"
-                fill={alpha(theme.custom.chart.pointFill, 0.95)}
+                fill={alpha(theme.palette.common.white, 0.95)}
                 stroke={alpha(chartColorDark, 0.25)}
               />
               <text
@@ -421,7 +421,7 @@ export function LineChart({
             borderRadius: '999px',
             px: 0.75,
             py: 0.4,
-            bgcolor: alpha(theme.custom.chart.pointFill, 0.5),
+            bgcolor: alpha(theme.palette.common.white, 0.5),
           }}
         >
           <IconButton

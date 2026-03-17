@@ -1,4 +1,5 @@
 import { Box, List, ListItem, ListItemButton, ListItemText, Typography } from '@mui/material'
+import { alpha } from '@mui/material/styles'
 import { memo, useCallback, useMemo } from 'react'
 import type { ReactElement, ReactNode } from 'react'
 
@@ -106,7 +107,7 @@ const UnifiedListRow = memo(function UnifiedListRow<TItem>({
       disablePadding
       secondaryAction={action}
       sx={{
-        borderBottom: isLastItem ? 'none' : (theme) => `1px solid ${theme.custom.border.soft}`,
+        borderBottom: isLastItem ? 'none' : (theme) => `1px solid ${alpha(theme.palette.secondary.main, 0.1)}`,
       }}
     >
       {onItemClick ? (
@@ -124,12 +125,12 @@ const UnifiedListRow = memo(function UnifiedListRow<TItem>({
               cursor: 'default',
             },
             '&:hover': {
-              bgcolor: disabled ? 'transparent' : (theme) => theme.custom.surface.hover,
+              bgcolor: disabled ? 'transparent' : (theme) => alpha(theme.palette.common.white, 0.34),
             },
             '&:focus-visible': {
-              outline: (theme) => `2px solid ${theme.custom.state.focus}`,
+              outline: (theme) => `2px solid ${alpha(theme.palette.primary.main, 0.55)}`,
               outlineOffset: -2,
-              bgcolor: (theme) => theme.custom.surface.hover,
+              bgcolor: (theme) => alpha(theme.palette.common.white, 0.34),
             },
           }}
         >
@@ -178,7 +179,7 @@ const UnifiedListRow = memo(function UnifiedListRow<TItem>({
                       borderRadius: 1.25,
                       px: 1,
                       py: 0.8,
-                      bgcolor: (theme) => theme.custom.surface.muted,
+                      bgcolor: (theme) => alpha(theme.palette.common.white, 0.24),
                     }}
                   >
                     <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
@@ -245,7 +246,7 @@ const UnifiedListRow = memo(function UnifiedListRow<TItem>({
                       borderRadius: 1.25,
                       px: 1,
                       py: 0.8,
-                      bgcolor: (theme) => theme.custom.surface.muted,
+                      bgcolor: (theme) => alpha(theme.palette.common.white, 0.24),
                     }}
                   >
                     <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
@@ -300,8 +301,8 @@ export function UnifiedList<TItem>({
       sx={{
         borderRadius: 2.5,
         overflow: 'hidden',
-        border: (theme) => `1px solid ${theme.custom.border.default}`,
-        bgcolor: (theme) => theme.custom.surface.subtle,
+        border: (theme) => `1px solid ${alpha(theme.palette.secondary.main, 0.14)}`,
+        bgcolor: (theme) => alpha(theme.palette.common.white, 0.18),
       }}
     >
       <Box sx={{ overflowX: 'auto' }}>
@@ -313,8 +314,8 @@ export function UnifiedList<TItem>({
             px: { xs: 1, sm: 2 },
             py: 1,
             pr: renderItemAction ? { xs: 4.5, sm: 6 } : { xs: 1, sm: 2 },
-            borderBottom: items.length ? (theme) => `1px solid ${theme.custom.border.soft}` : 'none',
-            bgcolor: (theme) => theme.custom.state.brandSoft,
+            borderBottom: items.length ? (theme) => `1px solid ${alpha(theme.palette.secondary.main, 0.1)}` : 'none',
+            bgcolor: 'action.hover',
             minWidth: minDesktopWidth,
           }}
         >

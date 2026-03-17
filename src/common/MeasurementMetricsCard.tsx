@@ -25,7 +25,7 @@ export function MeasurementMetricsCard({ currentValue, maxValue }: MeasurementMe
       sx={{
         borderRadius: '18px',
         border: `1px solid ${alpha(theme.palette.primary.dark, 0.16)}`,
-        backgroundColor: alpha(theme.custom.chart.pointFill, 0.42),
+        backgroundColor: alpha(theme.palette.common.white, 0.42),
         px: { xs: 1.75, sm: 1.5 },
         py: { xs: 1.6, sm: 1.35 },
       }}
@@ -38,7 +38,7 @@ export function MeasurementMetricsCard({ currentValue, maxValue }: MeasurementMe
             sx={{
               width: '1px',
               alignSelf: 'stretch',
-              bgcolor: (theme) => theme.custom.border.default,
+              bgcolor: (theme) => alpha(theme.palette.secondary.main, 0.14),
             }}
           />
         }

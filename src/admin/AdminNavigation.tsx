@@ -11,6 +11,7 @@ import {
   Tabs,
   Typography,
 } from '@mui/material'
+import { alpha } from '@mui/material/styles'
 import type { SyntheticEvent } from 'react'
 import { adminTabItems } from './adminTabs'
 import type { AdminTabValue } from './types'
@@ -57,18 +58,18 @@ export function AdminNavigation({
                 px: 1.5,
                 py: 1.15,
                 borderRadius: 999,
-                borderColor: (theme) => theme.custom.border.strong,
+                borderColor: (theme) => alpha(theme.palette.secondary.main, 0.18),
                 bgcolor: (theme) =>
-                  mobileAdminNavOpen ? theme.custom.state.brandSoft : theme.custom.surface.strong,
+                  mobileAdminNavOpen ? theme.palette.action.hover : alpha(theme.palette.common.white, 0.72),
                 color: 'text.primary',
-                boxShadow: mobileAdminNavOpen ? (theme) => theme.custom.shadow.soft : 'none',
+                boxShadow: mobileAdminNavOpen ? '0 8px 20px rgba(36,28,19,0.1)' : 'none',
                 '& .MuiButton-endIcon': {
                   color: 'text.secondary',
                 },
                 '&:hover': {
-                  borderColor: (theme) => theme.custom.border.interactiveStrong,
+                  borderColor: (theme) => alpha(theme.palette.secondary.main, 0.52),
                   bgcolor: (theme) =>
-                    mobileAdminNavOpen ? theme.custom.state.brandSelected : theme.custom.surface.elevated,
+                    mobileAdminNavOpen ? theme.palette.action.selected : alpha(theme.palette.common.white, 0.9),
                 },
               }}
             >
@@ -83,10 +84,10 @@ export function AdminNavigation({
               <Box
                 sx={{
                   borderRadius: 2,
-                  border: (theme) => `1px solid ${theme.custom.border.strong}`,
+                  border: (theme) => `1px solid ${alpha(theme.palette.secondary.main, 0.18)}`,
                   overflow: 'hidden',
-                  bgcolor: (theme) => theme.custom.surface.elevated,
-                  boxShadow: (theme) => theme.custom.shadow.panel,
+                  bgcolor: (theme) => alpha(theme.palette.common.white, 0.9),
+                  boxShadow: '0 12px 28px rgba(36,28,19,0.1)',
                 }}
               >
                 <List disablePadding>
@@ -100,18 +101,18 @@ export function AdminNavigation({
                         py: 1.5,
                         borderBottom:
                           index < adminTabItems.length - 1
-                            ? (theme) => `1px solid ${theme.custom.border.soft}`
+                            ? (theme) => `1px solid ${alpha(theme.palette.secondary.main, 0.1)}`
                             : 'none',
                         color: 'text.primary',
                         '&:hover': {
-                          bgcolor: (theme) => theme.custom.state.brandSoft,
+                          bgcolor: 'action.hover',
                         },
                         '&.Mui-selected': {
-                          bgcolor: (theme) => theme.custom.state.brandSelected,
+                          bgcolor: 'action.selected',
                           boxShadow: (theme) => `inset 3px 0 0 ${theme.palette.secondary.main}`,
                         },
                         '&.Mui-selected:hover': {
-                          bgcolor: (theme) => theme.custom.state.brandSelectedHover,
+                          bgcolor: (theme) => alpha(theme.palette.primary.main, 0.22),
                         },
                       }}
                     >

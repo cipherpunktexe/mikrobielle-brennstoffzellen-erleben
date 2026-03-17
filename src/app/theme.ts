@@ -1,53 +1,5 @@
 import { createTheme } from '@mui/material/styles'
 
-interface AppThemeCustom {
-  surface: {
-    subtle: string
-    muted: string
-    hover: string
-    strong: string
-    strongHover: string
-    elevated: string
-  }
-  border: {
-    soft: string
-    default: string
-    strong: string
-    interactive: string
-    interactiveStrong: string
-  }
-  state: {
-    brandSoft: string
-    brandSelected: string
-    brandSelectedHover: string
-    focus: string
-  }
-  text: {
-    muted: string
-    mutedSecondary: string
-    strong: string
-  }
-  shadow: {
-    soft: string
-    panel: string
-  }
-  chart: {
-    line: string
-    lineDark: string
-    pointFill: string
-  }
-}
-
-declare module '@mui/material/styles' {
-  interface Theme {
-    custom: AppThemeCustom
-  }
-
-  interface ThemeOptions {
-    custom?: Partial<AppThemeCustom>
-  }
-}
-
 export const theme = createTheme({
   palette: {
     primary: {
@@ -67,6 +19,12 @@ export const theme = createTheme({
       primary: '#241C13',
       secondary: '#4D4331',
     },
+    divider: 'rgba(121,101,66,0.18)',
+    action: {
+      hover: 'rgba(143,122,81,0.10)',
+      selected: 'rgba(143,122,81,0.17)',
+      focus: 'rgba(143,122,81,0.22)',
+    },
     success: {
       main: '#53734D',
     },
@@ -76,43 +34,6 @@ export const theme = createTheme({
   },
   shape: {
     borderRadius: 12,
-  },
-  custom: {
-    surface: {
-      subtle: 'rgba(255,255,255,0.18)',
-      muted: 'rgba(255,255,255,0.24)',
-      hover: 'rgba(255,255,255,0.34)',
-      strong: 'rgba(255,255,255,0.72)',
-      strongHover: 'rgba(255,255,255,0.96)',
-      elevated: 'rgba(255,255,255,0.9)',
-    },
-    border: {
-      soft: 'rgba(121,101,66,0.1)',
-      default: 'rgba(121,101,66,0.14)',
-      strong: 'rgba(121,101,66,0.18)',
-      interactive: 'rgba(121,101,66,0.28)',
-      interactiveStrong: 'rgba(121,101,66,0.52)',
-    },
-    state: {
-      brandSoft: 'rgba(143,122,81,0.1)',
-      brandSelected: 'rgba(143,122,81,0.17)',
-      brandSelectedHover: 'rgba(143,122,81,0.22)',
-      focus: 'rgba(143,122,81,0.55)',
-    },
-    text: {
-      muted: 'rgba(110,103,95,0.92)',
-      mutedSecondary: 'rgba(110,103,95,0.88)',
-      strong: 'rgba(60,48,33,0.96)',
-    },
-    shadow: {
-      soft: '0 8px 20px rgba(36,28,19,0.1)',
-      panel: '0 12px 28px rgba(36,28,19,0.1)',
-    },
-    chart: {
-      line: '#5F6B7A',
-      lineDark: '#2C3440',
-      pointFill: '#FFFFFF',
-    },
   },
   typography: {
     fontFamily: '"Trebuchet MS", "Verdana", sans-serif',
