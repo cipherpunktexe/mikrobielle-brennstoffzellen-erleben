@@ -47,15 +47,14 @@
   - `npm run spellcheck`
   - `npm run build`
 
+## Deploy
+- Frontend Build: `npm.cmd run build`
+- Komplettdeploy (Hosting + Functions + Rules): `firebase.cmd deploy --force`
+- Nur Functions: `firebase.cmd deploy --only functions --force`
+- In PowerShell bevorzugt `*.cmd`, um Script-Policy-Probleme zu vermeiden.
 
 ## Git-Workflow
 - Kleine, logisch getrennte Commits.
-- Nach jeder Änderung ein Commit erstellen und Commit-Nachricht angeben.
+- Nach jeder abgeschlossenen logischen Änderung ein Commit erstellen und Commit-Hash sowie Message dokumentieren.
 - Commit-Message im Imperativ und mit klarem Scope (z. B. `fix(leaderboard): avoid clipped value column on mobile`).
-- Wenn der Auftrag explizit `build deploy push` enthält:
-  1. Build/Lint ausführen,
-  2. Commit erstellen,
-  3. Deploy ausführen,
-  4. nach Remote pushen,
-  5. Commit-Hash und Message dokumentieren.
 - Keine fremden, nicht angefragten Änderungen zurücksetzen.
