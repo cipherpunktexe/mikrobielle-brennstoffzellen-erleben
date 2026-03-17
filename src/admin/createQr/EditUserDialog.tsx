@@ -1,6 +1,18 @@
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+﻿import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import SaveIcon from '@mui/icons-material/Save'
-import { Box, Button, Collapse, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField } from '@mui/material'
+import {
+  Box,
+  Button,
+  Chip,
+  Collapse,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material'
 import type { FormEvent } from 'react'
 import type { EntityLifecycleStatus, Generator, UserProfile } from '../../data/domain'
 import type { UserFormState } from '../types'
@@ -19,6 +31,30 @@ interface EditUserDialogProps {
   onUserLifecycleAction: (status: EntityLifecycleStatus) => void
 }
 
+function getStatusLabel(status: EntityLifecycleStatus) {
+  if (status === 'blocked') {
+    return 'Gesperrt'
+  }
+
+  if (status === 'deleted') {
+    return 'Gelöscht'
+  }
+
+  return 'Aktiv'
+}
+
+function getStatusChipColor(status: EntityLifecycleStatus): 'success' | 'warning' | 'default' {
+  if (status === 'blocked') {
+    return 'warning'
+  }
+
+  if (status === 'deleted') {
+    return 'default'
+  }
+
+  return 'success'
+}
+
 export function EditUserDialog({
   open,
   editingUser,
@@ -32,6 +68,8 @@ export function EditUserDialog({
   onSetUserDangerOpen,
   onUserLifecycleAction,
 }: EditUserDialogProps) {
+  const currentStatus = editingUser?.status ?? 'active'
+
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>Nutzer bearbeiten</DialogTitle>
@@ -73,61 +111,86 @@ export function EditUserDialog({
               disabled
               fullWidth
             />
-            <Box>
-              <Button
-                type="button"
-                color="inherit"
-                endIcon={
-                  <ExpandMoreIcon
-                    sx={{
-                      transform: userDangerOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                      transition: 'transform 160ms ease',
-                    }}
+
+            <Box
+              sx={{
+                border: '1px solid rgba(121,101,66,0.22)',
+                borderRadius: 2.5,
+                bgcolor: 'rgba(255,255,255,0.44)',
+                px: 1.25,
+                py: 1,
+              }}
+            >
+              <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
+                <Stack spacing={0.25} sx={{ minWidth: 0 }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                    Kontostatus
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Aktionen für Sperren, Wiederherstellen oder Löschen
+                  </Typography>
+                </Stack>
+
+                <Stack direction="row" alignItems="center" spacing={0.75}>
+                  <Chip
+                    size="small"
+                    label={getStatusLabel(currentStatus)}
+                    color={getStatusChipColor(currentStatus)}
                   />
-                }
-                onClick={() => onSetUserDangerOpen((current) => !current)}
-                sx={{ px: 0, minWidth: 0 }}
-              >
-                Kontostatus
-              </Button>
+                  <Button
+                    type="button"
+                    color="inherit"
+                    endIcon={
+                      <ExpandMoreIcon
+                        sx={{
+                          transform: userDangerOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                          transition: 'transform 160ms ease',
+                        }}
+                      />
+                    }
+                    onClick={() => onSetUserDangerOpen((current) => !current)}
+                    sx={{ px: 0.5, minWidth: 0 }}
+                  >
+                    Aktionen
+                  </Button>
+                </Stack>
+              </Stack>
+
               <Collapse in={userDangerOpen}>
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ pt: 1.25 }}>
                   <Button
                     type="button"
                     color="success"
+                    variant={currentStatus === 'active' ? 'outlined' : 'contained'}
                     onClick={() => onUserLifecycleAction('active')}
-                    disabled={Boolean(userLifecycleActionLoading) || editingUser?.status === 'active'}
+                    disabled={Boolean(userLifecycleActionLoading) || currentStatus === 'active'}
+                    fullWidth
                   >
                     {userLifecycleActionLoading === 'active'
                       ? 'Wiederherstellen...'
-                      : editingUser?.status === 'active'
-                        ? 'Aktiv'
-                        : editingUser?.status === 'blocked'
-                          ? 'Entsperren'
-                          : 'Wiederherstellen'}
+                      : currentStatus === 'blocked'
+                        ? 'Entsperren'
+                        : 'Wiederherstellen'}
                   </Button>
                   <Button
                     type="button"
+                    color="warning"
+                    variant={currentStatus === 'blocked' ? 'outlined' : 'contained'}
                     onClick={() => onUserLifecycleAction('blocked')}
-                    disabled={Boolean(userLifecycleActionLoading) || editingUser?.status === 'blocked'}
+                    disabled={Boolean(userLifecycleActionLoading) || currentStatus === 'blocked'}
+                    fullWidth
                   >
-                    {userLifecycleActionLoading === 'blocked'
-                      ? 'Sperren...'
-                      : editingUser?.status === 'blocked'
-                        ? 'Gesperrt'
-                        : 'Sperren'}
+                    {userLifecycleActionLoading === 'blocked' ? 'Sperren...' : 'Sperren'}
                   </Button>
                   <Button
                     type="button"
                     color="error"
+                    variant={currentStatus === 'deleted' ? 'outlined' : 'contained'}
                     onClick={() => onUserLifecycleAction('deleted')}
-                    disabled={Boolean(userLifecycleActionLoading) || editingUser?.status === 'deleted'}
+                    disabled={Boolean(userLifecycleActionLoading) || currentStatus === 'deleted'}
+                    fullWidth
                   >
-                    {userLifecycleActionLoading === 'deleted'
-                      ? 'Loeschen...'
-                      : editingUser?.status === 'deleted'
-                        ? 'Geloescht'
-                        : 'Loeschen'}
+                    {userLifecycleActionLoading === 'deleted' ? 'Löschen...' : 'Löschen'}
                   </Button>
                 </Stack>
               </Collapse>
@@ -138,7 +201,12 @@ export function EditUserDialog({
           <Button onClick={onClose} disabled={Boolean(userLifecycleActionLoading)}>
             Abbrechen
           </Button>
-          <Button type="submit" variant="contained" startIcon={<SaveIcon />} disabled={Boolean(userLifecycleActionLoading)}>
+          <Button
+            type="submit"
+            variant="contained"
+            startIcon={<SaveIcon />}
+            disabled={Boolean(userLifecycleActionLoading)}
+          >
             Speichern
           </Button>
         </DialogActions>
