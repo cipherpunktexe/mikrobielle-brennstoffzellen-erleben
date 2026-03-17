@@ -32,36 +32,18 @@ const DUPLICATE_DETECTION_COOLDOWN_MS = 1200
 const CAMERA_START_TIMEOUT_MS = 10000
 const VIDEO_READY_TIMEOUT_MS = 2500
 const ZXING_MAX_FRAME_EDGE = 1280
+const SCAN_SOUND_PATH = '/sounds/success-sound.mp3'
+let scanAudio: HTMLAudioElement | null = null
 
 function playScanSound() {
   try {
-    const AudioCtx = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
-
-    if (!AudioCtx) {
-      return
+    if (!scanAudio) {
+      scanAudio = new Audio(SCAN_SOUND_PATH)
+      scanAudio.preload = 'auto'
     }
 
-    const audioContext = new AudioCtx()
-    const oscillator = audioContext.createOscillator()
-    const gainNode = audioContext.createGain()
-    const now = audioContext.currentTime
-
-    oscillator.type = 'sine'
-    oscillator.frequency.setValueAtTime(980, now)
-    oscillator.frequency.exponentialRampToValueAtTime(1240, now + 0.08)
-
-    gainNode.gain.setValueAtTime(0.0001, now)
-    gainNode.gain.exponentialRampToValueAtTime(0.07, now + 0.02)
-    gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.1)
-
-    oscillator.connect(gainNode)
-    gainNode.connect(audioContext.destination)
-    oscillator.start(now)
-    oscillator.stop(now + 0.1)
-
-    oscillator.onended = () => {
-      void audioContext.close()
-    }
+    scanAudio.currentTime = 0
+    void scanAudio.play()
   } catch {
     // Audio feedback is optional and should never break scanning.
   }
