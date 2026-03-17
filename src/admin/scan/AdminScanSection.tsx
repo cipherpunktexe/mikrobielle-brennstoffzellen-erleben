@@ -95,12 +95,12 @@ export function AdminScanSection({
           gridTemplateColumns: 'minmax(0, 1fr) auto',
           gridTemplateRows: 'auto auto',
           alignItems: 'start',
-          columnGap: 0.75,
-          rowGap: 0.35,
+          columnGap: 0.9,
+          rowGap: 0.15,
           minWidth: 0,
         }}
       >
-        <Box sx={{ minWidth: 0 }}>
+        <Stack direction="row" spacing={0.75} alignItems="baseline" sx={{ minWidth: 0 }}>
           <Typography
             variant="body2"
             sx={{
@@ -111,9 +111,13 @@ export function AdminScanSection({
             noWrap
           >
             {item.generatorCode.toUpperCase()}
-            {item.ownerName ? ` · ${item.ownerName}` : ''}
           </Typography>
-        </Box>
+          {item.ownerName ? (
+            <Typography variant="caption" color="text.secondary" noWrap>
+              {item.ownerName}
+            </Typography>
+          ) : null}
+        </Stack>
 
         <Typography
           variant="body2"
@@ -126,18 +130,6 @@ export function AdminScanSection({
         <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.2 }}>
           {formatTimestamp(item.createdAt)}
         </Typography>
-
-        <IconButton
-          size="small"
-          aria-label={`Messwert ${formatMeasurement(item.value)} von ${item.generatorCode.toUpperCase()} bearbeiten`}
-          onClick={(event) => {
-            event.stopPropagation()
-            onEditRecentMeasurement(item)
-          }}
-          sx={{ justifySelf: 'end', width: 30, height: 30, mt: -0.1 }}
-        >
-          <EditNoteIcon fontSize="small" />
-        </IconButton>
       </Box>
     )
   }
