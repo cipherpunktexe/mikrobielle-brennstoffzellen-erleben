@@ -1,5 +1,5 @@
 import { Box, Stack, Typography } from '@mui/material'
-import { alpha, darken, lighten, type Theme } from '@mui/material/styles'
+import { alpha, type Theme } from '@mui/material/styles'
 import { type KeyboardEvent } from 'react'
 import { formatMeasurement } from '../common/format'
 import type { LeaderboardEntry } from '../data/domain'
@@ -12,25 +12,25 @@ type RankStyle = {
 
 const rankStyles: RankStyle[] = [
   {
-    medalBg: (theme) =>
-      `linear-gradient(180deg, ${lighten(theme.palette.warning.main, 0.35)}, ${theme.palette.warning.main})`,
-    podiumBg: (theme) =>
-      `linear-gradient(180deg, ${alpha(darken(theme.palette.warning.main, 0.2), 0.96)}, ${alpha(theme.palette.secondary.dark, 0.96)})`,
+    medalBg: () =>
+      'linear-gradient(180deg, #FFF3C4 0%, #F0C145 56%, #CF9B2B 100%)',
+    podiumBg: () =>
+      'linear-gradient(180deg, #B78624 0%, #8B6420 100%)',
     medalText: (theme) => alpha(theme.palette.common.white, 0.98),
   },
   {
-    medalBg: (theme) =>
-      `linear-gradient(180deg, ${lighten(theme.palette.text.secondary, 0.55)}, ${alpha(theme.palette.text.secondary, 0.74)})`,
-    podiumBg: (theme) =>
-      `linear-gradient(180deg, ${alpha(theme.palette.secondary.main, 0.94)}, ${alpha(theme.palette.text.secondary, 0.9)})`,
-    medalText: (theme) => theme.palette.text.primary,
+    medalBg: () =>
+      'linear-gradient(180deg, #F7FAFF 0%, #CBD4DF 58%, #A6B0BC 100%)',
+    podiumBg: () =>
+      'linear-gradient(180deg, #8D98A8 0%, #66717F 100%)',
+    medalText: () => '#2E3641',
   },
   {
-    medalBg: (theme) =>
-      `linear-gradient(180deg, ${lighten(theme.palette.primary.main, 0.16)}, ${darken(theme.palette.primary.main, 0.08)})`,
-    podiumBg: (theme) =>
-      `linear-gradient(180deg, ${alpha(darken(theme.palette.primary.main, 0.16), 0.94)}, ${alpha(theme.palette.secondary.dark, 0.92)})`,
-    medalText: (theme) => alpha(theme.palette.primary.contrastText, 0.98),
+    medalBg: () =>
+      'linear-gradient(180deg, #F2C49A 0%, #C07A43 56%, #9B5B2D 100%)',
+    podiumBg: () =>
+      'linear-gradient(180deg, #A66535 0%, #744522 100%)',
+    medalText: (theme) => alpha(theme.palette.common.white, 0.98),
   },
 ]
 

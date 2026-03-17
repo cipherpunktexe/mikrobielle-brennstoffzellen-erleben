@@ -5,6 +5,12 @@ import { type UnifiedListColumn } from '../common/UnifiedList'
 import { formatMeasurement } from '../common/format'
 import type { LeaderboardEntry } from '../data/domain'
 
+const topRankChipStyles: Record<number, { bg: string; color: string }> = {
+  1: { bg: '#F0C145', color: '#4B320E' },
+  2: { bg: '#CBD4DF', color: '#2E3641' },
+  3: { bg: '#C07A43', color: '#2D1B0D' },
+}
+
 export function createLeaderboardColumns(
   rankSource: LeaderboardEntry[],
   isMobileViewport: boolean,
@@ -25,11 +31,9 @@ export function createLeaderboardColumns(
             sx={{
               minWidth: 52,
               fontWeight: 700,
-              color: 'text.primary',
+              color: (theme) => topRankChipStyles[rank]?.color ?? theme.palette.text.primary,
               bgcolor: (theme) =>
-                rank <= 3
-                  ? alpha(theme.palette.primary.main, 0.24)
-                  : alpha(theme.palette.common.white, 0.54),
+                topRankChipStyles[rank]?.bg ?? alpha(theme.palette.common.white, 0.54),
             }}
           />
         )
