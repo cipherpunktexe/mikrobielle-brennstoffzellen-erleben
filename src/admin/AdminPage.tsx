@@ -448,7 +448,7 @@ export function AdminPage() {
       }
 
       if (!Number.isFinite(qrSizeMm) || qrSizeMm <= 0) {
-        throw new Error('Bitte eine gÃ¼ltige QR-GrÃ¶ÃŸe angeben.')
+        throw new Error('Bitte eine gültige QR-Größe angeben.')
       }
 
       if (!Number.isFinite(digits) || digits < 1 || digits > 12) {
@@ -515,7 +515,7 @@ export function AdminPage() {
     const code = extractGeneratorCodeFromQrValue(value)
 
     if (!code) {
-      throw new Error('Der QR-Code enthÃ¤lt keinen gÃ¼ltigen Brennstoffzellen-Code.')
+      throw new Error('Der QR-Code enthält keinen gültigen Brennstoffzellen-Code.')
     }
 
     const foundGenerator = await getGeneratorByCode(code)
@@ -549,13 +549,13 @@ export function AdminPage() {
       const numericValue = Number.parseFloat(scanMeasurementInput)
 
       if (Number.isNaN(numericValue)) {
-        throw new Error('Bitte einen gÃ¼ltigen Messwert eingeben.')
+        throw new Error('Bitte einen gültigen Messwert eingeben.')
       }
 
       const measuredAt = new Date(scanMeasurementDateTime)
 
       if (Number.isNaN(measuredAt.getTime())) {
-        throw new Error('Bitte ein gÃ¼ltiges Datum und eine gÃ¼ltige Uhrzeit angeben.')
+        throw new Error('Bitte ein gültiges Datum und eine gültige Uhrzeit angeben.')
       }
 
       const linkedGenerator = await addMeasurementByCode({
@@ -569,7 +569,7 @@ export function AdminPage() {
       setScanCode(normalizedCode)
       setScanMeasurementDialogOpen(false)
       setScanMeasurementCodeLocked(false)
-      setScanStatus(`Messwert fÃ¼r ${linkedGenerator.code} wurde gespeichert.`)
+      setScanStatus(`Messwert für ${linkedGenerator.code} wurde gespeichert.`)
     } catch (submitIssue) {
       setScanMeasurementError(
         submitIssue instanceof Error
@@ -830,7 +830,7 @@ export function AdminPage() {
       }
 
       setScanStatus(
-        `Messwert fÃ¼r ${editingRecentMeasurement.generatorCode.toUpperCase()} wurde aktualisiert.`,
+        `Messwert für ${editingRecentMeasurement.generatorCode.toUpperCase()} wurde aktualisiert.`,
       )
       setEditingRecentMeasurement(null)
       setRecentMeasurementUnit('V')
@@ -901,7 +901,7 @@ export function AdminPage() {
       })
 
       await loadGeneratorMeasurements(selectedMeasurementGenerator.id)
-      setModerationStatus(`Messwert fÃ¼r ${selectedMeasurementGenerator.code} aktualisiert.`)
+      setModerationStatus(`Messwert für ${selectedMeasurementGenerator.code} aktualisiert.`)
       handleCloseMeasurementEditor()
     } catch (saveIssue) {
       setMeasurementError(
@@ -946,7 +946,7 @@ export function AdminPage() {
         <Grid size={{ xs: 12, md: 6 }}>
           <AuthCard
             title="Admin-Login"
-            description="Admins melden sich Ã¼ber Firebase Authentication an und verwalten danach QR-Codes, Scans und Moderation an einer Stelle."
+            description="Admins melden sich über Firebase Authentication an und verwalten danach QR-Codes, Scans und Moderation an einer Stelle."
             values={formValues}
             submitLabel="Als Admin anmelden"
             googleLabel="Mit Google anmelden"
@@ -970,7 +970,7 @@ export function AdminPage() {
                   Die Admin-Seite ist jetzt in drei Bereiche getrennt: QR erstellen, Scannen und Moderieren.
                 </Typography>
                 <Typography color="text.secondary">
-                  Voraussetzung ist ein Firestore-User mit <code>role: "admin"</code> fÃ¼r das angemeldete Konto.
+                  Voraussetzung ist ein Firestore-User mit <code>role: "admin"</code> für das angemeldete Konto.
                 </Typography>
               </Stack>
             </CardContent>
