@@ -2,7 +2,6 @@
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner'
 import ReplayIcon from '@mui/icons-material/Replay'
 import { BrowserQRCodeReader } from '@zxing/browser'
-import jsQR from 'jsqr'
 import {
   Alert,
   Box,
@@ -32,8 +31,7 @@ const SCAN_INTERVAL_MS = 180
 const DUPLICATE_DETECTION_COOLDOWN_MS = 1200
 const CAMERA_START_TIMEOUT_MS = 10000
 const VIDEO_READY_TIMEOUT_MS = 2500
-const JSQR_MAX_FRAME_EDGE = 960
-const JSQR_CENTER_CROP_RATIO = 0.72
+const ZXING_MAX_FRAME_EDGE = 1280
 const NO_DETECTION_HINT_DELAY_MS = 5000
 
 function playScanSound() {
@@ -205,24 +203,16 @@ async function startCameraStream() {
   throw lastError ?? new Error('Die Kamera konnte nicht gestartet werden.')
 }
 
-function detectWithZxing(canvas: HTMLCanvasElement, reader: BrowserQRCodeReader | null) {
+function detectWithZxing(
+  video: HTMLVideoElement,
+  canvas: HTMLCanvasElement,
+  context: CanvasRenderingContext2D,
+  reader: BrowserQRCodeReader | null,
+) {
   if (!reader) {
     return ''
   }
 
-  try {
-    return reader.decodeFromCanvas(canvas).getText()?.trim() ?? ''
-  } catch {
-    return ''
-  }
-}
-
-function detectWithJsQr(
-  video: HTMLVideoElement,
-  canvas: HTMLCanvasElement,
-  context: CanvasRenderingContext2D,
-  zxingReader: BrowserQRCodeReader | null,
-) {
   const sourceWidth = video.videoWidth
   const sourceHeight = video.videoHeight
 
@@ -230,7 +220,7 @@ function detectWithJsQr(
     return ''
   }
 
-  const scale = Math.min(1, JSQR_MAX_FRAME_EDGE / Math.max(sourceWidth, sourceHeight))
+  const scale = Math.min(1, ZXING_MAX_FRAME_EDGE / Math.max(sourceWidth, sourceHeight))
   const width = Math.max(1, Math.round(sourceWidth * scale))
   const height = Math.max(1, Math.round(sourceHeight * scale))
 
@@ -240,70 +230,12 @@ function detectWithJsQr(
   }
 
   context.drawImage(video, 0, 0, width, height)
-  const fullFrame = context.getImageData(0, 0, width, height)
-  const decodedFromFullFrame = decodeWithJsQrVariants(fullFrame)
 
-  if (decodedFromFullFrame?.data?.trim()) {
-    return decodedFromFullFrame.data.trim()
+  try {
+    return reader.decodeFromCanvas(canvas).getText()?.trim() ?? ''
+  } catch {
+    return ''
   }
-
-  // Extra pass for small/centered QR codes that can get lost in full-frame noise.
-  const cropSize = Math.max(80, Math.floor(Math.min(width, height) * JSQR_CENTER_CROP_RATIO))
-  const cropLeft = Math.max(0, Math.floor((width - cropSize) / 2))
-  const cropTop = Math.max(0, Math.floor((height - cropSize) / 2))
-  const centerCrop = context.getImageData(cropLeft, cropTop, cropSize, cropSize)
-  const decodedFromCenterCrop = decodeWithJsQrVariants(centerCrop)
-
-  const decodedCenterValue = decodedFromCenterCrop?.data?.trim() ?? ''
-
-  if (decodedCenterValue) {
-    return decodedCenterValue
-  }
-
-  return detectWithZxing(canvas, zxingReader)
-}
-
-function decodeWithJsQrVariants(imageData: ImageData) {
-  const decodedOriginal = jsQR(imageData.data, imageData.width, imageData.height, {
-    inversionAttempts: 'attemptBoth',
-  })
-
-  if (decodedOriginal?.data?.trim()) {
-    return decodedOriginal
-  }
-
-  const binarized = createBinarizedImageData(imageData)
-
-  return jsQR(binarized.data, binarized.width, binarized.height, {
-    inversionAttempts: 'attemptBoth',
-  })
-}
-
-function createBinarizedImageData(imageData: ImageData) {
-  const source = imageData.data
-  const output = new Uint8ClampedArray(source.length)
-  let sum = 0
-  let count = 0
-
-  for (let index = 0; index < source.length; index += 4) {
-    const luminance = source[index] * 0.299 + source[index + 1] * 0.587 + source[index + 2] * 0.114
-    sum += luminance
-    count += 1
-  }
-
-  const averageLuminance = count ? sum / count : 128
-  const threshold = Math.max(72, Math.min(208, averageLuminance * 0.9))
-
-  for (let index = 0; index < source.length; index += 4) {
-    const luminance = source[index] * 0.299 + source[index + 1] * 0.587 + source[index + 2] * 0.114
-    const value = luminance < threshold ? 0 : 255
-    output[index] = value
-    output[index + 1] = value
-    output[index + 2] = value
-    output[index + 3] = 255
-  }
-
-  return new ImageData(output, imageData.width, imageData.height)
 }
 
 export function QrScannerDialog({
@@ -485,7 +417,7 @@ export function QrScannerDialog({
 
           if (canvasRef.current && contextRef.current) {
             try {
-              rawValue = detectWithJsQr(
+              rawValue = detectWithZxing(
                 scanVideo,
                 canvasRef.current,
                 contextRef.current,
@@ -741,5 +673,4 @@ export function QrScannerDialog({
     </Dialog>
   )
 }
-
 
