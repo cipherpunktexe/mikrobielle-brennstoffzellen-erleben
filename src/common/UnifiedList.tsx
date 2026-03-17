@@ -115,7 +115,7 @@ const UnifiedListRow = memo(function UnifiedListRow<TItem>({
           sx={{
             px: listItemButtonPaddingSx,
             py: 1.3,
-            pr: action ? 6 : listItemButtonPaddingSx,
+            pr: action ? { xs: 4.5, sm: 6 } : listItemButtonPaddingSx,
             borderRadius: 0,
             '&.Mui-disabled': {
               opacity: 1,
@@ -190,7 +190,14 @@ const UnifiedListRow = memo(function UnifiedListRow<TItem>({
           </Box>
         </ListItemButton>
       ) : (
-        <Box sx={{ px: listItemButtonPaddingSx, py: 1.3, pr: action ? 6 : listItemButtonPaddingSx, width: '100%' }}>
+        <Box
+          sx={{
+            px: listItemButtonPaddingSx,
+            py: 1.3,
+            pr: action ? { xs: 4.5, sm: 6 } : listItemButtonPaddingSx,
+            width: '100%',
+          }}
+        >
           <Box sx={{ width: '100%' }}>
             <Box
               sx={{
