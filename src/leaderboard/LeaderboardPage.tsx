@@ -156,7 +156,7 @@ export function LeaderboardPage() {
       key: 'name',
       header: 'Nutzer',
       mobileLabel: 'Nutzer',
-      width: isMobileViewport ? '82px' : 'minmax(92px, 1fr)',
+      width: isMobileViewport ? '74px' : 'minmax(92px, 1fr)',
       render: (entry) => (
         <Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 0 }}>
           <Typography
@@ -183,7 +183,7 @@ export function LeaderboardPage() {
       key: 'value',
       header: 'Wert',
       mobileLabel: 'Wert',
-      width: '88px',
+      width: '84px',
       align: 'right',
       render: (entry) => (
         <Typography
@@ -239,7 +239,7 @@ export function LeaderboardPage() {
 
   return (
     <Card>
-      <CardContent sx={{ p: { xs: 2.5, sm: 3, md: 4 } }}>
+      <CardContent sx={{ p: { xs: 1.5, sm: 3, md: 4 } }}>
         <Stack spacing={{ xs: 2.5, md: 3 }}>
           <Box>
             <Chip icon={<EmojiEventsIcon />} label="Leaderboard" color="warning" sx={{ mb: 2 }} />
@@ -416,7 +416,7 @@ export function LeaderboardPage() {
                 disableGutters
                 slotProps={{ transition: { unmountOnExit: true } }}
                 sx={{
-                  mx: { xs: -0.5, sm: 0 },
+                  mx: 0,
                   border: '1px solid rgba(121,101,66,0.12)',
                   borderRadius: '18px',
                   bgcolor: 'rgba(248,242,231,0.34)',
@@ -430,7 +430,7 @@ export function LeaderboardPage() {
                   expandIcon={<ExpandMoreIcon />}
                   sx={{
                     minHeight: 0,
-                    px: { xs: 1.5, sm: 2 },
+                    px: { xs: 1, sm: 2 },
                     py: 0.25,
                     '& .MuiAccordionSummary-content': {
                       my: 1.2,
@@ -462,7 +462,7 @@ export function LeaderboardPage() {
                     emptyPrimary="Keine Einträge"
                     onItemClick={(entry) => handleOpenEntry(entry)}
                     getItemAriaLabel={(entry) => `Messverlauf von ${entry.displayName} öffnen`}
-                    minDesktopWidth={260}
+                    minDesktopWidth={248}
                   />
                 </AccordionDetails>
               </Accordion>

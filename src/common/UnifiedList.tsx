@@ -74,7 +74,7 @@ function getTextAlign(align: CellAlign | undefined) {
   return 'left'
 }
 
-const listItemButtonPaddingSx = { xs: 1.5, sm: 1.75 }
+const listItemButtonPaddingSx = { xs: 1, sm: 1.75 }
 
 const UnifiedListRow = memo(function UnifiedListRow<TItem>({
   item,
@@ -136,7 +136,7 @@ const UnifiedListRow = memo(function UnifiedListRow<TItem>({
               sx={{
                 display: forceDesktopLayoutOnMobile ? 'grid' : { xs: 'none', sm: 'grid' },
                 gridTemplateColumns: desktopGridTemplate,
-                gap: 1.5,
+                gap: { xs: 1, sm: 1.5 },
                 alignItems: 'center',
                 minWidth: minDesktopWidth,
               }}
@@ -196,7 +196,7 @@ const UnifiedListRow = memo(function UnifiedListRow<TItem>({
               sx={{
                 display: forceDesktopLayoutOnMobile ? 'grid' : { xs: 'none', sm: 'grid' },
                 gridTemplateColumns: desktopGridTemplate,
-                gap: 1.5,
+                gap: { xs: 1, sm: 1.5 },
                 alignItems: 'center',
                 minWidth: minDesktopWidth,
               }}
@@ -300,10 +300,10 @@ export function UnifiedList<TItem>({
           sx={{
             display: forceDesktopLayoutOnMobile ? 'grid' : { xs: 'none', sm: 'grid' },
             gridTemplateColumns: desktopGridTemplate,
-            gap: 1.5,
-            px: 2,
+            gap: { xs: 1, sm: 1.5 },
+            px: { xs: 1, sm: 2 },
             py: 1,
-            pr: renderItemAction ? 6 : 2,
+            pr: renderItemAction ? { xs: 4.5, sm: 6 } : { xs: 1, sm: 2 },
             borderBottom: items.length ? '1px solid rgba(121,101,66,0.1)' : 'none',
             bgcolor: 'rgba(121,101,66,0.08)',
             minWidth: minDesktopWidth,
