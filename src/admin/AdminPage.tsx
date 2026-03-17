@@ -552,7 +552,7 @@ export function AdminPage() {
     if (!foundGenerator) {
       setScanStatus('')
       showSnackbar({
-        message: `Code ${code.toUpperCase()} ist noch nicht verknüpft. Bitte zuerst in Moderieren verknüpfen.`,
+        message: `Code ${code.toUpperCase()} ist noch nicht verknüpft.`,
         severity: 'info',
         autoHideDuration: 4500,
       })
