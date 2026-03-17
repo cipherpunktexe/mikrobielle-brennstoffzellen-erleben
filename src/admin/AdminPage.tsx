@@ -4,6 +4,7 @@
   Card,
   CardContent,
   Grid,
+  Snackbar,
   Stack,
   Typography,
   useMediaQuery,
@@ -11,6 +12,7 @@
 } from '@mui/material'
 import {
   useEffect,
+  useRef,
   useState,
   type FormEvent,
   type MouseEvent,
@@ -141,6 +143,8 @@ function isAdminTabValue(value: string | undefined): value is AdminTabValue {
   return value === 'qr' || value === 'scan' || value === 'moderation'
 }
 
+const SCAN_RESULT_SUPPRESSION_MS = 5000
+
 export function AdminPage() {
   const navigate = useNavigate()
   const theme = useTheme()
@@ -176,6 +180,8 @@ export function AdminPage() {
   const [scanMeasurementCodeLocked, setScanMeasurementCodeLocked] = useState(false)
   const [scanStatus, setScanStatus] = useState('')
   const [scanError, setScanError] = useState('')
+  const [unlinkedScanNoticeOpen, setUnlinkedScanNoticeOpen] = useState(false)
+  const [unlinkedScanNotice, setUnlinkedScanNotice] = useState('')
   const [scanMeasurementDialogOpen, setScanMeasurementDialogOpen] = useState(false)
   const [scanMeasurementInput, setScanMeasurementInput] = useState('1.42')
   const [scanMeasurementUnit, setScanMeasurementUnit] = useState<MeasurementUnit>('V')
@@ -232,6 +238,10 @@ export function AdminPage() {
   const [formValues, setFormValues] = useState({
     email: '',
     password: '',
+  })
+  const lastHandledScanRef = useRef<{ code: string; timestamp: number }>({
+    code: '',
+    timestamp: 0,
   })
 
   useEffect(() => {
@@ -513,6 +523,17 @@ export function AdminPage() {
     setScanMeasurementError('')
   }
 
+  function handleCloseUnlinkedScanNotice(
+    _event?: Event | SyntheticEvent,
+    reason?: string,
+  ) {
+    if (reason === 'clickaway') {
+      return
+    }
+
+    setUnlinkedScanNoticeOpen(false)
+  }
+
   async function handleDetectedQrValue(value: string) {
     const code = extractGeneratorCodeFromQrValue(value)
 
@@ -520,24 +541,42 @@ export function AdminPage() {
       throw new Error('Der QR-Code enthält keinen gültigen Brennstoffzellen-Code.')
     }
 
+    if (scanMeasurementDialogOpen) {
+      return
+    }
+
+    const now = Date.now()
+    const lastHandled = lastHandledScanRef.current
+
+    if (
+      lastHandled.code === code &&
+      now - lastHandled.timestamp < SCAN_RESULT_SUPPRESSION_MS
+    ) {
+      return
+    }
+
     const foundGenerator = await getGeneratorByCode(code, { includeInactive: true })
 
-    setScannerOpen(false)
     setScanCode(code)
     setScanError('')
     navigate(`/admin/scan/generator/${code}`)
 
     if (!foundGenerator) {
-      setScanStatus(
-        `QR-Code erkannt: ${code}. Für diesen Code wurde noch keine Brennstoffzelle verknüpft. Bitte zuerst in Moderieren verknüpfen.`,
+      setScanStatus('')
+      setUnlinkedScanNotice(
+        `Code ${code.toUpperCase()} ist noch nicht verknüpft. Bitte zuerst in Moderieren verknüpfen.`,
       )
+      setUnlinkedScanNoticeOpen(true)
       setScanMeasurementDialogOpen(false)
       setScanMeasurementCodeLocked(false)
+      lastHandledScanRef.current = { code, timestamp: now }
       return
     }
 
+    setUnlinkedScanNoticeOpen(false)
     setScanStatus(`QR-Code erkannt: ${code}`)
     openScanMeasurementDialog(code, true)
+    lastHandledScanRef.current = { code, timestamp: now }
   }
 
   async function handleScanMeasurementSubmit(event: FormEvent<HTMLFormElement>) {
@@ -1172,6 +1211,21 @@ export function AdminPage() {
         onDetected={handleDetectedQrValue}
         mode="admin"
       />
+      <Snackbar
+        open={unlinkedScanNoticeOpen}
+        autoHideDuration={4500}
+        onClose={handleCloseUnlinkedScanNotice}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert
+          severity="info"
+          variant="filled"
+          onClose={handleCloseUnlinkedScanNotice}
+          sx={{ width: '100%' }}
+        >
+          {unlinkedScanNotice}
+        </Alert>
+      </Snackbar>
 
       <ScanMeasurementDialog
         open={scanMeasurementDialogOpen}
@@ -1246,6 +1300,4 @@ export function AdminPage() {
     </Stack>
   )
 }
-
-
 
