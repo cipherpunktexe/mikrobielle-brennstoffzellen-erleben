@@ -48,12 +48,51 @@ function formatScientificMeasurement(value: number, fractionDigits: number) {
   return `${normalizedMantissa}e${exponent}`
 }
 
+function normalizeDecimalInput(value: string) {
+  const compact = value.trim().replace(/\s+/g, '')
+  const lastCommaIndex = compact.lastIndexOf(',')
+  const lastDotIndex = compact.lastIndexOf('.')
+
+  if (lastCommaIndex !== -1 && lastDotIndex !== -1) {
+    if (lastCommaIndex > lastDotIndex) {
+      return compact.replace(/\./g, '').replace(',', '.')
+    }
+
+    return compact.replace(/,/g, '')
+  }
+
+  if (lastCommaIndex !== -1) {
+    return compact.replace(',', '.')
+  }
+
+  return compact
+}
+
 function formatDecimalMeasurement(value: number, decimals: number) {
   return new Intl.NumberFormat('de-DE', {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
     useGrouping: false,
   }).format(value)
+}
+
+export function formatDecimalInput(value: number) {
+  if (!Number.isFinite(value)) {
+    return ''
+  }
+
+  return value.toString().replace('.', ',')
+}
+
+export function parseDecimalInput(value: string) {
+  if (!value.trim()) {
+    return Number.NaN
+  }
+
+  const normalizedValue = normalizeDecimalInput(value)
+  const parsedValue = Number(normalizedValue)
+
+  return Number.isFinite(parsedValue) ? parsedValue : Number.NaN
 }
 
 /**

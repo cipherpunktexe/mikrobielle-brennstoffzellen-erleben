@@ -7,7 +7,7 @@ describe('admin utils', () => {
   })
 
   test('formats scientific volts output', () => {
-    expect(formatScientificVolts(1.42)).toBe('1.420e+0 V')
+    expect(formatScientificVolts(1.42)).toBe('1,42e+0 V')
   })
 
   test('maps lifecycle labels', () => {

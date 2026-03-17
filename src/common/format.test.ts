@@ -3,8 +3,10 @@ import type { Timestamp } from 'firebase/firestore'
 import {
   createContextMeasurementFormatter,
   formatCode,
+  formatDecimalInput,
   formatMeasurement,
   formatTimestamp,
+  parseDecimalInput,
 } from './format'
 
 describe('format utils', () => {
@@ -39,6 +41,15 @@ describe('format utils', () => {
 
   test('normalizes generator codes', () => {
     expect(formatCode('  A1B2  ')).toBe('a1b2')
+  })
+
+  test('formats and parses decimal input with comma separator', () => {
+    expect(formatDecimalInput(1.42)).toBe('1,42')
+    expect(formatDecimalInput(0.002)).toBe('0,002')
+    expect(parseDecimalInput('1,42')).toBe(1.42)
+    expect(parseDecimalInput('1.42')).toBe(1.42)
+    expect(parseDecimalInput('1.234,56')).toBe(1234.56)
+    expect(Number.isNaN(parseDecimalInput('x'))).toBe(true)
   })
 
   test('formats timestamp via german locale formatter', () => {

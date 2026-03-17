@@ -5,7 +5,10 @@ export function formatMutedDecimal(sequence: number) {
 }
 
 export function formatScientificVolts(value: number) {
-  return `${value.toExponential(3)} V`
+  const [mantissa, exponent] = value.toExponential(3).split('e')
+  const normalizedMantissa = mantissa.replace(/\.?0+$/, '').replace('.', ',')
+
+  return `${normalizedMantissa}e${exponent} V`
 }
 
 export function getLifecycleStatusLabel(status: Exclude<EntityLifecycleStatus, 'active'>) {

@@ -32,7 +32,7 @@ import { MeasurementFormDialog } from './createQr/MeasurementFormDialog'
 import { AuthCard } from '../common/AuthCard'
 import { useAppSnackbar } from '../common/AppSnackbarContext'
 import { QrScannerDialog } from '../common/qr/QrScannerDialog'
-import { formatCode } from '../common/format'
+import { formatCode, formatDecimalInput, parseDecimalInput } from '../common/format'
 import {
   buildGeneratorQrValue,
   downloadQrPdf,
@@ -168,7 +168,7 @@ export function AdminPage() {
   const [scanStatus, setScanStatus] = useState('')
   const [scanError, setScanError] = useState('')
   const [scanMeasurementDialogOpen, setScanMeasurementDialogOpen] = useState(false)
-  const [scanMeasurementInput, setScanMeasurementInput] = useState('1.42')
+  const [scanMeasurementInput, setScanMeasurementInput] = useState('1,42')
   const [scanMeasurementUnit, setScanMeasurementUnit] = useState<MeasurementUnit>('V')
   const [scanMeasurementDateTime, setScanMeasurementDateTime] = useState(
     getCurrentDateTimeInputValue,
@@ -356,9 +356,9 @@ export function AdminPage() {
   }, [activeTab, authUserId, profile?.email])
 
   const parsedExportCount = Number.parseInt(exportCount, 10)
-  const requestedQrSize = Number.parseFloat(exportQrSize)
+  const requestedQrSize = parseDecimalInput(exportQrSize)
   const parsedExportDigits = Number.parseInt(exportDigits, 10)
-  const parsedScanMeasurementInput = Number.parseFloat(scanMeasurementInput)
+  const parsedScanMeasurementInput = parseDecimalInput(scanMeasurementInput)
   const convertedScanMeasurementVolts =
     Number.isFinite(parsedScanMeasurementInput) && scanMeasurementUnit !== 'V'
       ? convertMeasurementToVolts(parsedScanMeasurementInput, scanMeasurementUnit)
@@ -484,7 +484,7 @@ export function AdminPage() {
 
     try {
       const count = Number.parseInt(exportCount, 10)
-      const qrSizeMm = Number.parseFloat(exportQrSize)
+      const qrSizeMm = parseDecimalInput(exportQrSize)
       const digits = Number.parseInt(exportDigits, 10)
 
       if (!Number.isFinite(count) || count < 1 || count > 200) {
@@ -533,7 +533,7 @@ export function AdminPage() {
   function openScanMeasurementDialog(code = '', codeLocked = false) {
     setScanCode(code)
     setScanMeasurementCodeLocked(codeLocked)
-    setScanMeasurementInput('1.42')
+    setScanMeasurementInput('1,42')
     setScanMeasurementUnit('V')
     setScanMeasurementDateTime(getCurrentDateTimeInputValue())
     setScanMeasurementError('')
@@ -614,7 +614,7 @@ export function AdminPage() {
         throw new Error('Bitte einen Brennstoffzellen-Code eingeben.')
       }
 
-      const numericValue = Number.parseFloat(scanMeasurementInput)
+      const numericValue = parseDecimalInput(scanMeasurementInput)
 
       if (Number.isNaN(numericValue)) {
         throw new Error('Bitte einen gültigen Messwert eingeben.')
@@ -847,7 +847,7 @@ export function AdminPage() {
     setEditingRecentMeasurement(item)
     setRecentMeasurementUnit('V')
     setRecentMeasurementForm({
-      value: item.value.toString(),
+      value: formatDecimalInput(item.value),
       enteredBy: item.enteredBy,
     })
   }
@@ -876,7 +876,7 @@ export function AdminPage() {
     setScanError('')
 
     try {
-      const numericValue = Number.parseFloat(recentMeasurementForm.value)
+      const numericValue = parseDecimalInput(recentMeasurementForm.value)
 
       if (Number.isNaN(numericValue)) {
         throw new Error('Bitte einen gültigen Messwert eingeben.')
@@ -930,7 +930,7 @@ export function AdminPage() {
     setEditingMeasurement(measurement)
     setMeasurementUnit('V')
     setMeasurementForm({
-      value: measurement.value.toString(),
+      value: formatDecimalInput(measurement.value),
       enteredBy: measurement.enteredBy,
     })
   }
@@ -957,7 +957,7 @@ export function AdminPage() {
     setModerationError('')
 
     try {
-      const numericValue = Number.parseFloat(measurementForm.value)
+      const numericValue = parseDecimalInput(measurementForm.value)
 
       if (Number.isNaN(numericValue)) {
         throw new Error('Bitte einen gültigen Messwert eingeben.')
