@@ -528,8 +528,11 @@ export function AdminPage() {
     navigate(`/admin/scan/generator/${code}`)
 
     if (!foundGenerator) {
-      setScanStatus(`QR-Code erkannt: ${code}. Für diesen Code wurde noch keine Brennstoffzelle angelegt.`)
-      openScanMeasurementDialog(code, false)
+      setScanStatus(
+        `QR-Code erkannt: ${code}. Für diesen Code wurde noch keine Brennstoffzelle verknüpft. Bitte zuerst in Moderieren verknüpfen.`,
+      )
+      setScanMeasurementDialogOpen(false)
+      setScanMeasurementCodeLocked(false)
       return
     }
 
