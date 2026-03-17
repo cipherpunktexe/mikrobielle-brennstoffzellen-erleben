@@ -14,6 +14,7 @@ import { UnifiedList, type UnifiedListColumn } from '../../common/UnifiedList'
 import { formatMeasurement, formatTimestamp } from '../../common/format'
 import type { Generator, Measurement } from '../../data/domain'
 import type { MeasurementFormState } from '../types'
+import type { MeasurementUnit } from '../types'
 import { MeasurementFormDialog } from './MeasurementFormDialog'
 
 interface GeneratorMeasurementsDialogProps {
@@ -24,9 +25,11 @@ interface GeneratorMeasurementsDialogProps {
   generatorMeasurements: Measurement[]
   editingMeasurement: Measurement | null
   measurementForm: MeasurementFormState
+  measurementUnit: MeasurementUnit
   measurementSaving: boolean
   onClose: () => void
   onSetMeasurementForm: (updater: (current: MeasurementFormState) => MeasurementFormState) => void
+  onSetMeasurementUnit: (unit: MeasurementUnit) => void
   onSaveMeasurement: () => void
   onCloseMeasurementEditor: () => void
   onOpenMeasurementEditor: (measurement: Measurement) => void
@@ -40,9 +43,11 @@ export function GeneratorMeasurementsDialog({
   generatorMeasurements,
   editingMeasurement,
   measurementForm,
+  measurementUnit,
   measurementSaving,
   onClose,
   onSetMeasurementForm,
+  onSetMeasurementUnit,
   onSaveMeasurement,
   onCloseMeasurementEditor,
   onOpenMeasurementEditor,
@@ -144,6 +149,10 @@ export function GeneratorMeasurementsDialog({
               value,
             })),
           autoFocus: true,
+        }}
+        unitField={{
+          value: measurementUnit,
+          onChange: onSetMeasurementUnit,
         }}
         enteredByField={{
           value: measurementForm.enteredBy,

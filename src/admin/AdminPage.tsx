@@ -108,6 +108,20 @@ function convertMeasurementToVolts(value: number, unit: MeasurementUnit) {
   }
 }
 
+function convertVoltsToMeasurement(value: number, unit: MeasurementUnit) {
+  switch (unit) {
+    case 'uV':
+      return value * 1_000_000
+    case 'mV':
+      return value * 1_000
+    case 'kV':
+      return value / 1_000
+    case 'V':
+    default:
+      return value
+  }
+}
+
 function getModerationEntryStatus(
   user: Pick<UserProfile, 'status'>,
   generator: Pick<Generator, 'status'> | null,
@@ -175,6 +189,7 @@ export function AdminPage() {
   const [recentMeasurementForm, setRecentMeasurementForm] = useState<MeasurementFormState>(
     createEmptyMeasurementForm,
   )
+  const [recentMeasurementUnit, setRecentMeasurementUnit] = useState<MeasurementUnit>('V')
   const [recentMeasurementSaving, setRecentMeasurementSaving] = useState(false)
   const [recentMeasurementError, setRecentMeasurementError] = useState('')
 
@@ -204,6 +219,7 @@ export function AdminPage() {
   const [measurementForm, setMeasurementForm] = useState<MeasurementFormState>(
     createEmptyMeasurementForm,
   )
+  const [measurementUnit, setMeasurementUnit] = useState<MeasurementUnit>('V')
   const [measurementSaving, setMeasurementSaving] = useState(false)
   const [measurementError, setMeasurementError] = useState('')
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null)
@@ -761,6 +777,7 @@ export function AdminPage() {
     setScanError('')
     setRecentMeasurementError('')
     setEditingRecentMeasurement(item)
+    setRecentMeasurementUnit('V')
     setRecentMeasurementForm({
       value: item.value.toString(),
       enteredBy: item.enteredBy,
@@ -773,6 +790,7 @@ export function AdminPage() {
     }
 
     setEditingRecentMeasurement(null)
+    setRecentMeasurementUnit('V')
     setRecentMeasurementForm(createEmptyMeasurementForm())
     setRecentMeasurementError('')
   }
@@ -793,11 +811,11 @@ export function AdminPage() {
       const numericValue = Number.parseFloat(recentMeasurementForm.value)
 
       if (Number.isNaN(numericValue)) {
-        throw new Error('Bitte einen gÃ¼ltigen Messwert in V eingeben.')
+        throw new Error('Bitte einen gueltigen Messwert eingeben.')
       }
 
       await updateMeasurementAsAdmin(editingRecentMeasurement.id, {
-        value: numericValue,
+        value: convertMeasurementToVolts(numericValue, recentMeasurementUnit),
         enteredBy: recentMeasurementForm.enteredBy,
       })
 
@@ -815,6 +833,7 @@ export function AdminPage() {
         `Messwert fÃ¼r ${editingRecentMeasurement.generatorCode.toUpperCase()} wurde aktualisiert.`,
       )
       setEditingRecentMeasurement(null)
+      setRecentMeasurementUnit('V')
       setRecentMeasurementForm(createEmptyMeasurementForm())
       setRecentMeasurementError('')
     } catch (saveIssue) {
@@ -832,6 +851,7 @@ export function AdminPage() {
     setGeneratorMeasurements([])
     setGeneratorMeasurementsLoading(false)
     setEditingMeasurement(null)
+    setMeasurementUnit('V')
     setMeasurementForm(createEmptyMeasurementForm())
     setMeasurementSaving(false)
     setMeasurementError('')
@@ -840,6 +860,7 @@ export function AdminPage() {
   function handleOpenMeasurementEditor(measurement: Measurement) {
     setMeasurementError('')
     setEditingMeasurement(measurement)
+    setMeasurementUnit('V')
     setMeasurementForm({
       value: measurement.value.toString(),
       enteredBy: measurement.enteredBy,
@@ -852,6 +873,7 @@ export function AdminPage() {
     }
 
     setEditingMeasurement(null)
+    setMeasurementUnit('V')
     setMeasurementForm(createEmptyMeasurementForm())
     setMeasurementError('')
   }
@@ -870,11 +892,11 @@ export function AdminPage() {
       const numericValue = Number.parseFloat(measurementForm.value)
 
       if (Number.isNaN(numericValue)) {
-        throw new Error('Bitte einen gÃ¼ltigen Messwert in V eingeben.')
+        throw new Error('Bitte einen gueltigen Messwert eingeben.')
       }
 
       await updateMeasurementAsAdmin(editingMeasurement.id, {
-        value: numericValue,
+        value: convertMeasurementToVolts(numericValue, measurementUnit),
         enteredBy: measurementForm.enteredBy,
       })
 
@@ -1105,9 +1127,28 @@ export function AdminPage() {
         generatorMeasurements={generatorMeasurements}
         editingMeasurement={editingMeasurement}
         measurementForm={measurementForm}
+        measurementUnit={measurementUnit}
         measurementSaving={measurementSaving}
         onClose={handleCloseGeneratorMeasurementsDialog}
         onSetMeasurementForm={setMeasurementForm}
+        onSetMeasurementUnit={(nextUnit) => {
+          setMeasurementForm((current) => {
+            const numericValue = Number.parseFloat(current.value)
+
+            if (Number.isNaN(numericValue)) {
+              return current
+            }
+
+            return {
+              ...current,
+              value: convertVoltsToMeasurement(
+                convertMeasurementToVolts(numericValue, measurementUnit),
+                nextUnit,
+              ).toString(),
+            }
+          })
+          setMeasurementUnit(nextUnit)
+        }}
         onSaveMeasurement={() => {
           void handleMeasurementSave()
         }}
@@ -1160,6 +1201,27 @@ export function AdminPage() {
               value,
             })),
           autoFocus: true,
+        }}
+        unitField={{
+          value: recentMeasurementUnit,
+          onChange: (nextUnit) => {
+            setRecentMeasurementForm((current) => {
+              const numericValue = Number.parseFloat(current.value)
+
+              if (Number.isNaN(numericValue)) {
+                return current
+              }
+
+              return {
+                ...current,
+                value: convertVoltsToMeasurement(
+                  convertMeasurementToVolts(numericValue, recentMeasurementUnit),
+                  nextUnit,
+                ).toString(),
+              }
+            })
+            setRecentMeasurementUnit(nextUnit)
+          },
         }}
         enteredByField={{
           value: recentMeasurementForm.enteredBy,
