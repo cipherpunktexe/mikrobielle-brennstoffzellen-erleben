@@ -61,12 +61,28 @@ export function AdminQrSection({
   onExport,
   formatMutedDecimal,
 }: AdminQrSectionProps) {
+  const stepChipSx = {
+    minWidth: { xs: 32, sm: 36 },
+    height: { xs: 32, sm: 36 },
+    borderRadius: 999,
+    fontWeight: 700,
+    fontSize: { xs: '0.8rem', sm: '0.875rem' },
+  }
+  const stepCardSx = { flex: 1, borderRadius: { xs: 2, sm: 2.5 } }
+
+  function getStepContentPadding(open: boolean) {
+    return {
+      px: { xs: 1.25, sm: 2 },
+      py: { xs: open ? 1.25 : 0.9, sm: open ? 1.75 : 1.2 },
+    }
+  }
+
   return (
     <Grid container spacing={{ xs: 2, md: 3 }}>
       <Grid size={{ xs: 12, lg: 4 }}>
         <Card sx={{ height: '100%' }}>
-          <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
-            <Stack spacing={3}>
+          <CardContent sx={{ p: { xs: 1.5, sm: 3 } }}>
+            <Stack spacing={{ xs: 1.75, sm: 3 }}>
               <Box>
                 <Typography variant="h4" sx={{ fontSize: { xs: '1.45rem', sm: '2rem' } }}>
                   QR-Export
@@ -74,14 +90,16 @@ export function AdminQrSection({
               </Box>
               {exportStatus ? <Alert severity="success">{exportStatus}</Alert> : null}
               {exportError ? <Alert severity="error">{exportError}</Alert> : null}
-              <Stack spacing={2}>
-                <Stack direction="row" spacing={1.5} alignItems="flex-start">
-                  <Chip label="1" color="primary" sx={{ minWidth: 36, height: 36, borderRadius: 999 }} />
-                  <Card variant="outlined" sx={{ flex: 1 }}>
-                    <CardContent sx={{ p: 2 }}>
-                      <Stack spacing={1.5}>
+              <Stack spacing={{ xs: 1.2, sm: 2 }}>
+                <Stack direction="row" spacing={{ xs: 1, sm: 1.5 }} alignItems="flex-start">
+                  <Chip label="1" color="primary" sx={stepChipSx} />
+                  <Card variant="outlined" sx={stepCardSx}>
+                    <CardContent sx={getStepContentPadding(exportStepOpen.count)}>
+                      <Stack spacing={exportStepOpen.count ? 1.25 : 0.35}>
                         <Stack direction="row" alignItems="center" justifyContent="space-between">
-                          <Typography fontWeight={700}>Anzahl</Typography>
+                          <Typography fontWeight={700} sx={{ fontSize: { xs: '1.05rem', sm: '1.2rem' } }}>
+                            Anzahl
+                          </Typography>
                           <IconButton
                             size="small"
                             onClick={() => onToggleExportStep('count')}
@@ -95,7 +113,7 @@ export function AdminQrSection({
                             />
                           </IconButton>
                         </Stack>
-                        <Collapse in={exportStepOpen.count}>
+                        <Collapse in={exportStepOpen.count} unmountOnExit>
                           <TextField
                             label="Anzahl"
                             type="number"
@@ -108,13 +126,15 @@ export function AdminQrSection({
                     </CardContent>
                   </Card>
                 </Stack>
-                <Stack direction="row" spacing={1.5} alignItems="flex-start">
-                  <Chip label="2" color="primary" sx={{ minWidth: 36, height: 36, borderRadius: 999 }} />
-                  <Card variant="outlined" sx={{ flex: 1 }}>
-                    <CardContent sx={{ p: 2 }}>
-                      <Stack spacing={1.5}>
+                <Stack direction="row" spacing={{ xs: 1, sm: 1.5 }} alignItems="flex-start">
+                  <Chip label="2" color="primary" sx={stepChipSx} />
+                  <Card variant="outlined" sx={stepCardSx}>
+                    <CardContent sx={getStepContentPadding(exportStepOpen.layout)}>
+                      <Stack spacing={exportStepOpen.layout ? 1.25 : 0.35}>
                         <Stack direction="row" alignItems="center" justifyContent="space-between">
-                          <Typography fontWeight={700}>Größe und Format</Typography>
+                          <Typography fontWeight={700} sx={{ fontSize: { xs: '1.05rem', sm: '1.2rem' } }}>
+                            Größe und Format
+                          </Typography>
                           <IconButton
                             size="small"
                             onClick={() => onToggleExportStep('layout')}
@@ -128,8 +148,8 @@ export function AdminQrSection({
                             />
                           </IconButton>
                         </Stack>
-                        <Collapse in={exportStepOpen.layout}>
-                          <Stack spacing={1.5}>
+                        <Collapse in={exportStepOpen.layout} unmountOnExit>
+                          <Stack spacing={{ xs: 1.1, sm: 1.5 }}>
                             <TextField
                               label="QR-Größe in mm"
                               type="number"
@@ -156,13 +176,15 @@ export function AdminQrSection({
                     </CardContent>
                   </Card>
                 </Stack>
-                <Stack direction="row" spacing={1.5} alignItems="flex-start">
-                  <Chip label="3" color="primary" sx={{ minWidth: 36, height: 36, borderRadius: 999 }} />
-                  <Card variant="outlined" sx={{ flex: 1 }}>
-                    <CardContent sx={{ p: 2 }}>
-                      <Stack spacing={1.5}>
+                <Stack direction="row" spacing={{ xs: 1, sm: 1.5 }} alignItems="flex-start">
+                  <Chip label="3" color="primary" sx={stepChipSx} />
+                  <Card variant="outlined" sx={stepCardSx}>
+                    <CardContent sx={getStepContentPadding(exportStepOpen.number)}>
+                      <Stack spacing={exportStepOpen.number ? 1.25 : 0.35}>
                         <Stack direction="row" alignItems="center" justifyContent="space-between">
-                          <Typography fontWeight={700}>Nummer</Typography>
+                          <Typography fontWeight={700} sx={{ fontSize: { xs: '1.05rem', sm: '1.2rem' } }}>
+                            Nummer
+                          </Typography>
                           <IconButton
                             size="small"
                             onClick={() => onToggleExportStep('number')}
@@ -176,7 +198,7 @@ export function AdminQrSection({
                             />
                           </IconButton>
                         </Stack>
-                        <Collapse in={exportStepOpen.number}>
+                        <Collapse in={exportStepOpen.number} unmountOnExit>
                           <Stack spacing={2}>
                             <TextField
                               label="Stellen"
@@ -207,13 +229,15 @@ export function AdminQrSection({
                     </CardContent>
                   </Card>
                 </Stack>
-                <Stack direction="row" spacing={1.5} alignItems="flex-start">
-                  <Chip label="4" color="primary" sx={{ minWidth: 36, height: 36, borderRadius: 999 }} />
-                  <Card variant="outlined" sx={{ flex: 1 }}>
-                    <CardContent sx={{ p: 2 }}>
-                      <Stack spacing={1.5}>
+                <Stack direction="row" spacing={{ xs: 1, sm: 1.5 }} alignItems="flex-start">
+                  <Chip label="4" color="primary" sx={stepChipSx} />
+                  <Card variant="outlined" sx={stepCardSx}>
+                    <CardContent sx={getStepContentPadding(exportStepOpen.export)}>
+                      <Stack spacing={exportStepOpen.export ? 1.25 : 0.35}>
                         <Stack direction="row" alignItems="center" justifyContent="space-between">
-                          <Typography fontWeight={700}>Export</Typography>
+                          <Typography fontWeight={700} sx={{ fontSize: { xs: '1.05rem', sm: '1.2rem' } }}>
+                            Export
+                          </Typography>
                           <IconButton
                             size="small"
                             onClick={() => onToggleExportStep('export')}
@@ -227,7 +251,7 @@ export function AdminQrSection({
                             />
                           </IconButton>
                         </Stack>
-                        <Collapse in={exportStepOpen.export}>
+                        <Collapse in={exportStepOpen.export} unmountOnExit>
                           <Button variant="contained" onClick={onExport} startIcon={<SaveIcon />} fullWidth>
                             PDF herunterladen
                           </Button>
@@ -244,8 +268,8 @@ export function AdminQrSection({
 
       <Grid size={{ xs: 12, lg: 8 }}>
         <Card sx={{ height: '100%' }}>
-          <CardContent sx={{ p: { xs: 2.25, sm: 3 }, height: '100%' }}>
-            <Stack spacing={2.5} sx={{ height: '100%' }}>
+          <CardContent sx={{ p: { xs: 1.5, sm: 3 }, height: '100%' }}>
+            <Stack spacing={{ xs: 1.75, sm: 2.5 }} sx={{ height: '100%' }}>
               <Stack
                 direction={{ xs: 'column', sm: 'row' }}
                 justifyContent="space-between"
