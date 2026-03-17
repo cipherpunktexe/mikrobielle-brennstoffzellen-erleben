@@ -1,6 +1,7 @@
 ﻿import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner'
 import ReplayIcon from '@mui/icons-material/Replay'
+import { BrowserQRCodeReader } from '@zxing/browser'
 import jsQR from 'jsqr'
 import {
   Alert,
@@ -249,7 +250,24 @@ async function createQrDetector(BarcodeDetectorApi?: BarcodeDetectorConstructor)
   }
 }
 
-function detectWithJsQr(video: HTMLVideoElement, canvas: HTMLCanvasElement, context: CanvasRenderingContext2D) {
+function detectWithZxing(canvas: HTMLCanvasElement, reader: BrowserQRCodeReader | null) {
+  if (!reader) {
+    return ''
+  }
+
+  try {
+    return reader.decodeFromCanvas(canvas).getText()?.trim() ?? ''
+  } catch {
+    return ''
+  }
+}
+
+function detectWithJsQr(
+  video: HTMLVideoElement,
+  canvas: HTMLCanvasElement,
+  context: CanvasRenderingContext2D,
+  zxingReader: BrowserQRCodeReader | null,
+) {
   const sourceWidth = video.videoWidth
   const sourceHeight = video.videoHeight
 
@@ -281,7 +299,13 @@ function detectWithJsQr(video: HTMLVideoElement, canvas: HTMLCanvasElement, cont
   const centerCrop = context.getImageData(cropLeft, cropTop, cropSize, cropSize)
   const decodedFromCenterCrop = decodeWithJsQrVariants(centerCrop)
 
-  return decodedFromCenterCrop?.data?.trim() ?? ''
+  const decodedCenterValue = decodedFromCenterCrop?.data?.trim() ?? ''
+
+  if (decodedCenterValue) {
+    return decodedCenterValue
+  }
+
+  return detectWithZxing(canvas, zxingReader)
 }
 
 function decodeWithJsQrVariants(imageData: ImageData) {
@@ -336,6 +360,7 @@ export function QrScannerDialog({
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const detectorRef = useRef<BarcodeDetectorInstance | null>(null)
+  const zxingReaderRef = useRef<BrowserQRCodeReader | null>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const contextRef = useRef<CanvasRenderingContext2D | null>(null)
   const frameRef = useRef(0)
@@ -366,6 +391,7 @@ export function QrScannerDialog({
     window.cancelAnimationFrame(frameRef.current)
     frameRef.current = 0
     detectorRef.current = null
+    zxingReaderRef.current = null
     processingRef.current = false
     lastScanAtRef.current = 0
     noDetectionStartAtRef.current = 0
@@ -428,7 +454,7 @@ export function QrScannerDialog({
 
     if (!navigator.mediaDevices?.getUserMedia) {
       setCameraState('idle')
-      setError('Dieser Browser unterstÃ¼tzt keinen Kamerazugriff.')
+      setError('Dieser Browser unterstützt keinen Kamerazugriff.')
       return
     }
 
@@ -483,7 +509,8 @@ export function QrScannerDialog({
         }
 
         detectorRef.current = await createQrDetector(window.BarcodeDetector)
-        setDecoderLabel(detectorRef.current ? 'BarcodeDetector + jsQR' : 'jsQR')
+        zxingReaderRef.current = new BrowserQRCodeReader()
+        setDecoderLabel(detectorRef.current ? 'BarcodeDetector + jsQR + ZXing' : 'jsQR + ZXing')
 
         if (!canvasRef.current) {
           canvasRef.current = document.createElement('canvas')
@@ -534,7 +561,12 @@ export function QrScannerDialog({
 
           if (!rawValue && canvasRef.current && contextRef.current) {
             try {
-              rawValue = detectWithJsQr(scanVideo, canvasRef.current, contextRef.current)
+              rawValue = detectWithJsQr(
+                scanVideo,
+                canvasRef.current,
+                contextRef.current,
+                zxingReaderRef.current,
+              )
             } catch {
               // Ignore one-off frame read errors and continue scanning.
             }
@@ -786,7 +818,7 @@ export function QrScannerDialog({
                   onClick={() => void handleManualSubmit()}
                   disabled={manualSubmitting}
                 >
-                  Uebernehmen
+                  Übernehmen
                 </Button>
               </Stack>
             </Collapse>
@@ -794,7 +826,7 @@ export function QrScannerDialog({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>SchlieÃŸen</Button>
+        <Button onClick={onClose}>Schließen</Button>
       </DialogActions>
     </Dialog>
   )

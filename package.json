@@ -17,6 +17,7 @@
     "@emotion/styled": "^11.14.1",
     "@mui/icons-material": "^7.3.9",
     "@mui/material": "^7.3.9",
+    "@zxing/browser": "^0.1.5",
     "firebase": "^12.10.0",
     "jspdf": "^4.2.0",
     "jsqr": "^1.4.0",
