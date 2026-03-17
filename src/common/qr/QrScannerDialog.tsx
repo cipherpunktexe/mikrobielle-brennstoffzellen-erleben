@@ -50,6 +50,8 @@ const DUPLICATE_DETECTION_COOLDOWN_MS = 1200
 const CAMERA_START_TIMEOUT_MS = 10000
 const VIDEO_READY_TIMEOUT_MS = 2500
 const BARCODE_FORMATS_TIMEOUT_MS = 900
+const JSQR_MAX_FRAME_EDGE = 960
+const JSQR_CENTER_CROP_RATIO = 0.72
 
 function getScannerErrorMessage(error: unknown) {
   if (error instanceof DOMException) {
@@ -199,12 +201,16 @@ async function createQrDetector(BarcodeDetectorApi?: BarcodeDetectorConstructor)
 }
 
 function detectWithJsQr(video: HTMLVideoElement, canvas: HTMLCanvasElement, context: CanvasRenderingContext2D) {
-  const width = video.videoWidth
-  const height = video.videoHeight
+  const sourceWidth = video.videoWidth
+  const sourceHeight = video.videoHeight
 
-  if (!width || !height) {
+  if (!sourceWidth || !sourceHeight) {
     return ''
   }
+
+  const scale = Math.min(1, JSQR_MAX_FRAME_EDGE / Math.max(sourceWidth, sourceHeight))
+  const width = Math.max(1, Math.round(sourceWidth * scale))
+  const height = Math.max(1, Math.round(sourceHeight * scale))
 
   if (canvas.width !== width || canvas.height !== height) {
     canvas.width = width
@@ -212,12 +218,25 @@ function detectWithJsQr(video: HTMLVideoElement, canvas: HTMLCanvasElement, cont
   }
 
   context.drawImage(video, 0, 0, width, height)
-  const imageData = context.getImageData(0, 0, width, height)
-  const decodedCode = jsQR(imageData.data, imageData.width, imageData.height, {
+  const fullFrame = context.getImageData(0, 0, width, height)
+  const decodedFromFullFrame = jsQR(fullFrame.data, fullFrame.width, fullFrame.height, {
     inversionAttempts: 'attemptBoth',
   })
 
-  return decodedCode?.data?.trim() ?? ''
+  if (decodedFromFullFrame?.data?.trim()) {
+    return decodedFromFullFrame.data.trim()
+  }
+
+  // Extra pass for small/centered QR codes that can get lost in full-frame noise.
+  const cropSize = Math.max(80, Math.floor(Math.min(width, height) * JSQR_CENTER_CROP_RATIO))
+  const cropLeft = Math.max(0, Math.floor((width - cropSize) / 2))
+  const cropTop = Math.max(0, Math.floor((height - cropSize) / 2))
+  const centerCrop = context.getImageData(cropLeft, cropTop, cropSize, cropSize)
+  const decodedFromCenterCrop = jsQR(centerCrop.data, centerCrop.width, centerCrop.height, {
+    inversionAttempts: 'attemptBoth',
+  })
+
+  return decodedFromCenterCrop?.data?.trim() ?? ''
 }
 
 export function QrScannerDialog({ open, onClose, onDetected }: QrScannerDialogProps) {
