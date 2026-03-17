@@ -158,8 +158,10 @@ export function LeaderboardPage() {
       mobileLabel: 'Nutzer',
       width: 'minmax(0, 1fr)',
       render: (entry) => (
-        <Stack direction="row" alignItems="center" spacing={1}>
-          <Typography sx={{ fontWeight: 600 }}>{entry.displayName}</Typography>
+        <Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 0 }}>
+          <Typography sx={{ fontWeight: 600 }} noWrap>
+            {entry.displayName}
+          </Typography>
           <KeyboardArrowRightIcon
             fontSize="small"
             sx={{ color: 'text.secondary', opacity: 0.8 }}
@@ -171,10 +173,10 @@ export function LeaderboardPage() {
       key: 'value',
       header: 'Maximalwert',
       mobileLabel: 'Maximalwert',
-      width: '130px',
+      width: '116px',
       align: 'right',
       render: (entry) => (
-        <Typography sx={{ fontWeight: 800, fontSize: '1.05rem' }}>
+        <Typography sx={{ fontWeight: 800, fontSize: '1.05rem', whiteSpace: 'nowrap' }}>
           {formatMeasurement(entry.maxValue)}
         </Typography>
       ),
@@ -444,6 +446,7 @@ export function LeaderboardPage() {
                     emptyPrimary="Keine Einträge"
                     onItemClick={(entry) => handleOpenEntry(entry)}
                     getItemAriaLabel={(entry) => `Messverlauf von ${entry.displayName} öffnen`}
+                    minDesktopWidth={320}
                   />
                 </AccordionDetails>
               </Accordion>
