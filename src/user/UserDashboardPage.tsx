@@ -332,9 +332,9 @@ export function UserDashboardPage() {
             height: 34,
             borderRadius: 1.75,
             border: (theme) => `1px solid ${theme.palette.divider}`,
-            bgcolor: 'rgba(255,255,255,0.72)',
+            bgcolor: (theme) => theme.custom.surface.strong,
             '&:hover': {
-              bgcolor: 'rgba(255,255,255,0.96)',
+              bgcolor: (theme) => theme.custom.surface.strongHover,
             },
           }}
         >

@@ -67,9 +67,10 @@ export function CollapsibleSearchField({
         width: fullWidth ? (open ? '100%' : 44) : 'auto',
         minWidth: 44,
         borderRadius: 999,
-        border: open ? '1px solid rgba(121,101,66,0.28)' : '1px solid rgba(121,101,66,0.18)',
-        bgcolor: open ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.72)',
-        boxShadow: open ? '0 6px 16px rgba(36,28,19,0.07)' : 'none',
+        border: (theme) =>
+          `1px solid ${open ? theme.custom.border.interactive : theme.custom.border.strong}`,
+        bgcolor: (theme) => (open ? theme.custom.surface.elevated : theme.custom.surface.strong),
+        boxShadow: open ? (theme) => theme.custom.shadow.soft : 'none',
         overflow: 'hidden',
         transition:
           'width 220ms ease, background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease',
@@ -83,9 +84,9 @@ export function CollapsibleSearchField({
           height: 42,
           flexShrink: 0,
           borderRadius: 999,
-          color: open ? '#6C5A39' : 'rgba(110,103,95,0.92)',
+          color: open ? 'secondary.main' : (theme) => theme.custom.text.muted,
           '&:hover': {
-            bgcolor: open ? 'rgba(121,101,66,0.14)' : 'rgba(121,101,66,0.08)',
+            bgcolor: (theme) => (open ? theme.custom.border.default : theme.custom.state.brandSoft),
           },
         }}
       >
@@ -113,10 +114,10 @@ export function CollapsibleSearchField({
           sx={{
             flex: 1,
             minWidth: 0,
-            color: 'rgba(60,48,33,0.96)',
+            color: (theme) => theme.custom.text.strong,
             fontSize: '1rem',
             '& input::placeholder': {
-              color: 'rgba(110,103,95,0.88)',
+              color: (theme) => theme.custom.text.mutedSecondary,
               opacity: 1,
             },
           }}
@@ -127,10 +128,10 @@ export function CollapsibleSearchField({
           onClick={() => onChange('')}
           sx={{
             ml: 0.35,
-            color: 'rgba(110,103,95,0.9)',
+            color: (theme) => theme.custom.text.muted,
             opacity: value ? 1 : 0.5,
             '&:hover': {
-              bgcolor: 'rgba(121,101,66,0.1)',
+              bgcolor: (theme) => theme.custom.state.brandSoft,
             },
           }}
         >

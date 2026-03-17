@@ -136,7 +136,7 @@ export function AppShell() {
                     startIcon={item.icon}
                     sx={{
                       color: 'primary.contrastText',
-                      backgroundColor: active ? 'rgba(249,246,239,0.16)' : 'transparent',
+                      backgroundColor: active ? (theme) => theme.custom.state.brandSoft : 'transparent',
                     }}
                   >
                     {item.label}
@@ -155,9 +155,9 @@ export function AppShell() {
                 sx={{
                   width: 38,
                   height: 38,
-                  bgcolor: 'rgba(249,246,239,0.18)',
+                  bgcolor: (theme) => theme.custom.surface.subtle,
                   color: 'primary.contrastText',
-                  border: '1px solid rgba(249,246,239,0.22)',
+                  border: (theme) => `1px solid ${theme.custom.border.default}`,
                   fontWeight: 700,
                 }}
               >
@@ -235,8 +235,8 @@ export function AppShell() {
         component="footer"
         sx={{
           mt: 'auto',
-          borderTop: '1px solid rgba(121,101,66,0.22)',
-          background: 'rgba(249, 246, 239, 0.42)',
+          borderTop: (theme) => `1px solid ${theme.custom.border.strong}`,
+          background: (theme) => theme.custom.surface.hover,
           backdropFilter: 'blur(14px)',
         }}
       >

@@ -91,11 +91,11 @@ export function AdminModerationSection({
                   height: 44,
                   borderRadius: 2.25,
                   flexShrink: 0,
-                  color: 'rgba(110,103,95,0.92)',
-                  border: '1px solid rgba(121,101,66,0.18)',
-                  bgcolor: 'rgba(255,255,255,0.72)',
+                  color: (theme) => theme.custom.text.muted,
+                  border: (theme) => `1px solid ${theme.custom.border.strong}`,
+                  bgcolor: (theme) => theme.custom.surface.strong,
                   '&:hover': {
-                    bgcolor: 'rgba(255,255,255,0.96)',
+                    bgcolor: (theme) => theme.custom.surface.strongHover,
                   },
                 }}
               >

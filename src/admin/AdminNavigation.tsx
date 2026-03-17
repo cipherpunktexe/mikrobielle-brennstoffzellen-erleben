@@ -57,16 +57,18 @@ export function AdminNavigation({
                 px: 1.5,
                 py: 1.15,
                 borderRadius: 999,
-                borderColor: 'rgba(121,101,66,0.35)',
-                bgcolor: mobileAdminNavOpen ? 'rgba(143,122,81,0.12)' : 'rgba(255,255,255,0.74)',
+                borderColor: (theme) => theme.custom.border.strong,
+                bgcolor: (theme) =>
+                  mobileAdminNavOpen ? theme.custom.state.brandSoft : theme.custom.surface.strong,
                 color: 'text.primary',
-                boxShadow: mobileAdminNavOpen ? '0 8px 20px rgba(36,28,19,0.1)' : 'none',
+                boxShadow: mobileAdminNavOpen ? (theme) => theme.custom.shadow.soft : 'none',
                 '& .MuiButton-endIcon': {
-                  color: 'rgba(77,67,49,0.9)',
+                  color: 'text.secondary',
                 },
                 '&:hover': {
-                  borderColor: 'rgba(121,101,66,0.52)',
-                  bgcolor: mobileAdminNavOpen ? 'rgba(143,122,81,0.18)' : 'rgba(255,255,255,0.92)',
+                  borderColor: (theme) => theme.custom.border.interactiveStrong,
+                  bgcolor: (theme) =>
+                    mobileAdminNavOpen ? theme.custom.state.brandSelected : theme.custom.surface.elevated,
                 },
               }}
             >
@@ -81,10 +83,10 @@ export function AdminNavigation({
               <Box
                 sx={{
                   borderRadius: 2,
-                  border: '1px solid rgba(121,101,66,0.2)',
+                  border: (theme) => `1px solid ${theme.custom.border.strong}`,
                   overflow: 'hidden',
-                  bgcolor: 'rgba(249,246,239,0.9)',
-                  boxShadow: '0 12px 28px rgba(36,28,19,0.1)',
+                  bgcolor: (theme) => theme.custom.surface.elevated,
+                  boxShadow: (theme) => theme.custom.shadow.panel,
                 }}
               >
                 <List disablePadding>
@@ -97,17 +99,19 @@ export function AdminNavigation({
                         px: 2,
                         py: 1.5,
                         borderBottom:
-                          index < adminTabItems.length - 1 ? '1px solid rgba(121,101,66,0.12)' : 'none',
+                          index < adminTabItems.length - 1
+                            ? (theme) => `1px solid ${theme.custom.border.soft}`
+                            : 'none',
                         color: 'text.primary',
                         '&:hover': {
-                          bgcolor: 'rgba(143,122,81,0.1)',
+                          bgcolor: (theme) => theme.custom.state.brandSoft,
                         },
                         '&.Mui-selected': {
-                          bgcolor: 'rgba(143,122,81,0.17)',
-                          boxShadow: 'inset 3px 0 0 #796542',
+                          bgcolor: (theme) => theme.custom.state.brandSelected,
+                          boxShadow: (theme) => `inset 3px 0 0 ${theme.palette.secondary.main}`,
                         },
                         '&.Mui-selected:hover': {
-                          bgcolor: 'rgba(143,122,81,0.22)',
+                          bgcolor: (theme) => theme.custom.state.brandSelectedHover,
                         },
                       }}
                     >

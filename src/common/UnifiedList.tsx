@@ -105,7 +105,9 @@ const UnifiedListRow = memo(function UnifiedListRow<TItem>({
     <ListItem
       disablePadding
       secondaryAction={action}
-      sx={{ borderBottom: isLastItem ? 'none' : '1px solid rgba(121,101,66,0.1)' }}
+      sx={{
+        borderBottom: isLastItem ? 'none' : (theme) => `1px solid ${theme.custom.border.soft}`,
+      }}
     >
       {onItemClick ? (
         <ListItemButton
@@ -122,12 +124,12 @@ const UnifiedListRow = memo(function UnifiedListRow<TItem>({
               cursor: 'default',
             },
             '&:hover': {
-              bgcolor: disabled ? 'transparent' : 'rgba(255,255,255,0.34)',
+              bgcolor: disabled ? 'transparent' : (theme) => theme.custom.surface.hover,
             },
             '&:focus-visible': {
-              outline: '2px solid rgba(143,122,81,0.55)',
+              outline: (theme) => `2px solid ${theme.custom.state.focus}`,
               outlineOffset: -2,
-              bgcolor: 'rgba(255,255,255,0.34)',
+              bgcolor: (theme) => theme.custom.surface.hover,
             },
           }}
         >
@@ -176,7 +178,7 @@ const UnifiedListRow = memo(function UnifiedListRow<TItem>({
                       borderRadius: 1.25,
                       px: 1,
                       py: 0.8,
-                      bgcolor: 'rgba(255,255,255,0.24)',
+                      bgcolor: (theme) => theme.custom.surface.muted,
                     }}
                   >
                     <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
@@ -243,7 +245,7 @@ const UnifiedListRow = memo(function UnifiedListRow<TItem>({
                       borderRadius: 1.25,
                       px: 1,
                       py: 0.8,
-                      bgcolor: 'rgba(255,255,255,0.24)',
+                      bgcolor: (theme) => theme.custom.surface.muted,
                     }}
                   >
                     <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
@@ -298,8 +300,8 @@ export function UnifiedList<TItem>({
       sx={{
         borderRadius: 2.5,
         overflow: 'hidden',
-        border: '1px solid rgba(121,101,66,0.14)',
-        bgcolor: 'rgba(255,255,255,0.18)',
+        border: (theme) => `1px solid ${theme.custom.border.default}`,
+        bgcolor: (theme) => theme.custom.surface.subtle,
       }}
     >
       <Box sx={{ overflowX: 'auto' }}>
@@ -311,8 +313,8 @@ export function UnifiedList<TItem>({
             px: { xs: 1, sm: 2 },
             py: 1,
             pr: renderItemAction ? { xs: 4.5, sm: 6 } : { xs: 1, sm: 2 },
-            borderBottom: items.length ? '1px solid rgba(121,101,66,0.1)' : 'none',
-            bgcolor: 'rgba(121,101,66,0.08)',
+            borderBottom: items.length ? (theme) => `1px solid ${theme.custom.border.soft}` : 'none',
+            bgcolor: (theme) => theme.custom.state.brandSoft,
             minWidth: minDesktopWidth,
           }}
         >

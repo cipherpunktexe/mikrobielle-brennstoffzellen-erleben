@@ -59,7 +59,7 @@ export function ModerationList({
                   display: 'inline-flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: '#8F6410',
+                  color: 'warning.main',
                   flexShrink: 0,
                 }}
               >
@@ -148,12 +148,12 @@ export function ModerationList({
             width: 32,
             height: 32,
             borderRadius: 1.75,
-            color: 'rgba(110,103,95,0.92)',
+            color: (theme) => theme.custom.text.muted,
             '&:hover': {
-              bgcolor: 'rgba(121,101,66,0.08)',
+              bgcolor: (theme) => theme.custom.state.brandSoft,
             },
             '&:focus-visible': {
-              outline: '2px solid rgba(143,122,81,0.55)',
+              outline: (theme) => `2px solid ${theme.custom.state.focus}`,
               outlineOffset: 2,
             },
           }}
