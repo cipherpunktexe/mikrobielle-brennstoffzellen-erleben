@@ -64,7 +64,7 @@ export function CollapsibleSearchField({
         display: 'flex',
         alignItems: 'center',
         height: 44,
-        width: fullWidth ? '100%' : 'auto',
+        width: fullWidth ? (open ? '100%' : 44) : 'auto',
         minWidth: 44,
         borderRadius: 999,
         border: open ? '1px solid rgba(121,101,66,0.28)' : '1px solid rgba(121,101,66,0.18)',
@@ -72,7 +72,7 @@ export function CollapsibleSearchField({
         boxShadow: open ? '0 6px 16px rgba(36,28,19,0.07)' : 'none',
         overflow: 'hidden',
         transition:
-          'background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease',
+          'width 220ms ease, background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease',
       }}
     >
       <IconButton
