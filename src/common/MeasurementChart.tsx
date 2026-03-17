@@ -1,7 +1,7 @@
 import { Box, Stack, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { LineChart } from './LineChart'
-import { formatMeasurement, formatTimestamp } from './format'
+import { createContextMeasurementFormatter, formatTimestamp } from './format'
 import type { Measurement } from '../data/domain'
 
 interface MeasurementChartProps {
@@ -29,16 +29,17 @@ export function MeasurementChart({ measurements }: MeasurementChartProps) {
   })
   const latestMeasurement = orderedMeasurements.at(-1)
   const values = orderedMeasurements.map((measurement) => measurement.value)
+  const formatMeasurementInContext = createContextMeasurementFormatter(values)
   const maxValue = values.length > 0 ? Math.max(...values) : undefined
 
   const metricCards = [
     {
       label: 'Aktueller Messwert',
-      value: formatMeasurement(latestMeasurement?.value),
+      value: formatMeasurementInContext(latestMeasurement?.value),
     },
     {
       label: 'Maximalwert',
-      value: formatMeasurement(maxValue),
+      value: formatMeasurementInContext(maxValue),
     },
   ]
 
@@ -89,7 +90,7 @@ export function MeasurementChart({ measurements }: MeasurementChartProps) {
         ariaLabel="Diagramm der Messwerthistorie"
         detailLabelTitle="Zeitpunkt"
         valueLabelTitle="Wert"
-        valueFormatter={formatMeasurement}
+        valueFormatter={(value) => formatMeasurementInContext(value)}
         showActiveSummary={false}
       />
     </Stack>

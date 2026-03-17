@@ -1,6 +1,11 @@
 import { describe, expect, test } from 'vitest'
 import type { Timestamp } from 'firebase/firestore'
-import { formatCode, formatMeasurement, formatTimestamp } from './format'
+import {
+  createContextMeasurementFormatter,
+  formatCode,
+  formatMeasurement,
+  formatTimestamp,
+} from './format'
 
 describe('format utils', () => {
   test('formats empty timestamp and measurement placeholders', () => {
@@ -16,6 +21,19 @@ describe('format utils', () => {
   test('formats very small measurements in scientific notation', () => {
     expect(formatMeasurement(0.0000123)).toBe('1.230e-5 V')
     expect(formatMeasurement(-0.0000123)).toBe('-1.230e-5 V')
+  })
+
+  test('uses context-aware precision for close values', () => {
+    const formatInContext = createContextMeasurementFormatter([1.2341, 1.2342, 1.2343])
+
+    expect(formatInContext(1.2341)).toBe('1.2341 V')
+    expect(formatInContext(1.2342)).toBe('1.2342 V')
+  })
+
+  test('keeps scientific notation for very small context values', () => {
+    const formatInContext = createContextMeasurementFormatter([0.00001231, 0.00001239])
+
+    expect(formatInContext(0.00001231)).toBe('1.231e-5 V')
   })
 
   test('normalizes generator codes', () => {
