@@ -1,4 +1,5 @@
 import { Box, Card, CardContent, Link, Stack, Typography } from '@mui/material'
+import { uiColor } from '../app/uiColor'
 
 type SectionProps = {
   title: string
@@ -9,10 +10,10 @@ function Section({ title, children }: SectionProps) {
   return (
     <Box
       sx={{
-        border: '1px solid rgba(121,101,66,0.18)',
+        border: (theme) => `1px solid ${uiColor.surface.border(theme)}`,
         borderRadius: 3,
         p: { xs: 2, sm: 3 },
-        background: 'rgba(248,242,231,0.3)',
+        background: (theme) => uiColor.surface.subtle(theme),
       }}
     >
       <Typography variant="h5" sx={{ mb: 1.5, fontSize: { xs: '1.2rem', sm: '1.5rem' } }}>
@@ -91,8 +92,7 @@ const serviceItems: ServiceItem[] = [
   },
   {
     title: 'Cloud Firestore',
-    description:
-      'Wird zur Speicherung von Nutzerprofilen, Brennstoffzellen und Messwerten genutzt.',
+    description: 'Wird zur Speicherung von Nutzerprofilen, Brennstoffzellen und Messwerten genutzt.',
     dataItems: [
       'Name',
       'E-Mail-Adresse',
@@ -134,9 +134,9 @@ export function DatenschutzPage() {
               Datenschutzerklärung
             </Typography>
             <Typography color="text.secondary">
-              Diese Datenschutzerklärung ist als veröffentlichungsfähige Vorlage mit
-              Platzhaltern angelegt. Ersetze die eckigen Klammern vor der Veröffentlichung
-              durch die tatsächlichen Angaben zur verantwortlichen Stelle.
+              Diese Datenschutzerklärung ist als veröffentlichungsfähige Vorlage mit Platzhaltern angelegt.
+              Ersetze die eckigen Klammern vor der Veröffentlichung durch die tatsächlichen Angaben zur
+              verantwortlichen Stelle.
             </Typography>
           </Stack>
         </CardContent>
@@ -162,61 +162,58 @@ export function DatenschutzPage() {
       <Section title="2. Datenschutz auf einen Blick">
         <Subsection title="Welche Daten werden verarbeitet?">
           <Typography variant="body2">
-            Im Rahmen der Nutzung der App werden insbesondere Registrierungs-, Login-,
-            Rollen-, Brennstoffzellen- und Messwertdaten verarbeitet. Zusätzlich fallen beim
-            Aufruf der Web-App technische Zugriffsdaten an.
+            Im Rahmen der Nutzung der App werden insbesondere Registrierungs-, Login-, Rollen-,
+            Brennstoffzellen- und Messwertdaten verarbeitet. Zusätzlich fallen beim Aufruf der Web-App
+            technische Zugriffsdaten an.
           </Typography>
         </Subsection>
 
         <Subsection title="Wofür werden die Daten genutzt?">
           <Typography variant="body2">
-            Die Daten werden genutzt, um Nutzerkonten anzulegen, Anmeldungen zu
-            ermöglichen, Brennstoffzellen Nutzern zuzuordnen, Messwerte zu speichern und das
-            Leaderboard bereitzustellen.
+            Die Daten werden genutzt, um Nutzerkonten anzulegen, Anmeldungen zu ermöglichen,
+            Brennstoffzellen Nutzern zuzuordnen, Messwerte zu speichern und das Leaderboard
+            bereitzustellen.
           </Typography>
         </Subsection>
 
         <Subsection title="Wer erhält die Daten?">
           <Typography variant="body2">
-            Empfänger sind im aktuellen Stand vor allem die eingesetzten Google-Firebase-
-            Dienste für Authentifizierung, Datenbank und Hosting.
+            Empfänger sind im aktuellen Stand vor allem die eingesetzten Google-Firebase-Dienste für
+            Authentifizierung, Datenbank und Hosting.
           </Typography>
         </Subsection>
       </Section>
 
       <Section title="3. Rechtsgrundlagen">
         <Typography variant="body2">
-          Soweit die App für Registrierung, Anmeldung, Benutzerverwaltung und die
-          Bereitstellung der Kernfunktionen genutzt wird, erfolgt die Verarbeitung in der
-          Regel zur Durchführung der bereitgestellten Anwendung. Daneben können gesetzliche
-          Verpflichtungen oder berechtigte Interessen als Rechtsgrundlage einschlägig sein.
-          Die konkrete rechtliche Einordnung sollte vor Veröffentlichung abschließend
-          geprüft werden.
+          Soweit die App für Registrierung, Anmeldung, Benutzerverwaltung und die Bereitstellung der
+          Kernfunktionen genutzt wird, erfolgt die Verarbeitung in der Regel zur Durchführung der
+          bereitgestellten Anwendung. Daneben können gesetzliche Verpflichtungen oder berechtigte
+          Interessen als Rechtsgrundlage einschlägig sein. Die konkrete rechtliche Einordnung sollte vor
+          Veröffentlichung abschließend geprüft werden.
         </Typography>
       </Section>
 
       <Section title="4. Speicherdauer">
         <Typography variant="body2">
-          Personenbezogene Daten werden nur so lange gespeichert, wie sie für den Betrieb
-          der Anwendung, die bereitgestellten Funktionen oder gesetzliche
-          Aufbewahrungspflichten erforderlich sind. Nach Wegfall des jeweiligen Zwecks
-          werden die Daten gelöscht, soweit keine gesetzlichen Pflichten entgegenstehen.
+          Personenbezogene Daten werden nur so lange gespeichert, wie sie für den Betrieb der
+          Anwendung, die bereitgestellten Funktionen oder gesetzliche Aufbewahrungspflichten erforderlich
+          sind. Nach Wegfall des jeweiligen Zwecks werden die Daten gelöscht, soweit keine gesetzlichen
+          Pflichten entgegenstehen.
         </Typography>
       </Section>
 
       <Section title="5. Ihre Rechte">
         <Typography variant="body2">
-          Betroffene Personen haben nach Maßgabe der gesetzlichen Vorschriften
-          insbesondere das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der
-          Verarbeitung, Datenübertragbarkeit sowie auf Beschwerde bei einer zuständigen
-          Datenschutzaufsichtsbehörde.
+          Betroffene Personen haben nach Maßgabe der gesetzlichen Vorschriften insbesondere das Recht auf
+          Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit sowie auf
+          Beschwerde bei einer zuständigen Datenschutzaufsichtsbehörde.
         </Typography>
       </Section>
 
       <Section title="6. Eingesetzte Dienste">
         <Typography variant="body2" color="text.secondary">
-          Aufgeführt sind nur Dienste, die im aktuellen Stand der App tatsächlich
-          verwendet werden.
+          Aufgeführt sind nur Dienste, die im aktuellen Stand der App tatsächlich verwendet werden.
         </Typography>
 
         <Stack spacing={2}>
@@ -225,8 +222,6 @@ export function DatenschutzPage() {
           ))}
         </Stack>
       </Section>
-
-      
     </Stack>
   )
 }

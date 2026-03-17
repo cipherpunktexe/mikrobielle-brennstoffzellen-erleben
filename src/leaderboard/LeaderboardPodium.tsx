@@ -1,20 +1,37 @@
 import { Box, Stack, Typography } from '@mui/material'
+import { alpha, darken, lighten, type Theme } from '@mui/material/styles'
 import { type KeyboardEvent } from 'react'
+import { uiColor } from '../app/uiColor'
 import { formatMeasurement } from '../common/format'
 import type { LeaderboardEntry } from '../data/domain'
 
-const rankStyles = [
+type RankStyle = {
+  medalBg: (theme: Theme) => string
+  podiumBg: (theme: Theme) => string
+  medalText: (theme: Theme) => string
+}
+
+const rankStyles: RankStyle[] = [
   {
-    medalBg: 'linear-gradient(180deg, #f6d774, #d5a11d)',
-    podiumBg: 'linear-gradient(180deg, rgba(140,105,36,0.96), rgba(108,79,24,0.96))',
+    medalBg: (theme) =>
+      `linear-gradient(180deg, ${lighten(theme.palette.warning.main, 0.35)}, ${theme.palette.warning.main})`,
+    podiumBg: (theme) =>
+      `linear-gradient(180deg, ${alpha(darken(theme.palette.warning.main, 0.2), 0.96)}, ${alpha(theme.palette.secondary.dark, 0.96)})`,
+    medalText: (theme) => alpha(theme.palette.common.white, 0.98),
   },
   {
-    medalBg: 'linear-gradient(180deg, #d7d9de, #9ba1ab)',
-    podiumBg: 'linear-gradient(180deg, rgba(126,114,95,0.94), rgba(92,82,68,0.94))',
+    medalBg: (theme) =>
+      `linear-gradient(180deg, ${lighten(theme.palette.text.secondary, 0.55)}, ${alpha(theme.palette.text.secondary, 0.74)})`,
+    podiumBg: (theme) =>
+      `linear-gradient(180deg, ${alpha(theme.palette.secondary.main, 0.94)}, ${alpha(theme.palette.text.secondary, 0.9)})`,
+    medalText: (theme) => theme.palette.text.primary,
   },
   {
-    medalBg: 'linear-gradient(180deg, #df9b63, #b56a35)',
-    podiumBg: 'linear-gradient(180deg, rgba(138,93,62,0.94), rgba(108,70,45,0.94))',
+    medalBg: (theme) =>
+      `linear-gradient(180deg, ${lighten(theme.palette.primary.main, 0.16)}, ${darken(theme.palette.primary.main, 0.08)})`,
+    podiumBg: (theme) =>
+      `linear-gradient(180deg, ${alpha(darken(theme.palette.primary.main, 0.16), 0.94)}, ${alpha(theme.palette.secondary.dark, 0.92)})`,
+    medalText: (theme) => alpha(theme.palette.primary.contrastText, 0.98),
   },
 ]
 
@@ -65,10 +82,9 @@ export function LeaderboardPodium({ entries, onOpenEntry }: LeaderboardPodiumPro
         px: { xs: 1.5, sm: 2.25, md: 3 },
         pt: { xs: 2, md: 2.5 },
         pb: { xs: 1.5, md: 2 },
-        border: '1px solid rgba(121,101,66,0.14)',
-        background:
-          'linear-gradient(180deg, rgba(186,162,120,0.26), rgba(141,120,85,0.18)), rgba(248,242,231,0.72)',
-        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.36)',
+        border: (theme) => `1px solid ${uiColor.leaderboard.podiumContainerBorder(theme)}`,
+        background: (theme) => uiColor.leaderboard.podiumContainerBackground(theme),
+        boxShadow: (theme) => uiColor.leaderboard.podiumContainerInset(theme),
       }}
     >
       <Box
@@ -76,8 +92,7 @@ export function LeaderboardPodium({ entries, onOpenEntry }: LeaderboardPodiumPro
           position: 'absolute',
           inset: 0,
           opacity: 0.55,
-          background:
-            'radial-gradient(circle at 50% 42%, rgba(249,246,239,0.5), transparent 18%), repeating-conic-gradient(from 0deg at 50% 42%, rgba(249,246,239,0.22) 0deg 11deg, rgba(121,101,66,0.02) 11deg 22deg)',
+          background: (theme) => uiColor.leaderboard.podiumTexture(theme),
           pointerEvents: 'none',
         }}
       />
@@ -125,7 +140,7 @@ export function LeaderboardPodium({ entries, onOpenEntry }: LeaderboardPodiumPro
                 cursor: 'pointer',
                 zIndex: rank === 1 ? 2 : 1,
                 '&:focus-visible': {
-                  outline: '2px solid rgba(61,177,236,0.75)',
+                  outline: (theme) => `2px solid ${uiColor.leaderboard.focusOutline(theme)}`,
                   outlineOffset: '4px',
                   borderRadius: '18px',
                 },
@@ -158,17 +173,17 @@ export function LeaderboardPodium({ entries, onOpenEntry }: LeaderboardPodiumPro
                   pt: { xs: 1, sm: 1.25, md: 1.5 },
                   pb: { xs: 1.1, sm: 1.5, md: 1.75 },
                   borderRadius: '18px 18px 0 0',
-                  background: rankStyle.podiumBg,
-                  color: 'rgba(249,246,239,0.96)',
-                  boxShadow:
+                  background: (theme) => rankStyle.podiumBg(theme),
+                  color: (theme) => uiColor.leaderboard.podiumText(theme),
+                  boxShadow: (theme) =>
                     rank === 1
-                      ? '0 16px 28px rgba(72,48,16,0.2)'
-                      : '0 12px 22px rgba(72,48,16,0.12)',
+                      ? uiColor.leaderboard.podiumShadowStrong(theme)
+                      : uiColor.leaderboard.podiumShadowDefault(theme),
                   transition: 'transform 180ms ease, box-shadow 180ms ease, filter 180ms ease',
                   '&:hover': {
                     transform: 'translateY(-3px)',
                     filter: 'brightness(1.03)',
-                    boxShadow: '0 18px 30px rgba(72,48,16,0.18)',
+                    boxShadow: (theme) => uiColor.leaderboard.podiumShadowHover(theme),
                   },
                 }}
               >
@@ -194,14 +209,13 @@ export function LeaderboardPodium({ entries, onOpenEntry }: LeaderboardPodiumPro
                         sm: rank === 1 ? '2rem' : '1.65rem',
                         md: rank === 1 ? '2.4rem' : '2rem',
                       },
-                      color: rank === 2 ? '#50545D' : 'rgba(255,248,236,0.98)',
-                      background: rankStyle.medalBg,
-                      border: {
-                        xs: '3px solid rgba(249,246,239,0.35)',
-                        sm: '4px solid rgba(249,246,239,0.35)',
-                      },
-                      boxShadow: 'inset 0 2px 0 rgba(255,255,255,0.35)',
-                      textShadow: '0 1px 0 rgba(0,0,0,0.18)',
+                      color: (theme) => rankStyle.medalText(theme),
+                      background: (theme) => rankStyle.medalBg(theme),
+                      borderStyle: 'solid',
+                      borderWidth: { xs: 3, sm: 4 },
+                      borderColor: (theme) => uiColor.leaderboard.medalBorder(theme),
+                      boxShadow: (theme) => uiColor.leaderboard.medalInset(theme),
+                      textShadow: (theme) => uiColor.leaderboard.medalTextShadow(theme),
                     }}
                   >
                     {rank}

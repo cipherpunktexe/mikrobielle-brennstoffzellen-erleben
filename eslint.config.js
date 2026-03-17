@@ -21,7 +21,7 @@ export default defineConfig([
     },
     rules: {
       'no-restricted-syntax': [
-        'warn',
+        'error',
         {
           selector: 'Literal[value=/^#(?:[0-9a-fA-F]{3,8})$/]',
           message: 'Verwende Theme-Palette/Tokens statt hartcodierter Hex-Farben.',

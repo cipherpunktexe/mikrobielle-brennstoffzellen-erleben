@@ -17,6 +17,7 @@ import {
   Typography,
 } from '@mui/material'
 import { useEffect, useRef, useState } from 'react'
+import { uiColor } from '../../app/uiColor'
 
 interface QrScannerDialogProps {
   open: boolean
@@ -498,7 +499,7 @@ export function QrScannerDialog({
               overflow: 'hidden',
               borderRadius: 3,
               minHeight: { xs: 300, sm: 320 },
-              bgcolor: 'rgba(36,28,19,0.92)',
+              bgcolor: (theme) => uiColor.scanner.backdrop(theme),
               display: 'grid',
               placeItems: 'center',
             }}
@@ -526,9 +527,9 @@ export function QrScannerDialog({
                 width: { xs: 190, sm: 220 },
                 height: { xs: 190, sm: 220 },
                 transform: 'translate(-50%, -50%)',
-                border: '2px solid rgba(255,255,255,0.72)',
+                border: (theme) => `2px solid ${uiColor.scanner.frameBorder(theme)}`,
                 borderRadius: 3,
-                boxShadow: '0 0 0 9999px rgba(0,0,0,0.14)',
+                boxShadow: (theme) => uiColor.scanner.frameMaskShadow(theme),
               }}
             />
 

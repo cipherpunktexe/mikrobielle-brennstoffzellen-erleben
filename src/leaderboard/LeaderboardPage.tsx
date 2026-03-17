@@ -37,8 +37,8 @@ export function LeaderboardPage() {
     setSelectedMeasurements(null)
   }
 
-  const visibleEntries = leaderboard ?? []
-  const remainingEntries = visibleEntries.slice(3)
+  const visibleEntries = useMemo(() => leaderboard ?? [], [leaderboard])
+  const remainingEntries = useMemo(() => visibleEntries.slice(3), [visibleEntries])
   const leaderboardColumns = useMemo(
     () => createLeaderboardColumns(visibleEntries, isMobileViewport),
     [visibleEntries, isMobileViewport],

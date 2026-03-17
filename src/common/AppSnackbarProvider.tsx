@@ -1,14 +1,17 @@
 import { Alert, Snackbar } from '@mui/material'
 import type { AlertColor } from '@mui/material'
 import {
-  createContext,
   useCallback,
-  useContext,
   useMemo,
   useState,
   type ReactNode,
   type SyntheticEvent,
 } from 'react'
+import {
+  AppSnackbarContext,
+  type AppSnackbarContextValue,
+  type ShowAppSnackbarOptions,
+} from './AppSnackbarContext'
 
 interface AppSnackbarState {
   open: boolean
@@ -17,20 +20,7 @@ interface AppSnackbarState {
   autoHideDuration: number
 }
 
-interface ShowAppSnackbarOptions {
-  message: string
-  severity?: AlertColor
-  autoHideDuration?: number
-}
-
-interface AppSnackbarContextValue {
-  showSnackbar: (options: ShowAppSnackbarOptions) => void
-  closeSnackbar: () => void
-}
-
 const DEFAULT_AUTO_HIDE_DURATION_MS = 3500
-
-const AppSnackbarContext = createContext<AppSnackbarContextValue | null>(null)
 
 interface AppSnackbarProviderProps {
   children: ReactNode
@@ -103,14 +93,3 @@ export function AppSnackbarProvider({ children }: AppSnackbarProviderProps) {
     </AppSnackbarContext.Provider>
   )
 }
-
-export function useAppSnackbar() {
-  const context = useContext(AppSnackbarContext)
-
-  if (!context) {
-    throw new Error('useAppSnackbar muss innerhalb von AppSnackbarProvider verwendet werden.')
-  }
-
-  return context
-}
-

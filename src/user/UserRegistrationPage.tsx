@@ -11,7 +11,7 @@ import {
 } from '@mui/material'
 import { type FormEvent, useState } from 'react'
 import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom'
-import { useAppSnackbar } from '../common/AppSnackbarProvider'
+import { useAppSnackbar } from '../common/AppSnackbarContext'
 import { formatCode } from '../common/format'
 import { registerUserWithGenerator } from '../data/firebaseData'
 

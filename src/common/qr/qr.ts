@@ -1,5 +1,7 @@
 import { jsPDF } from 'jspdf'
 import QRCode from 'qrcode'
+import { theme } from '../../app/theme'
+import { uiColor } from '../../app/uiColor'
 
 export interface QrCardDefinition {
   code: string
@@ -99,6 +101,14 @@ const QR_BELOW_BADGE_TOP_PADDING_RATIO = 0.02
 const QR_BELOW_BADGE_MIN_WIDTH_RATIO = 0.22
 const QR_BELOW_BADGE_MAX_WIDTH_RATIO = 0.5
 const QR_BELOW_BADGE_HEIGHT_RATIO = 0.52
+const qrCanvasColor = {
+  finder: uiColor.qr.finder(theme),
+  module: uiColor.qr.module(theme),
+  canvasBackground: uiColor.qr.canvasBackground(theme),
+  badgeFill: uiColor.qr.badgeFill(theme),
+  badgeStroke: uiColor.qr.badgeStroke(theme),
+  badgeText: uiColor.qr.badgeText(theme),
+}
 
 export function getQrBadgeLabel(code: string) {
   const normalizedCode = formatCode(code) || code.trim() || '000'
@@ -245,7 +255,7 @@ function renderStyledQrModules({
       const insetRatio = isFinder ? QR_FINDER_INSET_RATIO : QR_MODULE_INSET_RATIO
       const inset = moduleSize * insetRatio
 
-      context.fillStyle = isFinder ? '#7CB342' : '#241C13'
+      context.fillStyle = isFinder ? qrCanvasColor.finder : qrCanvasColor.module
       drawRoundedRect(
         context,
         x + inset,
@@ -279,7 +289,7 @@ function renderStyledQrToCanvas(
   canvas.width = QR_CANVAS_SIZE
   canvas.height = QR_CANVAS_SIZE
 
-  context.fillStyle = '#F8F2E7'
+  context.fillStyle = qrCanvasColor.canvasBackground
   context.fillRect(0, 0, canvas.width, canvas.height)
 
   if (codePlacement === 'below') {
@@ -300,14 +310,14 @@ function renderStyledQrToCanvas(
       offsetY: qrOffsetY + QR_QUIET_ZONE_MODULES * moduleSize,
     })
 
-    context.fillStyle = '#FFF9EF'
-    context.strokeStyle = '#1F7A8C'
+    context.fillStyle = qrCanvasColor.badgeFill
+    context.strokeStyle = qrCanvasColor.badgeStroke
     context.lineWidth = badge.lineWidth
     drawRoundedRect(context, badge.x, badge.y, badge.width, badge.height, badge.radius)
     context.fill()
     context.stroke()
 
-    context.fillStyle = '#241C13'
+    context.fillStyle = qrCanvasColor.badgeText
     context.font =
       `bold ${getQrBadgeFontSize(badgeLabel, badge.width, badge.fontSize)}px ` +
       '"Consolas", "Courier New", monospace'
@@ -340,14 +350,14 @@ function renderStyledQrToCanvas(
     },
   })
 
-  context.fillStyle = '#FFF9EF'
-  context.strokeStyle = '#1F7A8C'
+  context.fillStyle = qrCanvasColor.badgeFill
+  context.strokeStyle = qrCanvasColor.badgeStroke
   context.lineWidth = badge.lineWidth
   drawRoundedRect(context, badge.x, badge.y, badge.width, badge.height, badge.radius)
   context.fill()
   context.stroke()
 
-  context.fillStyle = '#241C13'
+  context.fillStyle = qrCanvasColor.badgeText
   context.font = `bold ${getQrBadgeFontSize(badgeLabel, badge.width, badge.fontSize)}px "Consolas", "Courier New", monospace`
   context.textAlign = 'center'
   context.textBaseline = 'middle'

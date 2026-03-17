@@ -1,15 +1,7 @@
 import EditNoteIcon from '@mui/icons-material/EditNote'
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner'
-import {
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  Grid,
-  IconButton,
-  Stack,
-  Typography,
-} from '@mui/material'
+import { Button, Card, CardContent, Chip, Grid, IconButton, Stack, Typography } from '@mui/material'
+import { useEffect, useMemo, useState } from 'react'
 import { formatMeasurement } from '../../common/format'
 import { UnifiedList, type UnifiedListColumn } from '../../common/UnifiedList'
 import type { AdminRecentMeasurementItem } from '../../data/firebaseData'
@@ -80,17 +72,34 @@ export function AdminScanSection({
   onEditRecentMeasurement,
 }: AdminScanSectionProps) {
   const sixHoursInMs = 6 * 60 * 60 * 1000
-  const nowMs = Date.now()
-  const recentMeasurementsInLastSixHours = recentMeasurements.filter((item) => {
-    const createdAtMs = getCreatedAtMs(item.createdAt)
+  const [nowMs, setNowMs] = useState(0)
 
-    if (createdAtMs === null) {
-      return false
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setNowMs(Date.now())
+    }, 0)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+    }
+  }, [recentMeasurements])
+
+  const recentMeasurementsInLastSixHours = useMemo(() => {
+    if (nowMs === 0) {
+      return []
     }
 
-    const elapsedMs = nowMs - createdAtMs
-    return elapsedMs >= 0 && elapsedMs <= sixHoursInMs
-  })
+    return recentMeasurements.filter((item) => {
+      const createdAtMs = getCreatedAtMs(item.createdAt)
+
+      if (createdAtMs === null) {
+        return false
+      }
+
+      const elapsedMs = nowMs - createdAtMs
+      return elapsedMs >= 0 && elapsedMs <= sixHoursInMs
+    })
+  }, [nowMs, recentMeasurements, sixHoursInMs])
 
   const columns: UnifiedListColumn<AdminRecentMeasurementItem>[] = [
     {
@@ -190,7 +199,6 @@ export function AdminScanSection({
               <Typography variant="h4" sx={{ fontSize: { xs: '1.45rem', sm: '2rem' } }}>
                 Letzte eigene Einträge
               </Typography>
-              
               <UnifiedList
                 items={recentMeasurementsInLastSixHours}
                 columns={columns}

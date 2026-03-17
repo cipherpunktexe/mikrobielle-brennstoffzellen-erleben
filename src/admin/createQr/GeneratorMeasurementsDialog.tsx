@@ -10,6 +10,7 @@ import {
   Typography,
   Button,
 } from '@mui/material'
+import { uiColor } from '../../app/uiColor'
 import { UnifiedList, type UnifiedListColumn } from '../../common/UnifiedList'
 import { formatMeasurement, formatTimestamp } from '../../common/format'
 import type { Generator, Measurement } from '../../data/domain'
@@ -112,9 +113,9 @@ export function GeneratorMeasurementsDialog({
                       height: 34,
                       borderRadius: 1.75,
                       border: (theme) => `1px solid ${theme.palette.divider}`,
-                      bgcolor: 'rgba(255,255,255,0.72)',
+                      bgcolor: (theme) => uiColor.surface.soft(theme),
                       '&:hover': {
-                        bgcolor: 'rgba(255,255,255,0.96)',
+                        bgcolor: (theme) => uiColor.surface.softHover(theme),
                       },
                     }}
                   >

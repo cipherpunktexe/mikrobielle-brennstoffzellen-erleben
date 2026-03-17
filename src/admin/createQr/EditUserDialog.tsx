@@ -14,6 +14,7 @@ import {
   Typography,
 } from '@mui/material'
 import type { FormEvent } from 'react'
+import { uiColor } from '../../app/uiColor'
 import type { EntityLifecycleStatus, Generator, UserProfile } from '../../data/domain'
 import type { UserFormState } from '../types'
 
@@ -114,9 +115,9 @@ export function EditUserDialog({
 
             <Box
               sx={{
-                border: '1px solid rgba(121,101,66,0.22)',
+                border: (theme) => `1px solid ${uiColor.surface.borderStrong(theme)}`,
                 borderRadius: 2.5,
-                bgcolor: 'rgba(255,255,255,0.44)',
+                bgcolor: (theme) => uiColor.surface.muted(theme),
                 px: 1.25,
                 py: 1,
               }}

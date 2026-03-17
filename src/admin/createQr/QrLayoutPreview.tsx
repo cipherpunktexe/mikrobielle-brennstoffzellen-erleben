@@ -1,5 +1,6 @@
 import { Alert, Box, Stack, Typography } from '@mui/material'
 import { useEffect, useState } from 'react'
+import { uiColor } from '../../app/uiColor'
 import { buildGeneratorQrValue, generateQrDataUrl, getQrBadgeLabel } from '../../common/qr/qr'
 import type { QrCodeNumberPlacement, QrPdfLayoutPreview } from '../../common/qr/qr'
 
@@ -89,7 +90,7 @@ export function QrLayoutPreview({
         sx={{
           p: { xs: 1.5, sm: 2.5 },
           borderRadius: 4,
-          bgcolor: 'rgba(36,28,19,0.06)',
+          bgcolor: (theme) => uiColor.preview.background(theme),
           border: (theme) => `1px solid ${theme.palette.divider}`,
           display: 'flex',
           flex: 1,
@@ -113,10 +114,10 @@ export function QrLayoutPreview({
               maxWidth: '100%',
               maxHeight: '100%',
               aspectRatio: `${layout.pageWidthMm} / ${layout.pageHeightMm}`,
-              bgcolor: '#fffdf8',
+              bgcolor: (theme) => uiColor.preview.pageBackground(theme),
               borderRadius: 2,
-              border: '1px solid rgba(36,28,19,0.14)',
-              boxShadow: '0 12px 24px rgba(36,28,19,0.08)',
+              border: (theme) => `1px solid ${uiColor.preview.pageBorder(theme)}`,
+              boxShadow: (theme) => uiColor.preview.pageShadow(theme),
               overflow: 'hidden',
               flexShrink: 0,
             }}
@@ -155,11 +156,7 @@ export function QrLayoutPreview({
           </Box>
         </Box>
       </Box>
-      <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        justifyContent="space-between"
-        spacing={1}
-      >
+      <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" spacing={1}>
         <Typography variant="body2" color="text.secondary">
           Seite 1 / {layout.pageCount}
         </Typography>

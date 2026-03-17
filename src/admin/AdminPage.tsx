@@ -1,4 +1,4 @@
-﻿import {
+import {
   Alert,
   Button,
   Card,
@@ -30,7 +30,7 @@ import { GeneratorMeasurementsDialog } from './createQr/GeneratorMeasurementsDia
 import { ScanMeasurementDialog } from './createQr/ScanMeasurementDialog'
 import { MeasurementFormDialog } from './createQr/MeasurementFormDialog'
 import { AuthCard } from '../common/AuthCard'
-import { useAppSnackbar } from '../common/AppSnackbarProvider'
+import { useAppSnackbar } from '../common/AppSnackbarContext'
 import { QrScannerDialog } from '../common/qr/QrScannerDialog'
 import { formatCode } from '../common/format'
 import {

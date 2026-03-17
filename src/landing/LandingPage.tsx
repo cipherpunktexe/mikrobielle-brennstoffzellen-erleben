@@ -2,11 +2,11 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import OpenInNewIcon from '@mui/icons-material/OpenInNew'
 import { Box, Button, Card, CardContent, Chip, Grid, Stack, Typography } from '@mui/material'
 import { Link as RouterLink } from 'react-router-dom'
+import { uiColor } from '../app/uiColor'
 
 const canvaEditUrl =
   'https://www.canva.com/design/DAG07O2FJRM/I5SCR0qqx1-stjzMK3V_Qg/edit?utm_content=DAG07O2FJRM&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton'
-const canvaEmbedUrl =
-  'https://www.canva.com/design/DAG07O2FJRM/I5SCR0qqx1-stjzMK3V_Qg/view?embed'
+const canvaEmbedUrl = 'https://www.canva.com/design/DAG07O2FJRM/I5SCR0qqx1-stjzMK3V_Qg/view?embed'
 
 export function LandingPage() {
   return (
@@ -14,8 +14,7 @@ export function LandingPage() {
       <Card
         sx={{
           overflow: 'hidden',
-          background:
-            'linear-gradient(135deg, rgba(36,28,19,0.78), rgba(121,101,66,0.76)), radial-gradient(circle at top, rgba(255,248,231,0.22), transparent 42%)',
+          background: (theme) => uiColor.landing.heroGradient(theme),
           color: 'primary.contrastText',
         }}
       >
@@ -31,10 +30,8 @@ export function LandingPage() {
                 <Typography variant="h1" sx={{ fontSize: { xs: '2.35rem', sm: undefined } }}>
                   Lorem ipsum dolor sit amet.
                 </Typography>
-                <Typography sx={{ maxWidth: 680, color: 'rgba(249,246,239,0.82)' }}>
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere
-                  erat a ante venenatis dapibus posuere velit aliquet. Donec sed odio dui.
-                  Cras mattis consectetur purus sit amet fermentum.
+                <Typography sx={{ maxWidth: 680, color: (theme) => uiColor.landing.heroBody(theme) }}>
+                  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere erat a ante venenatis dapibus posuere velit aliquet. Donec sed odio dui. Cras mattis consectetur purus sit amet fermentum.
                 </Typography>
                 <Button
                   component={RouterLink}
@@ -53,9 +50,9 @@ export function LandingPage() {
                 elevation={0}
                 sx={{
                   borderRadius: { xs: '22px', sm: '28px' },
-                  background: 'rgba(248,242,231,0.74)',
-                  border: '1px solid rgba(121,101,66,0.18)',
-                  boxShadow: '0 20px 42px rgba(19, 15, 9, 0.18)',
+                  background: (theme) => uiColor.landing.panelBackground(theme),
+                  border: (theme) => `1px solid ${uiColor.landing.panelBorder(theme)}`,
+                  boxShadow: (theme) => uiColor.landing.panelShadow(theme),
                 }}
               >
                 <CardContent
@@ -94,7 +91,6 @@ export function LandingPage() {
               <Typography variant="h2" gutterBottom sx={{ fontSize: { xs: '1.85rem', sm: undefined } }}>
                 Projektpräsentation
               </Typography>
-              
             </div>
 
             <Box
@@ -103,8 +99,8 @@ export function LandingPage() {
                 width: '100%',
                 overflow: 'hidden',
                 borderRadius: { xs: '18px', sm: '24px' },
-                border: '1px solid rgba(121,101,66,0.18)',
-                background: 'rgba(248,242,231,0.74)',
+                border: (theme) => `1px solid ${uiColor.landing.panelBorder(theme)}`,
+                background: (theme) => uiColor.landing.panelBackground(theme),
                 pt: { xs: '70%', sm: '56.25%' },
               }}
             >
