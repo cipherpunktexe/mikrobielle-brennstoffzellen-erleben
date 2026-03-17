@@ -1,7 +1,7 @@
 import CloseIcon from '@mui/icons-material/Close'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import SearchIcon from '@mui/icons-material/Search'
-import { Alert, Box, Card, CardContent, IconButton, InputBase, Stack, Typography } from '@mui/material'
+import { Alert, Badge, Box, Card, CardContent, IconButton, InputBase, Stack, Typography } from '@mui/material'
 import type { MouseEvent } from 'react'
 import type { ModerationListEntry } from '../types'
 import { ModerationList } from './ModerationList'
@@ -55,73 +55,63 @@ export function AdminModerationSection({
             </Stack>
           ) : null}
 
-          <Stack direction="row" spacing={1} alignItems="center">
+          <Stack spacing={1.25}>
+            <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1.5}>
+              <Typography variant="h4" sx={{ fontSize: { xs: '1.45rem', sm: '2rem' } }}>
+                Moderieren
+              </Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
+                {activeModerationEntries.length} aktiv
+              </Typography>
+            </Stack>
+
+            <Stack direction="row" spacing={1} alignItems="center">
             <Box
               sx={{
                 display: 'flex',
                 alignItems: 'center',
-                flex: moderationSearchOpen ? 1 : '0 0 58px',
-                width: moderationSearchOpen ? 'auto' : 58,
+                flex: 1,
+                width: '100%',
                 height: 54,
                 minWidth: 0,
                 border: '1px solid',
-                borderColor: moderationSearchOpen ? 'rgba(11,110,105,0.46)' : 'rgba(121,101,66,0.18)',
+                borderColor: moderationSearchOpen || moderationSearch ? 'rgba(11,110,105,0.46)' : 'rgba(121,101,66,0.18)',
                 borderRadius: 999,
                 bgcolor: 'rgba(255,255,255,0.92)',
-                overflow: 'hidden',
-                boxShadow: moderationSearchOpen ? '0 10px 24px rgba(36,28,19,0.08)' : '0 2px 8px rgba(36,28,19,0.04)',
-                transition:
-                  'flex-basis 240ms ease, width 240ms ease, border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease',
+                px: 0.75,
+                boxShadow: moderationSearchOpen || moderationSearch ? '0 10px 24px rgba(36,28,19,0.08)' : '0 2px 8px rgba(36,28,19,0.04)',
+                transition: 'border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease',
               }}
             >
-              <IconButton
-                aria-label={moderationSearchOpen ? 'Suche einklappen' : 'Suche ausklappen'}
-                onClick={() => onSetModerationSearchOpen((current) => !current)}
+              <SearchIcon
                 sx={{
-                  width: 54,
-                  height: 54,
-                  borderRadius: 999,
-                  ml: 0.25,
-                  color: moderationSearchOpen ? '#0B6E69' : 'rgba(110,103,95,0.92)',
-                  flexShrink: 0,
-                  transition: 'color 180ms ease, background-color 180ms ease',
-                  '&:hover': {
-                    bgcolor: 'rgba(11,110,105,0.08)',
-                  },
+                  fontSize: 24,
+                  color: moderationSearchOpen || moderationSearch ? '#0B6E69' : 'rgba(110,103,95,0.92)',
+                  ml: 0.5,
+                  mr: 0.75,
                 }}
-              >
-                <SearchIcon sx={{ fontSize: 30 }} />
-              </IconButton>
-              <Box
+              />
+              <InputBase
+                value={moderationSearch}
+                onChange={(event) => {
+                  if (!moderationSearchOpen) {
+                    onSetModerationSearchOpen(true)
+                  }
+                  onSetModerationSearch(event.target.value)
+                }}
+                onFocus={() => onSetModerationSearchOpen(true)}
+                placeholder="Suche nach Name, E-Mail oder Code"
+                inputProps={{ 'aria-label': 'Suchen' }}
                 sx={{
                   flex: 1,
-                  minWidth: 0,
-                  opacity: moderationSearchOpen ? 1 : 0,
-                  maxWidth: moderationSearchOpen ? '100%' : 0,
-                  transform: moderationSearchOpen ? 'translateX(0)' : 'translateX(-10px)',
-                  transition: 'max-width 240ms ease, opacity 180ms ease, transform 220ms ease',
-                  pointerEvents: moderationSearchOpen ? 'auto' : 'none',
-                  overflow: 'hidden',
+                  color: 'rgba(60,48,33,0.96)',
+                  fontSize: '1.02rem',
+                  '& input::placeholder': {
+                    color: 'rgba(110,103,95,0.9)',
+                    opacity: 1,
+                  },
                 }}
-              >
-                <InputBase
-                  value={moderationSearch}
-                  onChange={(event) => onSetModerationSearch(event.target.value)}
-                  placeholder="Suche"
-                  inputProps={{ 'aria-label': 'Suchen' }}
-                  sx={{
-                    width: '100%',
-                    color: 'rgba(60,48,33,0.96)',
-                    fontSize: '1.05rem',
-                    px: 0.5,
-                    py: 1.2,
-                    '& input::placeholder': {
-                      color: 'rgba(110,103,95,0.9)',
-                      opacity: 1,
-                    },
-                  }}
-                />
-              </Box>
+              />
               <IconButton
                 aria-label={moderationSearch ? 'Suche leeren' : 'Suche einklappen'}
                 size="small"
@@ -161,8 +151,15 @@ export function AdminModerationSection({
                 },
               }}
             >
-              <MoreVertIcon fontSize="small" />
+              <Badge
+                badgeContent={trashedModerationEntriesCount > 0 ? trashedModerationEntriesCount : null}
+                color="warning"
+                max={99}
+              >
+                <MoreVertIcon fontSize="small" />
+              </Badge>
             </IconButton>
+            </Stack>
           </Stack>
 
           <ModerationList
