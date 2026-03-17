@@ -107,7 +107,7 @@ export function AdminNavigation({
                           bgcolor: 'action.hover',
                         },
                         '&.Mui-selected': {
-                          bgcolor: 'action.selected',
+                          bgcolor: (theme) => alpha(theme.palette.primary.main, 0.24),
                           boxShadow: (theme) => `inset 3px 0 0 ${theme.palette.secondary.main}`,
                         },
                         '&.Mui-selected:hover': {
@@ -134,7 +134,14 @@ export function AdminNavigation({
           onChange={onTabChange}
           variant="scrollable"
           scrollButtons="auto"
-          sx={{ px: { xs: 1, sm: 2 }, pt: 1 }}
+          sx={{
+            px: { xs: 1, sm: 2 },
+            pt: 1,
+            '& .MuiTabs-indicator': {
+              height: 3,
+              borderRadius: 999,
+            },
+          }}
         >
           {adminTabItems.map((item) => (
             <Tab
@@ -143,6 +150,16 @@ export function AdminNavigation({
               label={item.label}
               icon={item.icon}
               iconPosition="start"
+              sx={{
+                borderTopLeftRadius: 12,
+                borderTopRightRadius: 12,
+                minHeight: 46,
+                '&.Mui-selected': {
+                  bgcolor: (theme) => alpha(theme.palette.primary.main, 0.2),
+                  color: 'text.primary',
+                  fontWeight: 700,
+                },
+              }}
             />
           ))}
         </Tabs>

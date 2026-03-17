@@ -136,8 +136,23 @@ export function AppShell() {
                     color="inherit"
                     startIcon={item.icon}
                     sx={{
-                      color: 'primary.contrastText',
-                      backgroundColor: active ? 'action.hover' : 'transparent',
+                      color: (theme) =>
+                        active
+                          ? theme.palette.primary.contrastText
+                          : alpha(theme.palette.primary.contrastText, 0.9),
+                      backgroundColor: (theme) =>
+                        active ? alpha(theme.palette.common.white, 0.2) : 'transparent',
+                      border: (theme) =>
+                        active
+                          ? `1px solid ${alpha(theme.palette.common.white, 0.34)}`
+                          : '1px solid transparent',
+                      fontWeight: active ? 700 : 600,
+                      '&:hover': {
+                        backgroundColor: (theme) =>
+                          active
+                            ? alpha(theme.palette.common.white, 0.24)
+                            : alpha(theme.palette.common.white, 0.12),
+                      },
                     }}
                   >
                     {item.label}
@@ -209,6 +224,15 @@ export function AppShell() {
                     ? location.pathname === item.to
                     : location.pathname.startsWith(item.to)
                 }
+                sx={{
+                  '&.Mui-selected': {
+                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.22),
+                    boxShadow: (theme) => `inset 3px 0 0 ${theme.palette.secondary.main}`,
+                  },
+                  '&.Mui-selected:hover': {
+                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.28),
+                  },
+                }}
               >
                 <Stack direction="row" spacing={1.25} alignItems="center">
                   {item.icon}
