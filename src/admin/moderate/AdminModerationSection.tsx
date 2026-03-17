@@ -1,11 +1,21 @@
 import CloseIcon from '@mui/icons-material/Close'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import SearchIcon from '@mui/icons-material/Search'
-import { Alert, Badge, Box, Card, CardContent, IconButton, InputBase, Stack, Typography } from '@mui/material'
-import type { MouseEvent } from 'react'
+import {
+  Alert,
+  Badge,
+  Box,
+  Card,
+  CardContent,
+  IconButton,
+  InputBase,
+  Stack,
+  Typography,
+} from '@mui/material'
+import { useEffect, useRef, type MouseEvent } from 'react'
+import type { Generator, UserProfile } from '../../data/domain'
 import type { ModerationListEntry } from '../types'
 import { ModerationList } from './ModerationList'
-import type { Generator, UserProfile } from '../../data/domain'
 
 interface AdminModerationSectionProps {
   moderationStatus: string
@@ -42,6 +52,41 @@ export function AdminModerationSection({
   onOpenActions,
   onOpenMeasurements,
 }: AdminModerationSectionProps) {
+  const searchAreaRef = useRef<HTMLDivElement | null>(null)
+  const searchInputRef = useRef<HTMLInputElement | null>(null)
+
+  useEffect(() => {
+    if (!moderationSearchOpen) {
+      return
+    }
+
+    function handlePointerDown(event: PointerEvent) {
+      const target = event.target
+
+      if (!(target instanceof Node)) {
+        return
+      }
+
+      if (!searchAreaRef.current?.contains(target)) {
+        onSetModerationSearchOpen(false)
+      }
+    }
+
+    window.addEventListener('pointerdown', handlePointerDown)
+
+    return () => {
+      window.removeEventListener('pointerdown', handlePointerDown)
+    }
+  }, [moderationSearchOpen, onSetModerationSearchOpen])
+
+  useEffect(() => {
+    if (!moderationSearchOpen) {
+      return
+    }
+
+    searchInputRef.current?.focus()
+  }, [moderationSearchOpen])
+
   return (
     <Card>
       <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
@@ -51,7 +96,7 @@ export function AdminModerationSection({
 
           {moderationLoading ? (
             <Stack alignItems="center" justifyContent="center" sx={{ py: 6 }}>
-              <Typography color="text.secondary">Einträge werden geladen...</Typography>
+              <Typography color="text.secondary">EintrÃ¤ge werden geladen...</Typography>
             </Stack>
           ) : null}
 
@@ -65,110 +110,113 @@ export function AdminModerationSection({
               </Typography>
             </Stack>
 
-            <Stack direction="row" spacing={1} alignItems="center">
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                flex: 1,
-                width: '100%',
-                height: 54,
-                minWidth: 0,
-                border: '1px solid',
-                borderColor: moderationSearchOpen || moderationSearch ? 'rgba(11,110,105,0.46)' : 'rgba(121,101,66,0.18)',
-                borderRadius: 999,
-                bgcolor: 'rgba(255,255,255,0.92)',
-                px: 0.75,
-                boxShadow: moderationSearchOpen || moderationSearch ? '0 10px 24px rgba(36,28,19,0.08)' : '0 2px 8px rgba(36,28,19,0.04)',
-                transition: 'border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease',
-              }}
-            >
-              <SearchIcon
-                sx={{
-                  fontSize: 24,
-                  color: moderationSearchOpen || moderationSearch ? '#0B6E69' : 'rgba(110,103,95,0.92)',
-                  ml: 0.5,
-                  mr: 0.75,
-                }}
-              />
-              <InputBase
-                value={moderationSearch}
-                onChange={(event) => {
-                  if (!moderationSearchOpen) {
-                    onSetModerationSearchOpen(true)
-                  }
-                  onSetModerationSearch(event.target.value)
-                }}
-                onFocus={() => onSetModerationSearchOpen(true)}
-                placeholder="Suche nach Name, E-Mail oder Code"
-                inputProps={{ 'aria-label': 'Suchen' }}
-                sx={{
-                  flex: 1,
-                  color: 'rgba(60,48,33,0.96)',
-                  fontSize: '1.02rem',
-                  '& input::placeholder': {
-                    color: 'rgba(110,103,95,0.9)',
-                    opacity: 1,
-                  },
-                }}
-              />
+            <Stack direction="row" spacing={1} alignItems="center" ref={searchAreaRef}>
               <IconButton
-                aria-label={moderationSearch ? 'Suche leeren' : 'Suche einklappen'}
-                size="small"
-                onClick={() => {
-                  if (moderationSearch) {
-                    onSetModerationSearch('')
-                    return
-                  }
-
-                  onSetModerationSearchOpen(false)
-                }}
+                aria-label={moderationSearchOpen ? 'Suche einklappen' : 'Suche aufklappen'}
+                onClick={() => onSetModerationSearchOpen((current) => !current)}
                 sx={{
-                  mr: 0.75,
-                  color: 'rgba(110,103,95,0.9)',
-                  opacity: moderationSearchOpen ? 1 : 0,
-                  pointerEvents: moderationSearchOpen ? 'auto' : 'none',
-                  transition: 'opacity 180ms ease, color 180ms ease',
+                  width: 44,
+                  height: 44,
+                  borderRadius: 2.25,
+                  flexShrink: 0,
+                  color: moderationSearchOpen ? '#6C5A39' : 'rgba(110,103,95,0.92)',
+                  bgcolor: moderationSearchOpen ? 'rgba(121,101,66,0.12)' : 'rgba(255,255,255,0.72)',
+                  border: '1px solid rgba(121,101,66,0.18)',
                   '&:hover': {
-                    bgcolor: 'rgba(121,101,66,0.08)',
+                    bgcolor: moderationSearchOpen ? 'rgba(121,101,66,0.18)' : 'rgba(255,255,255,0.96)',
                   },
                 }}
               >
-                <CloseIcon fontSize="small" />
+                <SearchIcon fontSize="small" />
               </IconButton>
-            </Box>
-            <IconButton
-              aria-label={`Weitere Aktionen${trashedModerationEntriesCount ? ` (${trashedModerationEntriesCount})` : ''}`}
-              onClick={onOpenTrashMenu}
-              sx={{
-                width: 44,
-                height: 44,
-                borderRadius: 2.25,
-                flexShrink: 0,
-                color: 'rgba(110,103,95,0.92)',
-                '&:hover': {
-                  bgcolor: 'rgba(121,101,66,0.08)',
-                },
-              }}
-            >
-              <Badge
-                badgeContent={trashedModerationEntriesCount > 0 ? trashedModerationEntriesCount : null}
-                color="warning"
-                max={99}
+
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  flex: moderationSearchOpen ? 1 : '0 0 0px',
+                  maxWidth: moderationSearchOpen ? '100%' : 0,
+                  height: 44,
+                  minWidth: 0,
+                  border: moderationSearchOpen ? '1px solid rgba(121,101,66,0.2)' : '1px solid transparent',
+                  borderRadius: 999,
+                  bgcolor: moderationSearchOpen ? 'rgba(255,255,255,0.9)' : 'transparent',
+                  px: moderationSearchOpen ? 0.75 : 0,
+                  opacity: moderationSearchOpen ? 1 : 0,
+                  boxShadow: moderationSearchOpen ? '0 6px 16px rgba(36,28,19,0.07)' : 'none',
+                  overflow: 'hidden',
+                  transition:
+                    'max-width 220ms ease, opacity 180ms ease, background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, padding 220ms ease',
+                }}
               >
-                <MoreVertIcon fontSize="small" />
-              </Badge>
-            </IconButton>
+                <InputBase
+                  inputRef={searchInputRef}
+                  value={moderationSearch}
+                  onChange={(event) => onSetModerationSearch(event.target.value)}
+                  placeholder="Suche nach Name, E-Mail oder Code"
+                  inputProps={{ 'aria-label': 'Suchen' }}
+                  sx={{
+                    flex: 1,
+                    minWidth: 0,
+                    color: 'rgba(60,48,33,0.96)',
+                    fontSize: '1rem',
+                    '& input::placeholder': {
+                      color: 'rgba(110,103,95,0.88)',
+                      opacity: 1,
+                    },
+                  }}
+                />
+                <IconButton
+                  aria-label="Suche leeren"
+                  size="small"
+                  onClick={() => onSetModerationSearch('')}
+                  sx={{
+                    ml: 0.5,
+                    color: 'rgba(110,103,95,0.9)',
+                    opacity: moderationSearch ? 1 : 0.5,
+                    '&:hover': {
+                      bgcolor: 'rgba(121,101,66,0.1)',
+                    },
+                  }}
+                >
+                  <CloseIcon fontSize="small" />
+                </IconButton>
+              </Box>
+
+              <IconButton
+                aria-label={`Weitere Aktionen${trashedModerationEntriesCount ? ` (${trashedModerationEntriesCount})` : ''}`}
+                onClick={onOpenTrashMenu}
+                sx={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 2.25,
+                  flexShrink: 0,
+                  color: 'rgba(110,103,95,0.92)',
+                  border: '1px solid rgba(121,101,66,0.18)',
+                  bgcolor: 'rgba(255,255,255,0.72)',
+                  '&:hover': {
+                    bgcolor: 'rgba(255,255,255,0.96)',
+                  },
+                }}
+              >
+                <Badge
+                  badgeContent={trashedModerationEntriesCount > 0 ? trashedModerationEntriesCount : null}
+                  color="warning"
+                  max={99}
+                >
+                  <MoreVertIcon fontSize="small" />
+                </Badge>
+              </IconButton>
             </Stack>
           </Stack>
 
           <ModerationList
             entries={activeModerationEntries}
             ariaLabel="Moderationsliste"
-            emptyPrimary={moderationEntriesCount ? 'Keine Treffer' : 'Noch keine Einträge'}
+            emptyPrimary={moderationEntriesCount ? 'Keine Treffer' : 'Noch keine EintrÃ¤ge'}
             emptySecondary={
               moderationEntriesCount
-                ? 'Passe den Suchbegriff an, um weitere Einträge zu sehen.'
+                ? 'Passe den Suchbegriff an, um weitere EintrÃ¤ge zu sehen.'
                 : 'Registrierte Konten erscheinen hier automatisch.'
             }
             onOpenActions={onOpenActions}
