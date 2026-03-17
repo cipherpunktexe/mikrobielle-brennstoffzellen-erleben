@@ -93,42 +93,39 @@ export function AdminScanSection({
         sx={{
           display: 'grid',
           gridTemplateColumns: 'minmax(0, 1fr) auto',
-          alignItems: 'center',
-          gap: 1,
+          gridTemplateRows: 'auto auto',
+          alignItems: 'start',
+          columnGap: 0.75,
+          rowGap: 0.35,
           minWidth: 0,
         }}
       >
-        <Stack spacing={0.5} sx={{ minWidth: 0 }}>
-          <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 0 }}>
-            <Typography variant="caption" color="text.secondary" sx={{ flexShrink: 0 }}>
-              Code
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{ fontFamily: '"Consolas", "Courier New", monospace', fontWeight: 700 }}
-            >
-              {item.generatorCode.toUpperCase()}
-            </Typography>
-            {item.ownerName ? (
-              <Typography variant="caption" color="text.secondary" noWrap>
-                {item.ownerName}
-              </Typography>
-            ) : null}
-          </Stack>
-
-          <Stack direction="row" spacing={1} alignItems="center">
-            <Typography variant="caption" color="text.secondary">
-              Wert
-            </Typography>
-            <Typography variant="body2" fontWeight={700}>
-              {formatMeasurement(item.value)}
-            </Typography>
-          </Stack>
-
-          <Typography variant="caption" color="text.secondary">
-            {formatTimestamp(item.createdAt)}
+        <Box sx={{ minWidth: 0 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              fontFamily: '"Consolas", "Courier New", monospace',
+              fontWeight: 700,
+              lineHeight: 1.2,
+            }}
+            noWrap
+          >
+            {item.generatorCode.toUpperCase()}
+            {item.ownerName ? ` · ${item.ownerName}` : ''}
           </Typography>
-        </Stack>
+        </Box>
+
+        <Typography
+          variant="body2"
+          fontWeight={800}
+          sx={{ justifySelf: 'end', whiteSpace: 'nowrap', lineHeight: 1.2 }}
+        >
+          {formatMeasurement(item.value)}
+        </Typography>
+
+        <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.2 }}>
+          {formatTimestamp(item.createdAt)}
+        </Typography>
 
         <IconButton
           size="small"
@@ -137,6 +134,7 @@ export function AdminScanSection({
             event.stopPropagation()
             onEditRecentMeasurement(item)
           }}
+          sx={{ justifySelf: 'end', width: 30, height: 30, mt: -0.1 }}
         >
           <EditNoteIcon fontSize="small" />
         </IconButton>
