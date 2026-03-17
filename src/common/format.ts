@@ -11,22 +11,63 @@ export function formatTimestamp(timestamp?: Timestamp | null) {
   }).format(timestamp.toDate())
 }
 
+function trimTrailingMantissaZeros(mantissa: string) {
+  if (!mantissa.includes('.')) {
+    return mantissa
+  }
+
+  return mantissa.replace(/\.?0+$/, '')
+}
+
+function formatScientificMeasurement(value: number, fractionDigits: number) {
+  const [mantissa, exponent] = value.toExponential(fractionDigits).split('e')
+  const normalizedMantissa = trimTrailingMantissaZeros(mantissa).replace('.', ',')
+
+  return `${normalizedMantissa}e${exponent}`
+}
+
+function formatDecimalMeasurement(value: number, decimals: number) {
+  return new Intl.NumberFormat('de-DE', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+    useGrouping: false,
+  }).format(value)
+}
+
+/**
+ * Formats a measurement value in a human-readable format.
+ * Returns 'Noch kein Messwert' if the value is null or undefined.
+ * If the absolute value of the measurement is less than 0.01, formats it as a scientific notation with 3 significant digits.
+ * Otherwise, formats it as a fixed-point number with 2 decimal places.
+ * @param value The measurement value to format.
+ * @returns A human-readable string representation of the measurement value.
+ */
 export function formatMeasurement(value?: number | null) {
   if (value === undefined || value === null) {
     return 'Noch kein Messwert'
   }
 
   if (value !== 0 && Math.abs(value) < 0.01) {
-    return `${value.toExponential(3)} V`
+    return `${formatScientificMeasurement(value, 3)} V`
   }
 
-  return `${value.toFixed(2)} V`
+  return `${formatDecimalMeasurement(value, 2)} V`
 }
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max)
 }
 
+/**
+ * Calculates the number of decimal places required to accurately represent the given values.
+ * If there are less than 2 finite values, returns 2.
+ * Otherwise, returns the maximum of the following two values:
+ * 1. The number of decimal places required to represent the full range of values.
+ * 2. The number of decimal places required to represent the minimum difference between two adjacent values.
+ * The result is clamped to a minimum of 2 and a maximum of 10.
+ * @param values The values for which to calculate the required decimal places.
+ * @returns The number of decimal places required to accurately represent the given values.
+ */
 function getContextDecimals(values: number[]) {
   const finiteValues = values.filter((value) => Number.isFinite(value))
 
@@ -74,10 +115,10 @@ export function createContextMeasurementFormatter(values: number[]) {
     }
 
     if (value !== 0 && Math.abs(value) < 0.01) {
-      return `${value.toExponential(3)} V`
+      return `${formatScientificMeasurement(value, 3)} V`
     }
 
-    return `${value.toFixed(decimals)} V`
+    return `${formatDecimalMeasurement(value, decimals)} V`
   }
 }
 
