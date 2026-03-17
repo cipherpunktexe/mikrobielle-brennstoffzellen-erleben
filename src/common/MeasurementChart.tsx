@@ -18,6 +18,8 @@ function formatShortTimestamp(measurement: Measurement) {
   return new Intl.DateTimeFormat('de-DE', {
     day: '2-digit',
     month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
   }).format(date)
 }
 
@@ -86,6 +88,7 @@ export function MeasurementChart({ measurements }: MeasurementChartProps) {
           value: measurement.value,
           label: formatTimestamp(measurement.createdAt),
           shortLabel: formatShortTimestamp(measurement),
+          xValue: measurement.createdAt?.toMillis(),
         }))}
         ariaLabel="Diagramm der Messwerthistorie"
         detailLabelTitle="Zeitpunkt"

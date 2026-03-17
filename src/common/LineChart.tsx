@@ -9,6 +9,7 @@ export interface LineChartPoint {
   value: number
   label: string
   shortLabel?: string
+  xValue?: number
 }
 
 interface LineChartProps {
@@ -83,12 +84,21 @@ export function LineChart({
   }
   const plotWidth = width - padding.left - padding.right
   const plotHeight = height - padding.top - padding.bottom
+  const hasCompleteXValues = data.every(
+    (point) => typeof point.xValue === 'number' && Number.isFinite(point.xValue),
+  )
+  const rawXValues = hasCompleteXValues
+    ? data.map((point) => point.xValue as number)
+    : data.map((_point, index) => index)
+  const minXValue = Math.min(...rawXValues)
+  const maxXValue = Math.max(...rawXValues)
+  const xRange = maxXValue - minXValue
 
   const points = data.map((point, index) => {
     const x =
-      data.length === 1
+      data.length === 1 || xRange === 0
         ? padding.left + plotWidth / 2
-        : padding.left + (index / (data.length - 1)) * plotWidth
+        : padding.left + ((rawXValues[index] - minXValue) / xRange) * plotWidth
     const y = padding.top + ((chartMax - point.value) / valueRange) * plotHeight
 
     return { x, y, point }
