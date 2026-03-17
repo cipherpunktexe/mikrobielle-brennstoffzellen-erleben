@@ -1,13 +1,14 @@
 import { Alert, Box, Stack, Typography } from '@mui/material'
 import { useEffect, useState } from 'react'
 import { buildGeneratorQrValue, generateQrDataUrl, getQrBadgeLabel } from '../../common/qr/qr'
-import type { QrPdfLayoutPreview } from '../../common/qr/qr'
+import type { QrCodeNumberPlacement, QrPdfLayoutPreview } from '../../common/qr/qr'
 
 interface QrLayoutPreviewProps {
   layout: QrPdfLayoutPreview | null
   totalCards: number
   digits: number
   startSequence: number | null
+  codePlacement: QrCodeNumberPlacement
 }
 
 function formatPreviewCode(sequence: number, digits: number) {
@@ -27,7 +28,13 @@ function createPreviewCards(count: number, digits: number, startSequence: number
   })
 }
 
-export function QrLayoutPreview({ layout, totalCards, digits, startSequence }: QrLayoutPreviewProps) {
+export function QrLayoutPreview({
+  layout,
+  totalCards,
+  digits,
+  startSequence,
+  codePlacement,
+}: QrLayoutPreviewProps) {
   const [qrDataUrls, setQrDataUrls] = useState<string[]>([])
   const [error, setError] = useState('')
 
@@ -42,7 +49,7 @@ export function QrLayoutPreview({ layout, totalCards, digits, startSequence }: Q
 
     Promise.all(
       createPreviewCards(visibleCards, digits, startSequence).map((card) =>
-        generateQrDataUrl(card.scanValue, getQrBadgeLabel(card.code)),
+        generateQrDataUrl(card.scanValue, getQrBadgeLabel(card.code), codePlacement),
       ),
     )
       .then((nextDataUrls) => {
@@ -65,7 +72,7 @@ export function QrLayoutPreview({ layout, totalCards, digits, startSequence }: Q
     return () => {
       active = false
     }
-  }, [digits, layout, startSequence, visibleCards])
+  }, [codePlacement, digits, layout, startSequence, visibleCards])
 
   if (!layout) {
     return (

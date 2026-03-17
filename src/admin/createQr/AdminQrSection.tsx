@@ -15,7 +15,7 @@ import {
   Typography,
 } from '@mui/material'
 import { QrLayoutPreview } from './QrLayoutPreview'
-import type { QrPdfPageSize } from '../../common/qr/qr'
+import type { QrCodeNumberPlacement, QrPdfPageSize } from '../../common/qr/qr'
 import type { QrExportStepKey } from '../types'
 
 interface AdminQrSectionProps {
@@ -26,6 +26,7 @@ interface AdminQrSectionProps {
   exportQrSize: string
   exportPageSize: QrPdfPageSize
   exportDigits: string
+  exportCodePlacement: QrCodeNumberPlacement
   exportNextCode: string
   exportNextSequence: number | null
   parsedExportDigits: number
@@ -36,6 +37,7 @@ interface AdminQrSectionProps {
   onSetExportQrSize: (value: string) => void
   onSetExportPageSize: (value: QrPdfPageSize) => void
   onSetExportDigits: (value: string) => void
+  onSetExportCodePlacement: (value: QrCodeNumberPlacement) => void
   onExport: () => void
   formatMutedDecimal: (sequence: number) => string
 }
@@ -48,6 +50,7 @@ export function AdminQrSection({
   exportQrSize,
   exportPageSize,
   exportDigits,
+  exportCodePlacement,
   exportNextCode,
   exportNextSequence,
   parsedExportDigits,
@@ -58,6 +61,7 @@ export function AdminQrSection({
   onSetExportQrSize,
   onSetExportPageSize,
   onSetExportDigits,
+  onSetExportCodePlacement,
   onExport,
   formatMutedDecimal,
 }: AdminQrSectionProps) {
@@ -207,6 +211,18 @@ export function AdminQrSection({
                               onChange={(event) => onSetExportDigits(event.target.value)}
                               fullWidth
                             />
+                            <TextField
+                              label="Position der Nummer"
+                              select
+                              value={exportCodePlacement}
+                              onChange={(event) =>
+                                onSetExportCodePlacement(event.target.value as QrCodeNumberPlacement)}
+                              fullWidth
+                              SelectProps={{ native: true }}
+                            >
+                              <option value="center">Im QR-Code (mittig)</option>
+                              <option value="below">Unter dem QR-Code</option>
+                            </TextField>
                             <Box>
                               <Typography
                                 variant="h3"
@@ -287,6 +303,7 @@ export function AdminQrSection({
                 totalCards={previewTotalCards}
                 digits={Number.isFinite(parsedExportDigits) && parsedExportDigits > 0 ? parsedExportDigits : 4}
                 startSequence={exportNextSequence}
+                codePlacement={exportCodePlacement}
               />
             </Stack>
           </CardContent>

@@ -8,6 +8,7 @@ export interface QrCardDefinition {
 
 export type QrPdfLayoutMode = 'cardsPerPage' | 'qrSize'
 export type QrPdfPageSize = 'auto' | 'a4' | 'a5' | 'a6' | 'qr'
+export type QrCodeNumberPlacement = 'center' | 'below'
 type PageOrientation = 'portrait' | 'landscape'
 type StaticQrPdfPageSize = Exclude<QrPdfPageSize, 'auto' | 'qr'>
 
@@ -37,6 +38,7 @@ export interface QrPdfExportOptions {
   cardsPerPage?: number
   qrSizeMm?: number
   pageSize?: QrPdfPageSize
+  codePlacement?: QrCodeNumberPlacement
   fileName?: string
 }
 
@@ -92,6 +94,11 @@ const QR_CENTER_BADGE_MIN_WIDTH_RATIO = 0.18
 const QR_CENTER_BADGE_MAX_WIDTH_RATIO = 0.3
 const QR_CENTER_BADGE_HEIGHT_RATIO = 0.17
 const QR_CENTER_BADGE_PADDING_RATIO = 0.18
+const QR_BELOW_BADGE_AREA_RATIO = 0.18
+const QR_BELOW_BADGE_TOP_PADDING_RATIO = 0.02
+const QR_BELOW_BADGE_MIN_WIDTH_RATIO = 0.22
+const QR_BELOW_BADGE_MAX_WIDTH_RATIO = 0.5
+const QR_BELOW_BADGE_HEIGHT_RATIO = 0.52
 
 export function getQrBadgeLabel(code: string) {
   const normalizedCode = formatCode(code) || code.trim() || '000'
@@ -164,55 +171,74 @@ function getQrBadgeMetrics(label: string) {
   }
 }
 
+function getQrBelowBadgeMetrics(label: string, y: number, availableHeight: number) {
+  const badgeHeight = availableHeight * QR_BELOW_BADGE_HEIGHT_RATIO
+  const estimatedWidth = Math.max(badgeHeight * 1.2, label.length * badgeHeight * 0.46)
+  const badgeWidth = clamp(
+    estimatedWidth,
+    QR_CANVAS_SIZE * QR_BELOW_BADGE_MIN_WIDTH_RATIO,
+    QR_CANVAS_SIZE * QR_BELOW_BADGE_MAX_WIDTH_RATIO,
+  )
+
+  return {
+    width: badgeWidth,
+    height: badgeHeight,
+    x: (QR_CANVAS_SIZE - badgeWidth) / 2,
+    y: y + (availableHeight - badgeHeight) / 2,
+    radius: Math.max(14, badgeHeight * 0.32),
+    lineWidth: Math.max(3, badgeHeight * 0.07),
+    fontSize: Math.max(24, badgeHeight * 0.42),
+  }
+}
+
 function getQrBadgeFontSize(label: string, badgeWidth: number, preferredFontSize: number) {
   const estimatedTextWidthRatio = Math.max(label.length * 0.66, 1)
   return Math.min(preferredFontSize, (badgeWidth * 0.78) / estimatedTextWidthRatio)
 }
 
-function renderStyledQrToCanvas(value: string, badgeLabel = getQrCenterLabel(value)) {
-  const qr = QRCode.create(value, {
-    errorCorrectionLevel: 'H',
-  })
-  const canvas = document.createElement('canvas')
-  const context = canvas.getContext('2d')
-
-  if (!context) {
-    throw new Error('QR-Code konnte nicht gezeichnet werden.')
+interface RenderQrModulesParams {
+  context: CanvasRenderingContext2D
+  qr: ReturnType<typeof QRCode.create>
+  moduleSize: number
+  offsetX: number
+  offsetY: number
+  cutout?: {
+    left: number
+    top: number
+    right: number
+    bottom: number
   }
+}
 
-  const totalModules = qr.modules.size + QR_QUIET_ZONE_MODULES * 2
-
-  canvas.width = QR_CANVAS_SIZE
-  canvas.height = QR_CANVAS_SIZE
-  const moduleSize = QR_CANVAS_SIZE / totalModules
-  const qrOffset = QR_QUIET_ZONE_MODULES * moduleSize
-  const badge = getQrBadgeMetrics(badgeLabel)
-  const cutoutLeft = badge.x - badge.cutoutPadding
-  const cutoutTop = badge.y - badge.cutoutPadding
-  const cutoutRight = badge.x + badge.width + badge.cutoutPadding
-  const cutoutBottom = badge.y + badge.height + badge.cutoutPadding
-
-  context.fillStyle = '#F8F2E7'
-  context.fillRect(0, 0, canvas.width, canvas.height)
-
+function renderStyledQrModules({
+  context,
+  qr,
+  moduleSize,
+  offsetX,
+  offsetY,
+  cutout,
+}: RenderQrModulesParams) {
   for (let row = 0; row < qr.modules.size; row += 1) {
     for (let col = 0; col < qr.modules.size; col += 1) {
       if (!qr.modules.get(row, col)) {
         continue
       }
 
-      const x = qrOffset + col * moduleSize
-      const y = qrOffset + row * moduleSize
-      const moduleCenterX = x + moduleSize / 2
-      const moduleCenterY = y + moduleSize / 2
+      const x = offsetX + col * moduleSize
+      const y = offsetY + row * moduleSize
 
-      if (
-        moduleCenterX >= cutoutLeft &&
-        moduleCenterX <= cutoutRight &&
-        moduleCenterY >= cutoutTop &&
-        moduleCenterY <= cutoutBottom
-      ) {
-        continue
+      if (cutout) {
+        const moduleCenterX = x + moduleSize / 2
+        const moduleCenterY = y + moduleSize / 2
+
+        if (
+          moduleCenterX >= cutout.left &&
+          moduleCenterX <= cutout.right &&
+          moduleCenterY >= cutout.top &&
+          moduleCenterY <= cutout.bottom
+        ) {
+          continue
+        }
       }
 
       const isFinder = isFinderZone(row, col, qr.modules.size)
@@ -231,6 +257,88 @@ function renderStyledQrToCanvas(value: string, badgeLabel = getQrCenterLabel(val
       context.fill()
     }
   }
+}
+
+function renderStyledQrToCanvas(
+  value: string,
+  badgeLabel = getQrCenterLabel(value),
+  codePlacement: QrCodeNumberPlacement = 'center',
+) {
+  const qr = QRCode.create(value, {
+    errorCorrectionLevel: 'H',
+  })
+  const canvas = document.createElement('canvas')
+  const context = canvas.getContext('2d')
+
+  if (!context) {
+    throw new Error('QR-Code konnte nicht gezeichnet werden.')
+  }
+
+  const totalModules = qr.modules.size + QR_QUIET_ZONE_MODULES * 2
+
+  canvas.width = QR_CANVAS_SIZE
+  canvas.height = QR_CANVAS_SIZE
+
+  context.fillStyle = '#F8F2E7'
+  context.fillRect(0, 0, canvas.width, canvas.height)
+
+  if (codePlacement === 'below') {
+    const labelAreaHeight = QR_CANVAS_SIZE * QR_BELOW_BADGE_AREA_RATIO
+    const topPadding = QR_CANVAS_SIZE * QR_BELOW_BADGE_TOP_PADDING_RATIO
+    const qrAreaSize = QR_CANVAS_SIZE - labelAreaHeight - topPadding
+    const moduleSize = qrAreaSize / totalModules
+    const qrPixelSize = moduleSize * totalModules
+    const qrOffsetX = (QR_CANVAS_SIZE - qrPixelSize) / 2
+    const qrOffsetY = topPadding
+    const badge = getQrBelowBadgeMetrics(badgeLabel, qrOffsetY + qrPixelSize, labelAreaHeight)
+
+    renderStyledQrModules({
+      context,
+      qr,
+      moduleSize,
+      offsetX: qrOffsetX + QR_QUIET_ZONE_MODULES * moduleSize,
+      offsetY: qrOffsetY + QR_QUIET_ZONE_MODULES * moduleSize,
+    })
+
+    context.fillStyle = '#FFF9EF'
+    context.strokeStyle = '#1F7A8C'
+    context.lineWidth = badge.lineWidth
+    drawRoundedRect(context, badge.x, badge.y, badge.width, badge.height, badge.radius)
+    context.fill()
+    context.stroke()
+
+    context.fillStyle = '#241C13'
+    context.font =
+      `bold ${getQrBadgeFontSize(badgeLabel, badge.width, badge.fontSize)}px ` +
+      '"Consolas", "Courier New", monospace'
+    context.textAlign = 'center'
+    context.textBaseline = 'middle'
+    context.fillText(badgeLabel, canvas.width / 2, badge.y + badge.height / 2 + 1)
+
+    return canvas
+  }
+
+  const moduleSize = QR_CANVAS_SIZE / totalModules
+  const qrOffset = QR_QUIET_ZONE_MODULES * moduleSize
+  const badge = getQrBadgeMetrics(badgeLabel)
+  const cutoutLeft = badge.x - badge.cutoutPadding
+  const cutoutTop = badge.y - badge.cutoutPadding
+  const cutoutRight = badge.x + badge.width + badge.cutoutPadding
+  const cutoutBottom = badge.y + badge.height + badge.cutoutPadding
+
+  renderStyledQrModules({
+    context,
+    qr,
+    moduleSize,
+    offsetX: qrOffset,
+    offsetY: qrOffset,
+    cutout: {
+      left: cutoutLeft,
+      top: cutoutTop,
+      right: cutoutRight,
+      bottom: cutoutBottom,
+    },
+  })
 
   context.fillStyle = '#FFF9EF'
   context.strokeStyle = '#1F7A8C'
@@ -258,8 +366,12 @@ export function buildGeneratorQrValue(code: string) {
   return new URL(`/register/${encodeURIComponent(normalizedCode)}`, DEFAULT_PUBLIC_APP_ORIGIN).toString()
 }
 
-export async function generateQrDataUrl(value: string, badgeLabel?: string) {
-  return renderStyledQrToCanvas(value, badgeLabel).toDataURL('image/png')
+export async function generateQrDataUrl(
+  value: string,
+  badgeLabel?: string,
+  codePlacement: QrCodeNumberPlacement = 'center',
+) {
+  return renderStyledQrToCanvas(value, badgeLabel, codePlacement).toDataURL('image/png')
 }
 
 function extractCodeFromPathSegments(pathSegments: string[]) {
@@ -567,7 +679,9 @@ export async function downloadQrPdf(cards: QrCardDefinition[], options: QrPdfExp
   })
 
   const qrDataUrls = await Promise.all(
-    cards.map((card) => generateQrDataUrl(card.scanValue, getQrBadgeLabel(card.code))),
+    cards.map((card) =>
+      generateQrDataUrl(card.scanValue, getQrBadgeLabel(card.code), options.codePlacement ?? 'center'),
+    ),
   )
 
   cards.forEach((_card, index) => {
