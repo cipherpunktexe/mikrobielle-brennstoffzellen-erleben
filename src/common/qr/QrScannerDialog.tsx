@@ -254,9 +254,7 @@ function detectWithJsQr(video: HTMLVideoElement, canvas: HTMLCanvasElement, cont
 
   context.drawImage(video, 0, 0, width, height)
   const fullFrame = context.getImageData(0, 0, width, height)
-  const decodedFromFullFrame = jsQR(fullFrame.data, fullFrame.width, fullFrame.height, {
-    inversionAttempts: 'attemptBoth',
-  })
+  const decodedFromFullFrame = decodeWithJsQrVariants(fullFrame)
 
   if (decodedFromFullFrame?.data?.trim()) {
     return decodedFromFullFrame.data.trim()
@@ -267,11 +265,52 @@ function detectWithJsQr(video: HTMLVideoElement, canvas: HTMLCanvasElement, cont
   const cropLeft = Math.max(0, Math.floor((width - cropSize) / 2))
   const cropTop = Math.max(0, Math.floor((height - cropSize) / 2))
   const centerCrop = context.getImageData(cropLeft, cropTop, cropSize, cropSize)
-  const decodedFromCenterCrop = jsQR(centerCrop.data, centerCrop.width, centerCrop.height, {
+  const decodedFromCenterCrop = decodeWithJsQrVariants(centerCrop)
+
+  return decodedFromCenterCrop?.data?.trim() ?? ''
+}
+
+function decodeWithJsQrVariants(imageData: ImageData) {
+  const decodedOriginal = jsQR(imageData.data, imageData.width, imageData.height, {
     inversionAttempts: 'attemptBoth',
   })
 
-  return decodedFromCenterCrop?.data?.trim() ?? ''
+  if (decodedOriginal?.data?.trim()) {
+    return decodedOriginal
+  }
+
+  const binarized = createBinarizedImageData(imageData)
+
+  return jsQR(binarized.data, binarized.width, binarized.height, {
+    inversionAttempts: 'attemptBoth',
+  })
+}
+
+function createBinarizedImageData(imageData: ImageData) {
+  const source = imageData.data
+  const output = new Uint8ClampedArray(source.length)
+  let sum = 0
+  let count = 0
+
+  for (let index = 0; index < source.length; index += 4) {
+    const luminance = source[index] * 0.299 + source[index + 1] * 0.587 + source[index + 2] * 0.114
+    sum += luminance
+    count += 1
+  }
+
+  const averageLuminance = count ? sum / count : 128
+  const threshold = Math.max(72, Math.min(208, averageLuminance * 0.9))
+
+  for (let index = 0; index < source.length; index += 4) {
+    const luminance = source[index] * 0.299 + source[index + 1] * 0.587 + source[index + 2] * 0.114
+    const value = luminance < threshold ? 0 : 255
+    output[index] = value
+    output[index + 1] = value
+    output[index + 2] = value
+    output[index + 3] = 255
+  }
+
+  return new ImageData(output, imageData.width, imageData.height)
 }
 
 export function QrScannerDialog({
