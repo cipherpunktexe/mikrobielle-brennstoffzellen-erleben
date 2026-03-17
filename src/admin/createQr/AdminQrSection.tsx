@@ -220,8 +220,8 @@ export function AdminQrSection({
                               fullWidth
                               SelectProps={{ native: true }}
                             >
-                              <option value="center">Im QR-Code (mittig)</option>
                               <option value="below">Unter dem QR-Code</option>
+                              <option value="center">Im QR-Code (mittig)</option>
                             </TextField>
                             <Box>
                               <Typography

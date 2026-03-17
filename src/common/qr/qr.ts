@@ -262,7 +262,7 @@ function renderStyledQrModules({
 function renderStyledQrToCanvas(
   value: string,
   badgeLabel = getQrCenterLabel(value),
-  codePlacement: QrCodeNumberPlacement = 'center',
+  codePlacement: QrCodeNumberPlacement = 'below',
 ) {
   const qr = QRCode.create(value, {
     errorCorrectionLevel: 'H',
@@ -369,7 +369,7 @@ export function buildGeneratorQrValue(code: string) {
 export async function generateQrDataUrl(
   value: string,
   badgeLabel?: string,
-  codePlacement: QrCodeNumberPlacement = 'center',
+  codePlacement: QrCodeNumberPlacement = 'below',
 ) {
   return renderStyledQrToCanvas(value, badgeLabel, codePlacement).toDataURL('image/png')
 }
@@ -680,7 +680,7 @@ export async function downloadQrPdf(cards: QrCardDefinition[], options: QrPdfExp
 
   const qrDataUrls = await Promise.all(
     cards.map((card) =>
-      generateQrDataUrl(card.scanValue, getQrBadgeLabel(card.code), options.codePlacement ?? 'center'),
+      generateQrDataUrl(card.scanValue, getQrBadgeLabel(card.code), options.codePlacement ?? 'below'),
     ),
   )
 
