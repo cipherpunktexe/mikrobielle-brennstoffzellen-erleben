@@ -1,4 +1,4 @@
-﻿import { Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField, Typography } from '@mui/material'
+﻿import { Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, TextField, Typography } from '@mui/material'
 import type { FormEvent, ReactNode } from 'react'
 import type { MeasurementUnit } from '../types'
 
@@ -99,12 +99,11 @@ export function MeasurementFormDialog({
                     value={unitField.value}
                     onChange={(event) => unitField.onChange(event.target.value as MeasurementUnit)}
                     sx={{ width: 112, flexShrink: 0 }}
-                    SelectProps={{ native: true }}
                   >
-                    <option value="uV">uV</option>
-                    <option value="mV">mV</option>
-                    <option value="V">V</option>
-                    <option value="kV">kV</option>
+                    <MenuItem value="uV">uV</MenuItem>
+                    <MenuItem value="mV">mV</MenuItem>
+                    <MenuItem value="V">V</MenuItem>
+                    <MenuItem value="kV">kV</MenuItem>
                   </TextField>
                 </Stack>
                 {helperText ? (

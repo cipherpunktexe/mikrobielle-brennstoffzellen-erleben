@@ -9,6 +9,7 @@ import {
   Collapse,
   Grid,
   IconButton,
+  MenuItem,
   Stack,
   TextField,
   Typography,
@@ -160,12 +161,11 @@ export function AdminQrSection({
                               value={exportPageSize}
                               onChange={(event) => onSetExportPageSize(event.target.value as QrPdfPageSize)}
                               fullWidth
-                              SelectProps={{ native: true }}
                             >
-                              <option value="a4">A4</option>
-                              <option value="a5">A5</option>
-                              <option value="a6">A6</option>
-                              <option value="qr">QR-Code</option>
+                              <MenuItem value="a4">A4</MenuItem>
+                              <MenuItem value="a5">A5</MenuItem>
+                              <MenuItem value="a6">A6</MenuItem>
+                              <MenuItem value="qr">QR-Code</MenuItem>
                             </TextField>
                           </Stack>
                         </Collapse>
@@ -211,10 +211,9 @@ export function AdminQrSection({
                               onChange={(event) =>
                                 onSetExportCodePlacement(event.target.value as QrCodeNumberPlacement)}
                               fullWidth
-                              SelectProps={{ native: true }}
                             >
-                              <option value="center">Im QR-Code (mittig)</option>
-                              <option value="below">Unter dem QR-Code</option>
+                              <MenuItem value="center">Im QR-Code (mittig)</MenuItem>
+                              <MenuItem value="below">Unter dem QR-Code</MenuItem>
                             </TextField>
                             <Box>
                               <Typography

@@ -1,6 +1,5 @@
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import { Accordion, AccordionDetails, AccordionSummary, Stack, Typography } from '@mui/material'
-import { alpha } from '@mui/material/styles'
 import { UnifiedList, type UnifiedListColumn } from '../common/UnifiedList'
 import type { LeaderboardEntry } from '../data/domain'
 import type { LeaderboardSection } from './leaderboardSections'
@@ -24,6 +23,7 @@ export function LeaderboardSectionList({
     <Stack spacing={1.5}>
       {sections.map((section) => (
         <Accordion
+          variant="soft"
           key={section.title}
           expanded={expandedSection === section.title}
           onChange={(_, isExpanded) => {
@@ -33,13 +33,7 @@ export function LeaderboardSectionList({
           slotProps={{ transition: { unmountOnExit: true } }}
           sx={{
             mx: 0,
-            border: (theme) => `1px solid ${alpha(theme.palette.secondary.main, 0.18)}`,
             borderRadius: '18px',
-            bgcolor: (theme) => alpha(theme.palette.background.paper, 0.8),
-            boxShadow: 'none',
-            '&::before': {
-              display: 'none',
-            },
           }}
         >
           <AccordionSummary

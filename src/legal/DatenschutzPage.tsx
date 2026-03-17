@@ -1,5 +1,4 @@
 import { Box, Card, CardContent, Link, Stack, Typography } from '@mui/material'
-import { alpha } from '@mui/material/styles'
 
 type SectionProps = {
   title: string
@@ -8,19 +7,14 @@ type SectionProps = {
 
 function Section({ title, children }: SectionProps) {
   return (
-    <Box
-      sx={{
-        border: (theme) => `1px solid ${alpha(theme.palette.secondary.main, 0.18)}`,
-        borderRadius: 3,
-        p: { xs: 2, sm: 3 },
-        background: (theme) => alpha(theme.palette.text.primary, 0.06),
-      }}
-    >
-      <Typography variant="h5" sx={{ mb: 1.5, fontSize: { xs: '1.2rem', sm: '1.5rem' } }}>
-        {title}
-      </Typography>
-      <Stack spacing={1.5}>{children}</Stack>
-    </Box>
+    <Card variant="subtle">
+      <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+        <Typography variant="h5" sx={{ mb: 1.5, fontSize: { xs: '1.2rem', sm: '1.5rem' } }}>
+          {title}
+        </Typography>
+        <Stack spacing={1.5}>{children}</Stack>
+      </CardContent>
+    </Card>
   )
 }
 

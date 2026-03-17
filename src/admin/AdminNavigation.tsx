@@ -82,13 +82,11 @@ export function AdminNavigation({
               </Stack>
             </Button>
             <Collapse in={mobileAdminNavOpen}>
-              <Box
+              <Card
+                variant="soft"
                 sx={{
                   borderRadius: 2,
-                  border: (theme) => `1px solid ${alpha(theme.palette.secondary.main, 0.18)}`,
                   overflow: 'hidden',
-                  bgcolor: (theme) => alpha(theme.palette.common.white, 0.9),
-                  boxShadow: (theme) => `0 18px 34px ${alpha(theme.palette.common.black, 0.12)}`,
                 }}
               >
                 <List disablePadding>
@@ -126,7 +124,7 @@ export function AdminNavigation({
                     </ListItemButton>
                   ))}
                 </List>
-              </Box>
+              </Card>
             </Collapse>
           </Stack>
         </Box>

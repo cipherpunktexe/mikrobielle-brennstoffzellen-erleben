@@ -9,6 +9,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  MenuItem,
   Stack,
   TextField,
   Typography,
@@ -100,10 +101,9 @@ export function EditUserDialog({
                 }))
               }
               fullWidth
-              SelectProps={{ native: true }}
             >
-              <option value="user">user</option>
-              <option value="admin">admin</option>
+              <MenuItem value="user">user</MenuItem>
+              <MenuItem value="admin">admin</MenuItem>
             </TextField>
             <TextField
               label="Verknüpfte Brennstoffzelle"

@@ -48,12 +48,9 @@ export function LandingPage() {
             </Grid>
             <Grid size={{ xs: 12, md: 5 }}>
               <Card
-                elevation={0}
+                variant="panel"
                 sx={{
                   borderRadius: { xs: '22px', sm: '28px' },
-                  background: (theme) => alpha(theme.palette.background.paper, 0.74),
-                  border: (theme) => `1px solid ${alpha(theme.palette.secondary.main, 0.18)}`,
-                  boxShadow: (theme) => `0 20px 42px ${alpha(theme.palette.common.black, 0.18)}`,
                 }}
               >
                 <CardContent
@@ -94,14 +91,13 @@ export function LandingPage() {
               </Typography>
             </div>
 
-            <Box
+            <Card
+              variant="panel"
               sx={{
                 position: 'relative',
                 width: '100%',
                 overflow: 'hidden',
                 borderRadius: { xs: '18px', sm: '24px' },
-                border: (theme) => `1px solid ${alpha(theme.palette.secondary.main, 0.18)}`,
-                background: (theme) => alpha(theme.palette.background.paper, 0.74),
                 pt: { xs: '70%', sm: '56.25%' },
               }}
             >
@@ -118,7 +114,7 @@ export function LandingPage() {
                   border: 0,
                 }}
               />
-            </Box>
+            </Card>
 
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
               <Button

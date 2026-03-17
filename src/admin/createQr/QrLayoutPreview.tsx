@@ -1,5 +1,4 @@
-import { Alert, Box, Stack, Typography } from '@mui/material'
-import { alpha } from '@mui/material/styles'
+import { Alert, Box, Card, Stack, Typography } from '@mui/material'
 import { useEffect, useState } from 'react'
 import { buildGeneratorQrValue, generateQrDataUrl, getQrBadgeLabel } from '../../common/qr/qr'
 import type { QrCodeNumberPlacement, QrPdfLayoutPreview } from '../../common/qr/qr'
@@ -86,12 +85,11 @@ export function QrLayoutPreview({
   return (
     <Stack spacing={2} sx={{ height: '100%' }}>
       {error ? <Alert severity="error">{error}</Alert> : null}
-      <Box
+      <Card
+        variant="subtle"
         sx={{
           p: { xs: 1.5, sm: 2.5 },
           borderRadius: 4,
-          bgcolor: (theme) => alpha(theme.palette.text.primary, 0.06),
-          border: (theme) => `1px solid ${theme.palette.divider}`,
           display: 'flex',
           flex: 1,
           minHeight: { xs: 240, sm: 360 },
@@ -106,7 +104,8 @@ export function QrLayoutPreview({
             alignItems: 'center',
           }}
         >
-          <Box
+          <Card
+            variant="panel"
             sx={{
               position: 'relative',
               height: '100%',
@@ -114,10 +113,7 @@ export function QrLayoutPreview({
               maxWidth: '100%',
               maxHeight: '100%',
               aspectRatio: `${layout.pageWidthMm} / ${layout.pageHeightMm}`,
-              bgcolor: (theme) => alpha(theme.palette.common.white, 0.9),
               borderRadius: 2,
-              border: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.14)}`,
-              boxShadow: (theme) => `0 12px 24px ${alpha(theme.palette.text.primary, 0.08)}`,
               overflow: 'hidden',
               flexShrink: 0,
             }}
@@ -153,9 +149,9 @@ export function QrLayoutPreview({
                 </Box>
               )
             })}
-          </Box>
+          </Card>
         </Box>
-      </Box>
+      </Card>
       <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" spacing={1}>
         <Typography variant="body2" color="text.secondary">
           Seite 1 / {layout.pageCount}
