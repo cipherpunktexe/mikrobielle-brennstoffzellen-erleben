@@ -1,4 +1,4 @@
-import { Box, List, ListItem, ListItemButton, ListItemText, Stack, Typography } from '@mui/material'
+import { Box, List, ListItem, ListItemButton, ListItemText, Typography } from '@mui/material'
 import type { ReactNode } from 'react'
 
 type CellAlign = 'left' | 'right' | 'center'
@@ -9,6 +9,7 @@ export interface UnifiedListColumn<TItem> {
   mobileLabel?: ReactNode
   width?: string
   align?: CellAlign
+  mobileSpan?: 1 | 2
   render: (item: TItem) => ReactNode
 }
 
@@ -104,16 +105,37 @@ export function UnifiedList<TItem>({
         {renderMobileRow ? (
           <Box sx={{ display: { xs: 'block', sm: 'none' } }}>{renderMobileRow(item)}</Box>
         ) : (
-          <Stack spacing={1.1} sx={{ display: { xs: 'flex', sm: 'none' } }}>
-            {columns.map((column) => (
-              <Stack key={column.key} direction="row" spacing={1.5} justifyContent="space-between" alignItems="flex-start">
-                <Typography variant="caption" color="text.secondary" sx={{ flexShrink: 0, minWidth: 72 }}>
-                  {column.mobileLabel ?? column.header}
-                </Typography>
-                <Box sx={{ minWidth: 0, textAlign: 'right' }}>{column.render(item)}</Box>
-              </Stack>
-            ))}
-          </Stack>
+          <Box
+            sx={{
+              display: { xs: 'grid', sm: 'none' },
+              gridTemplateColumns: columns.length <= 1 ? '1fr' : 'repeat(2, minmax(0, 1fr))',
+              gap: 1,
+            }}
+          >
+            {columns.map((column, index) => {
+              const isLastOddColumn = columns.length % 2 === 1 && index === columns.length - 1
+              const span = column.mobileSpan ?? (isLastOddColumn ? 2 : 1)
+
+              return (
+                <Box
+                  key={column.key}
+                  sx={{
+                    minWidth: 0,
+                    gridColumn: `span ${span}`,
+                    borderRadius: 1.25,
+                    px: 1,
+                    py: 0.8,
+                    bgcolor: 'rgba(255,255,255,0.24)',
+                  }}
+                >
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                    {column.mobileLabel ?? column.header}
+                  </Typography>
+                  <Box sx={{ minWidth: 0, mt: 0.25, textAlign: getTextAlign(column.align) }}>{column.render(item)}</Box>
+                </Box>
+              )
+            })}
+          </Box>
         )}
       </Box>
     )
