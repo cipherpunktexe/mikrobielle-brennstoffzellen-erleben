@@ -1,5 +1,5 @@
-import { Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField, Typography } from '@mui/material'
-import type { FormEvent } from 'react'
+﻿import type { FormEvent } from 'react'
+import { MeasurementFormDialog } from './MeasurementFormDialog'
 import type { MeasurementUnit } from '../types'
 
 interface ScanMeasurementDialogProps {
@@ -40,67 +40,39 @@ export function ScanMeasurementDialog({
   formatScientificVolts,
 }: ScanMeasurementDialogProps) {
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle>Messwert eintragen</DialogTitle>
-      <Box component="form" onSubmit={onSubmit}>
-        <DialogContent>
-          <Stack spacing={2}>
-            <TextField
-              label="Brennstoffzellen-Code"
-              value={scanCode}
-              onChange={(event) => onSetScanCode(event.target.value)}
-              disabled={scanMeasurementCodeLocked}
-              fullWidth
-            />
-            <Stack spacing={1}>
-              <Stack direction="row" spacing={1.25} alignItems="flex-start">
-                <TextField
-                  label="Wert"
-                  value={scanMeasurementInput}
-                  onChange={(event) => onSetScanMeasurementInput(event.target.value)}
-                  autoFocus
-                  fullWidth
-                />
-                <TextField
-                  label="Einheit"
-                  select
-                  value={scanMeasurementUnit}
-                  onChange={(event) => onSetScanMeasurementUnit(event.target.value as MeasurementUnit)}
-                  sx={{ width: 112, flexShrink: 0 }}
-                  SelectProps={{ native: true }}
-                >
-                  <option value="uV">uV</option>
-                  <option value="mV">mV</option>
-                  <option value="V">V</option>
-                  <option value="kV">kV</option>
-                </TextField>
-              </Stack>
-              {convertedScanMeasurementVolts !== null ? (
-                <Typography variant="body2" color="text.secondary">
-                  {formatScientificVolts(convertedScanMeasurementVolts)}
-                </Typography>
-              ) : null}
-            </Stack>
-            <TextField
-              label="Datum und Uhrzeit"
-              type="datetime-local"
-              value={scanMeasurementDateTime}
-              onChange={(event) => onSetScanMeasurementDateTime(event.target.value)}
-              fullWidth
-              InputLabelProps={{ shrink: true }}
-            />
-            {scanMeasurementError ? <Alert severity="error">{scanMeasurementError}</Alert> : null}
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={onClose} disabled={scanMeasurementSaving}>
-            Abbrechen
-          </Button>
-          <Button type="submit" variant="contained" disabled={scanMeasurementSaving}>
-            Speichern
-          </Button>
-        </DialogActions>
-      </Box>
-    </Dialog>
+    <MeasurementFormDialog
+      open={open}
+      title="Messwert eintragen"
+      submitLabel="Speichern"
+      saving={scanMeasurementSaving}
+      error={scanMeasurementError}
+      maxWidth="xs"
+      onClose={onClose}
+      onSubmit={onSubmit}
+      codeField={{
+        value: scanCode,
+        onChange: onSetScanCode,
+        disabled: scanMeasurementCodeLocked,
+      }}
+      valueField={{
+        label: 'Wert',
+        value: scanMeasurementInput,
+        onChange: onSetScanMeasurementInput,
+        autoFocus: true,
+      }}
+      unitField={{
+        value: scanMeasurementUnit,
+        onChange: onSetScanMeasurementUnit,
+      }}
+      dateTimeField={{
+        value: scanMeasurementDateTime,
+        onChange: onSetScanMeasurementDateTime,
+      }}
+      helperText={
+        convertedScanMeasurementVolts !== null
+          ? formatScientificVolts(convertedScanMeasurementVolts)
+          : null
+      }
+    />
   )
 }

@@ -192,7 +192,7 @@ export function AdminPage() {
   const [selectedMeasurementGenerator, setSelectedMeasurementGenerator] = useState<Generator | null>(
     null,
   )
-  const [editingMeasurementId, setEditingMeasurementId] = useState('')
+  const [editingMeasurement, setEditingMeasurement] = useState<Measurement | null>(null)
   const [measurementForm, setMeasurementForm] = useState<MeasurementFormState>(
     createEmptyMeasurementForm,
   )
@@ -722,7 +722,7 @@ export function AdminPage() {
     setModerationStatus('')
     setModerationError('')
     setMeasurementError('')
-    setEditingMeasurementId('')
+    setEditingMeasurement(null)
     setMeasurementForm(createEmptyMeasurementForm())
     setSelectedMeasurementGenerator(generator)
     setGeneratorMeasurements([])
@@ -774,7 +774,7 @@ export function AdminPage() {
     setSelectedMeasurementGenerator(null)
     setGeneratorMeasurements([])
     setGeneratorMeasurementsLoading(false)
-    setEditingMeasurementId('')
+    setEditingMeasurement(null)
     setMeasurementForm(createEmptyMeasurementForm())
     setMeasurementSaving(false)
     setMeasurementError('')
@@ -782,7 +782,7 @@ export function AdminPage() {
 
   function handleOpenMeasurementEditor(measurement: Measurement) {
     setMeasurementError('')
-    setEditingMeasurementId(measurement.id)
+    setEditingMeasurement(measurement)
     setMeasurementForm({
       value: measurement.value.toString(),
       enteredBy: measurement.enteredBy,
@@ -794,13 +794,13 @@ export function AdminPage() {
       return
     }
 
-    setEditingMeasurementId('')
+    setEditingMeasurement(null)
     setMeasurementForm(createEmptyMeasurementForm())
     setMeasurementError('')
   }
 
-  async function handleMeasurementSave(measurementId: string) {
-    if (!selectedMeasurementGenerator) {
+  async function handleMeasurementSave() {
+    if (!selectedMeasurementGenerator || !editingMeasurement) {
       return
     }
 
@@ -816,7 +816,7 @@ export function AdminPage() {
         throw new Error('Bitte einen gÃ¼ltigen Messwert in V eingeben.')
       }
 
-      await updateMeasurementAsAdmin(measurementId, {
+      await updateMeasurementAsAdmin(editingMeasurement.id, {
         value: numericValue,
         enteredBy: measurementForm.enteredBy,
       })
@@ -1048,13 +1048,13 @@ export function AdminPage() {
         measurementError={measurementError}
         generatorMeasurementsLoading={generatorMeasurementsLoading}
         generatorMeasurements={generatorMeasurements}
-        editingMeasurementId={editingMeasurementId}
+        editingMeasurement={editingMeasurement}
         measurementForm={measurementForm}
         measurementSaving={measurementSaving}
         onClose={handleCloseGeneratorMeasurementsDialog}
         onSetMeasurementForm={setMeasurementForm}
-        onSaveMeasurement={(measurementId) => {
-          void handleMeasurementSave(measurementId)
+        onSaveMeasurement={() => {
+          void handleMeasurementSave()
         }}
         onCloseMeasurementEditor={handleCloseMeasurementEditor}
         onOpenMeasurementEditor={handleOpenMeasurementEditor}

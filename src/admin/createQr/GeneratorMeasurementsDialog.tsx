@@ -1,20 +1,20 @@
-import EditNoteIcon from '@mui/icons-material/EditNote'
+﻿import EditNoteIcon from '@mui/icons-material/EditNote'
 import {
   Alert,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   IconButton,
   Stack,
-  TextField,
   Typography,
+  Button,
 } from '@mui/material'
 import { UnifiedList, type UnifiedListColumn } from '../../common/UnifiedList'
 import { formatMeasurement, formatTimestamp } from '../../common/format'
 import type { Generator, Measurement } from '../../data/domain'
 import type { MeasurementFormState } from '../types'
+import { MeasurementFormDialog } from './MeasurementFormDialog'
 
 interface GeneratorMeasurementsDialogProps {
   open: boolean
@@ -22,12 +22,12 @@ interface GeneratorMeasurementsDialogProps {
   measurementError: string
   generatorMeasurementsLoading: boolean
   generatorMeasurements: Measurement[]
-  editingMeasurementId: string
+  editingMeasurement: Measurement | null
   measurementForm: MeasurementFormState
   measurementSaving: boolean
   onClose: () => void
   onSetMeasurementForm: (updater: (current: MeasurementFormState) => MeasurementFormState) => void
-  onSaveMeasurement: (measurementId: string) => void
+  onSaveMeasurement: () => void
   onCloseMeasurementEditor: () => void
   onOpenMeasurementEditor: (measurement: Measurement) => void
 }
@@ -38,7 +38,7 @@ export function GeneratorMeasurementsDialog({
   measurementError,
   generatorMeasurementsLoading,
   generatorMeasurements,
-  editingMeasurementId,
+  editingMeasurement,
   measurementForm,
   measurementSaving,
   onClose,
@@ -53,97 +53,51 @@ export function GeneratorMeasurementsDialog({
       header: 'Messwert',
       mobileLabel: 'Messwert',
       width: 'minmax(0, 1fr)',
-      render: (measurement) => {
-        const isEditing = editingMeasurementId === measurement.id
-
-        if (isEditing) {
-          return (
-            <Stack spacing={1.25} sx={{ width: '100%' }}>
-              <TextField
-                label="Wert in V"
-                value={measurementForm.value}
-                onChange={(event) =>
-                  onSetMeasurementForm((current) => ({
-                    ...current,
-                    value: event.target.value,
-                  }))
-                }
-                fullWidth
-              />
-              <TextField
-                label="Eingetragen von"
-                value={measurementForm.enteredBy}
-                onChange={(event) =>
-                  onSetMeasurementForm((current) => ({
-                    ...current,
-                    enteredBy: event.target.value,
-                  }))
-                }
-                fullWidth
-              />
-              <Stack direction="row" spacing={1}>
-                <Button
-                  size="small"
-                  variant="contained"
-                  onClick={() => onSaveMeasurement(measurement.id)}
-                  disabled={measurementSaving}
-                >
-                  Speichern
-                </Button>
-                <Button size="small" onClick={onCloseMeasurementEditor} disabled={measurementSaving}>
-                  Abbrechen
-                </Button>
-              </Stack>
-            </Stack>
-          )
-        }
-
-        return (
-          <Stack spacing={0.35}>
-            <Typography variant="body1" sx={{ fontWeight: 700 }}>
-              {formatMeasurement(measurement.value)}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {measurement.enteredBy}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {formatTimestamp(measurement.createdAt)}
-            </Typography>
-          </Stack>
-        )
-      },
+      render: (measurement) => (
+        <Stack spacing={0.35}>
+          <Typography variant="body1" sx={{ fontWeight: 700 }}>
+            {formatMeasurement(measurement.value)}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {measurement.enteredBy}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            {formatTimestamp(measurement.createdAt)}
+          </Typography>
+        </Stack>
+      ),
     },
   ]
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>
-        {selectedMeasurementGenerator
-          ? `Messwerte fuer ${selectedMeasurementGenerator.ownerName?.trim() || selectedMeasurementGenerator.code}`
-          : 'Messwerte'}
-      </DialogTitle>
-      <DialogContent>
-        <Stack spacing={2}>
-          {selectedMeasurementGenerator ? (
-            <Typography color="text.secondary">
-              {selectedMeasurementGenerator.code} | {selectedMeasurementGenerator.ownerUid}
-            </Typography>
-          ) : null}
+    <>
+      <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+        <DialogTitle>
+          {selectedMeasurementGenerator
+            ? `Messwerte fuer ${selectedMeasurementGenerator.ownerName?.trim() || selectedMeasurementGenerator.code}`
+            : 'Messwerte'}
+        </DialogTitle>
+        <DialogContent>
+          <Stack spacing={2}>
+            {selectedMeasurementGenerator ? (
+              <Typography color="text.secondary">
+                {selectedMeasurementGenerator.code} | {selectedMeasurementGenerator.ownerUid}
+              </Typography>
+            ) : null}
 
-          {measurementError ? <Alert severity="error">{measurementError}</Alert> : null}
+            {measurementError ? <Alert severity="error">{measurementError}</Alert> : null}
 
-          {generatorMeasurementsLoading ? (
-            <Typography color="text.secondary">Messwerte werden geladen...</Typography>
-          ) : (
-            <UnifiedList
-              items={generatorMeasurements}
-              columns={columns}
-              getItemKey={(measurement) => measurement.id}
-              ariaLabel="Messwerte der ausgewaehlten Brennstoffzelle"
-              emptyPrimary="Noch keine Messwerte"
-              emptySecondary="Fuer diese Brennstoffzelle wurden noch keine Werte eingetragen."
-              renderItemAction={(measurement) =>
-                editingMeasurementId === measurement.id ? null : (
+            {generatorMeasurementsLoading ? (
+              <Typography color="text.secondary">Messwerte werden geladen...</Typography>
+            ) : (
+              <UnifiedList
+                items={generatorMeasurements}
+                columns={columns}
+                getItemKey={(measurement) => measurement.id}
+                ariaLabel="Messwerte der ausgewaehlten Brennstoffzelle"
+                emptyPrimary="Noch keine Messwerte"
+                emptySecondary="Fuer diese Brennstoffzelle wurden noch keine Werte eingetragen."
+                renderItemAction={(measurement) => (
                   <IconButton
                     size="small"
                     aria-label="Messwert bearbeiten"
@@ -161,15 +115,45 @@ export function GeneratorMeasurementsDialog({
                   >
                     <EditNoteIcon fontSize="small" />
                   </IconButton>
-                )
-              }
-            />
-          )}
-        </Stack>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Schliessen</Button>
-      </DialogActions>
-    </Dialog>
+                )}
+              />
+            )}
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={onClose}>Schliessen</Button>
+        </DialogActions>
+      </Dialog>
+
+      <MeasurementFormDialog
+        open={Boolean(editingMeasurement)}
+        title="Messwert bearbeiten"
+        submitLabel="Speichern"
+        saving={measurementSaving}
+        error={measurementError}
+        onClose={onCloseMeasurementEditor}
+        onSubmit={(event) => {
+          event.preventDefault()
+          onSaveMeasurement()
+        }}
+        valueField={{
+          value: measurementForm.value,
+          onChange: (value) =>
+            onSetMeasurementForm((current) => ({
+              ...current,
+              value,
+            })),
+          autoFocus: true,
+        }}
+        enteredByField={{
+          value: measurementForm.enteredBy,
+          onChange: (enteredBy) =>
+            onSetMeasurementForm((current) => ({
+              ...current,
+              enteredBy,
+            })),
+        }}
+      />
+    </>
   )
 }
