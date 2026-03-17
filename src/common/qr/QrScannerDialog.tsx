@@ -53,6 +53,7 @@ const VIDEO_READY_TIMEOUT_MS = 2500
 const BARCODE_FORMATS_TIMEOUT_MS = 900
 const JSQR_MAX_FRAME_EDGE = 960
 const JSQR_CENTER_CROP_RATIO = 0.72
+const NO_DETECTION_HINT_DELAY_MS = 5000
 
 function playScanSound() {
   try {
@@ -86,6 +87,19 @@ function playScanSound() {
   } catch {
     // Audio feedback is optional and should never break scanning.
   }
+}
+function summarizeRawValue(value: string) {
+  const trimmed = value.trim()
+
+  if (!trimmed) {
+    return ''
+  }
+
+  if (trimmed.length <= 64) {
+    return trimmed
+  }
+
+  return `${trimmed.slice(0, 61)}...`
 }
 
 function getScannerErrorMessage(error: unknown) {
@@ -328,10 +342,17 @@ export function QrScannerDialog({
   const sessionRef = useRef(0)
   const processingRef = useRef(false)
   const lastScanAtRef = useRef(0)
+  const noDetectionStartAtRef = useRef(0)
+  const scanAttemptCountRef = useRef(0)
   const lastDetectedRef = useRef<{ value: string; timestamp: number }>({ value: '', timestamp: 0 })
   const detectedHandlerRef = useRef(onDetected)
   const [cameraState, setCameraState] = useState<CameraState>('idle')
   const [error, setError] = useState('')
+  const [decoderLabel, setDecoderLabel] = useState('Automatisch')
+  const [scanAttemptCount, setScanAttemptCount] = useState(0)
+  const [showNoDetectionHint, setShowNoDetectionHint] = useState(false)
+  const [videoSizeLabel, setVideoSizeLabel] = useState('-')
+  const [lastRejectedValue, setLastRejectedValue] = useState('')
   const [manualOpen, setManualOpen] = useState(false)
   const [manualValue, setManualValue] = useState('')
   const [manualSubmitting, setManualSubmitting] = useState(false)
@@ -347,6 +368,8 @@ export function QrScannerDialog({
     detectorRef.current = null
     processingRef.current = false
     lastScanAtRef.current = 0
+    noDetectionStartAtRef.current = 0
+    scanAttemptCountRef.current = 0
     lastDetectedRef.current = { value: '', timestamp: 0 }
     stopStream(streamRef.current)
     streamRef.current = null
@@ -380,6 +403,7 @@ export function QrScannerDialog({
       await detectedHandlerRef.current(trimmedValue)
     } catch (detectError) {
       setError(getScannerErrorMessage(detectError))
+      setLastRejectedValue(summarizeRawValue(trimmedValue))
     } finally {
       setManualSubmitting(false)
     }
@@ -391,6 +415,11 @@ export function QrScannerDialog({
       resetScannerRuntime()
       setCameraState('idle')
       setError('')
+      setDecoderLabel('Automatisch')
+      setScanAttemptCount(0)
+      setShowNoDetectionHint(false)
+      setVideoSizeLabel('-')
+      setLastRejectedValue('')
       setManualOpen(false)
       setManualValue('')
       setManualSubmitting(false)
@@ -407,7 +436,14 @@ export function QrScannerDialog({
     sessionRef.current = sessionId
     setCameraState('starting')
     setError('')
+    setDecoderLabel('Automatisch')
+    setScanAttemptCount(0)
+    setShowNoDetectionHint(false)
+    setVideoSizeLabel('-')
+    setLastRejectedValue('')
     processingRef.current = false
+    noDetectionStartAtRef.current = Date.now()
+    scanAttemptCountRef.current = 0
     lastDetectedRef.current = { value: '', timestamp: 0 }
 
     const startScanner = async () => {
@@ -434,6 +470,7 @@ export function QrScannerDialog({
         video.srcObject = stream
 
         await waitForVideoReady(video, VIDEO_READY_TIMEOUT_MS)
+        setVideoSizeLabel(`${video.videoWidth} x ${video.videoHeight}`)
 
         try {
           await video.play()
@@ -446,6 +483,7 @@ export function QrScannerDialog({
         }
 
         detectorRef.current = await createQrDetector(window.BarcodeDetector)
+        setDecoderLabel(detectorRef.current ? 'BarcodeDetector + jsQR' : 'jsQR')
 
         if (!canvasRef.current) {
           canvasRef.current = document.createElement('canvas')
@@ -465,6 +503,11 @@ export function QrScannerDialog({
           }
 
           lastScanAtRef.current = timestamp
+          scanAttemptCountRef.current += 1
+
+          if (scanAttemptCountRef.current % 4 === 0) {
+            setScanAttemptCount(scanAttemptCountRef.current)
+          }
 
           const scanVideo = videoRef.current
 
@@ -498,6 +541,9 @@ export function QrScannerDialog({
           }
 
           if (!rawValue) {
+            if (Date.now() - noDetectionStartAtRef.current >= NO_DETECTION_HINT_DELAY_MS) {
+              setShowNoDetectionHint(true)
+            }
             scheduleNextScan(scanFrame)
             return
           }
@@ -514,6 +560,8 @@ export function QrScannerDialog({
           }
 
           lastDetectedRef.current = { value: rawValue, timestamp: now }
+          setLastRejectedValue('')
+          setShowNoDetectionHint(false)
           playScanSound()
           processingRef.current = true
           setCameraState('processing')
@@ -529,6 +577,7 @@ export function QrScannerDialog({
           } catch (detectError) {
             if (sessionRef.current === sessionId) {
               setError(getScannerErrorMessage(detectError))
+              setLastRejectedValue(summarizeRawValue(rawValue))
               processingRef.current = false
               setCameraState('ready')
               scheduleNextScan(scanFrame)
@@ -563,6 +612,7 @@ export function QrScannerDialog({
     mode === 'admin'
       ? 'Richte die Kamera auf den QR-Code der Brennstoffzelle. Nach dem Scan wird der Code direkt für die Messwerterfassung übernommen.'
       : 'Richte die Kamera auf den QR-Code deiner Brennstoffzelle. Nach dem Scan startet die Verknüpfung automatisch.'
+  const showDiagnostics = mode === 'admin'
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
@@ -668,6 +718,11 @@ export function QrScannerDialog({
                   startIcon={<ReplayIcon />}
                   onClick={() => {
                     setError('')
+      setDecoderLabel('Automatisch')
+      setScanAttemptCount(0)
+      setShowNoDetectionHint(false)
+      setVideoSizeLabel('-')
+      setLastRejectedValue('')
                     setRestartCounter((current) => current + 1)
                   }}
                 >
@@ -676,6 +731,26 @@ export function QrScannerDialog({
               }
             >
               {error}
+            </Alert>
+          ) : null}
+          {lastRejectedValue ? (
+            <Alert severity="warning">
+              Letzter erkannter Inhalt konnte nicht verarbeitet werden: <strong>{lastRejectedValue}</strong>
+            </Alert>
+          ) : null}
+          {showNoDetectionHint ? (
+            <Alert severity="info">
+              Noch kein QR-Code erkannt. Halte den Code nah und mittig in den Rahmen, erhöhe die Beleuchtung und vermeide Reflexionen.
+            </Alert>
+          ) : null}
+          {showDiagnostics ? (
+            <Alert severity="info">
+              <Stack spacing={0.5}>
+                <Typography variant="body2">Diagnose: Kamera {cameraState}</Typography>
+                <Typography variant="body2">Diagnose: Decoder {decoderLabel}</Typography>
+                <Typography variant="body2">Diagnose: Auflösung {videoSizeLabel}</Typography>
+                <Typography variant="body2">Diagnose: Scan-Zyklen {scanAttemptCount}</Typography>
+              </Stack>
             </Alert>
           ) : null}
 
@@ -724,4 +799,5 @@ export function QrScannerDialog({
     </Dialog>
   )
 }
+
 
