@@ -1,4 +1,4 @@
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+﻿import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner'
 import ReplayIcon from '@mui/icons-material/Replay'
 import jsQR from 'jsqr'
@@ -41,6 +41,7 @@ interface QrScannerDialogProps {
   open: boolean
   onClose: () => void
   onDetected: (value: string) => Promise<void> | void
+  mode?: 'link' | 'admin'
 }
 
 type CameraState = 'idle' | 'starting' | 'ready' | 'processing'
@@ -239,7 +240,12 @@ function detectWithJsQr(video: HTMLVideoElement, canvas: HTMLCanvasElement, cont
   return decodedFromCenterCrop?.data?.trim() ?? ''
 }
 
-export function QrScannerDialog({ open, onClose, onDetected }: QrScannerDialogProps) {
+export function QrScannerDialog({
+  open,
+  onClose,
+  onDetected,
+  mode = 'link',
+}: QrScannerDialogProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const detectorRef = useRef<BarcodeDetectorInstance | null>(null)
@@ -320,7 +326,7 @@ export function QrScannerDialog({ open, onClose, onDetected }: QrScannerDialogPr
 
     if (!navigator.mediaDevices?.getUserMedia) {
       setCameraState('idle')
-      setError('Dieser Browser unterstützt keinen Kamerazugriff.')
+      setError('Dieser Browser unterstÃ¼tzt keinen Kamerazugriff.')
       return
     }
 
@@ -479,6 +485,10 @@ export function QrScannerDialog({ open, onClose, onDetected }: QrScannerDialogPr
   const cameraReady = cameraState === 'ready' || cameraState === 'processing'
   const initializing = cameraState === 'starting'
   const processing = cameraState === 'processing'
+  const scannerDescription =
+    mode === 'admin'
+      ? 'Richte die Kamera auf den QR-Code der Brennstoffzelle. Nach dem Scan wird der Code direkt für die Messwerterfassung übernommen.'
+      : 'Richte die Kamera auf den QR-Code deiner Brennstoffzelle. Nach dem Scan startet die Verknüpfung automatisch.'
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
@@ -486,7 +496,7 @@ export function QrScannerDialog({ open, onClose, onDetected }: QrScannerDialogPr
       <DialogContent>
         <Stack spacing={2}>
           <Typography color="text.secondary">
-            Richte die Kamera auf den QR-Code deiner Brennstoffzelle. Nach dem Scan startet die Verknüpfung automatisch.
+            {scannerDescription}
           </Typography>
 
           <Box
@@ -635,8 +645,9 @@ export function QrScannerDialog({ open, onClose, onDetected }: QrScannerDialogPr
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Schließen</Button>
+        <Button onClick={onClose}>SchlieÃŸen</Button>
       </DialogActions>
     </Dialog>
   )
 }
+

@@ -518,17 +518,20 @@ export function AdminPage() {
       throw new Error('Der QR-Code enthält keinen gültigen Brennstoffzellen-Code.')
     }
 
-    const foundGenerator = await getGeneratorByCode(code)
-
-    if (!foundGenerator) {
-      throw new Error('Zu diesem Code wurde keine Brennstoffzelle gefunden.')
-    }
+    const foundGenerator = await getGeneratorByCode(code, { includeInactive: true })
 
     setScannerOpen(false)
     setScanCode(code)
     setScanError('')
-    setScanStatus(`QR-Code erkannt: ${code}`)
     navigate(`/admin/scan/generator/${code}`)
+
+    if (!foundGenerator) {
+      setScanStatus(`QR-Code erkannt: ${code}. Für diesen Code wurde noch keine Brennstoffzelle angelegt.`)
+      openScanMeasurementDialog(code, false)
+      return
+    }
+
+    setScanStatus(`QR-Code erkannt: ${code}`)
     openScanMeasurementDialog(code, true)
   }
 
@@ -1160,6 +1163,7 @@ export function AdminPage() {
         open={scannerOpen}
         onClose={() => setScannerOpen(false)}
         onDetected={handleDetectedQrValue}
+        mode="admin"
       />
 
       <ScanMeasurementDialog
