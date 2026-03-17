@@ -156,16 +156,26 @@ export function LeaderboardPage() {
       key: 'name',
       header: 'Nutzer',
       mobileLabel: 'Nutzer',
-      width: 'minmax(92px, 1fr)',
+      width: isMobileViewport ? '82px' : 'minmax(92px, 1fr)',
       render: (entry) => (
         <Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 0 }}>
-          <Typography sx={{ fontWeight: 600 }} noWrap>
+          <Typography
+            sx={{
+              fontWeight: 600,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              minWidth: 0,
+            }}
+          >
             {entry.displayName}
           </Typography>
-          <KeyboardArrowRightIcon
-            fontSize="small"
-            sx={{ color: 'text.secondary', opacity: 0.8 }}
-          />
+          {!isMobileViewport ? (
+            <KeyboardArrowRightIcon
+              fontSize="small"
+              sx={{ color: 'text.secondary', opacity: 0.8 }}
+            />
+          ) : null}
         </Stack>
       ),
     },
