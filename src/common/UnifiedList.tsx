@@ -27,6 +27,7 @@ interface UnifiedListProps<TItem> {
   renderItemAction?: (item: TItem) => ReactNode
   renderMobileRow?: (item: TItem) => ReactNode
   minDesktopWidth?: number
+  forceDesktopLayoutOnMobile?: boolean
 }
 
 interface PreparedColumn<TItem> extends UnifiedListColumn<TItem> {
@@ -46,6 +47,7 @@ interface UnifiedListRowProps<TItem> {
   getItemAriaLabel?: (item: TItem) => string
   renderItemAction?: (item: TItem) => ReactNode
   renderMobileRow?: (item: TItem) => ReactNode
+  forceDesktopLayoutOnMobile: boolean
 }
 
 function getDesktopCellAlign(align: CellAlign | undefined) {
@@ -85,6 +87,7 @@ const UnifiedListRow = memo(function UnifiedListRow<TItem>({
   getItemAriaLabel,
   renderItemAction,
   renderMobileRow,
+  forceDesktopLayoutOnMobile,
 }: UnifiedListRowProps<TItem>) {
   const action = renderItemAction ? renderItemAction(item) : null
   const disabled = isItemDisabled?.(item) ?? false
@@ -131,7 +134,7 @@ const UnifiedListRow = memo(function UnifiedListRow<TItem>({
           <Box sx={{ width: '100%' }}>
             <Box
               sx={{
-                display: { xs: 'none', sm: 'grid' },
+                display: forceDesktopLayoutOnMobile ? 'grid' : { xs: 'none', sm: 'grid' },
                 gridTemplateColumns: desktopGridTemplate,
                 gap: 1.5,
                 alignItems: 'center',
@@ -153,11 +156,13 @@ const UnifiedListRow = memo(function UnifiedListRow<TItem>({
             </Box>
 
             {renderMobileRow ? (
-              <Box sx={{ display: { xs: 'block', sm: 'none' } }}>{renderMobileRow(item)}</Box>
+              <Box sx={{ display: forceDesktopLayoutOnMobile ? 'none' : { xs: 'block', sm: 'none' } }}>
+                {renderMobileRow(item)}
+              </Box>
             ) : (
               <Box
                 sx={{
-                  display: { xs: 'grid', sm: 'none' },
+                  display: forceDesktopLayoutOnMobile ? 'none' : { xs: 'grid', sm: 'none' },
                   gridTemplateColumns: mobileGridTemplate,
                   gap: 1,
                 }}
@@ -189,7 +194,7 @@ const UnifiedListRow = memo(function UnifiedListRow<TItem>({
           <Box sx={{ width: '100%' }}>
             <Box
               sx={{
-                display: { xs: 'none', sm: 'grid' },
+                display: forceDesktopLayoutOnMobile ? 'grid' : { xs: 'none', sm: 'grid' },
                 gridTemplateColumns: desktopGridTemplate,
                 gap: 1.5,
                 alignItems: 'center',
@@ -211,11 +216,13 @@ const UnifiedListRow = memo(function UnifiedListRow<TItem>({
             </Box>
 
             {renderMobileRow ? (
-              <Box sx={{ display: { xs: 'block', sm: 'none' } }}>{renderMobileRow(item)}</Box>
+              <Box sx={{ display: forceDesktopLayoutOnMobile ? 'none' : { xs: 'block', sm: 'none' } }}>
+                {renderMobileRow(item)}
+              </Box>
             ) : (
               <Box
                 sx={{
-                  display: { xs: 'grid', sm: 'none' },
+                  display: forceDesktopLayoutOnMobile ? 'none' : { xs: 'grid', sm: 'none' },
                   gridTemplateColumns: mobileGridTemplate,
                   gap: 1,
                 }}
@@ -260,6 +267,7 @@ export function UnifiedList<TItem>({
   renderItemAction,
   renderMobileRow,
   minDesktopWidth = 520,
+  forceDesktopLayoutOnMobile = true,
 }: UnifiedListProps<TItem>) {
   const preparedColumns = useMemo<PreparedColumn<TItem>[]>(() => {
     const isOddColumnCount = columns.length % 2 === 1
@@ -290,7 +298,7 @@ export function UnifiedList<TItem>({
       <Box sx={{ overflowX: 'auto' }}>
         <Box
           sx={{
-            display: { xs: 'none', sm: 'grid' },
+            display: forceDesktopLayoutOnMobile ? 'grid' : { xs: 'none', sm: 'grid' },
             gridTemplateColumns: desktopGridTemplate,
             gap: 1.5,
             px: 2,
@@ -331,6 +339,7 @@ export function UnifiedList<TItem>({
                 getItemAriaLabel={getItemAriaLabel}
                 renderItemAction={renderItemAction}
                 renderMobileRow={renderMobileRow}
+                forceDesktopLayoutOnMobile={forceDesktopLayoutOnMobile}
               />
             )
           })

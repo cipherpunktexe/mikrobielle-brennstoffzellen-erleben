@@ -6,7 +6,6 @@ import {
   AccordionDetails,
   AccordionSummary,
   Alert,
-  Box,
   Button,
   Card,
   CardContent,
@@ -82,49 +81,23 @@ export function AdminScanSection({
       width: 'minmax(0, 1fr)',
       render: (item) => <Typography variant="body2">{formatElapsedTime(item.createdAt)}</Typography>,
     },
-  ]
-
-  function renderRecentMeasurementMobileRow(item: AdminRecentMeasurementItem) {
-    return (
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: 'minmax(0, 1fr) auto',
-          gridTemplateRows: 'auto auto',
-          alignItems: 'start',
-          columnGap: 0.9,
-          rowGap: 0.15,
-          minWidth: 0,
-        }}
-      >
-        <Stack direction="row" spacing={0.75} alignItems="baseline" sx={{ minWidth: 0 }}>
-          <Typography
-            variant="body2"
-            sx={{
-              fontFamily: '"Consolas", "Courier New", monospace',
-              fontWeight: 700,
-              lineHeight: 1.2,
-            }}
-            noWrap
-          >
-            {item.generatorCode.toUpperCase()}
-          </Typography>
-        </Stack>
-
-        <Typography
-          variant="body2"
-          fontWeight={800}
-          sx={{ justifySelf: 'end', whiteSpace: 'nowrap', lineHeight: 1.2 }}
+    {
+      key: 'action',
+      header: '',
+      mobileLabel: 'Aktion',
+      width: '44px',
+      align: 'right',
+      render: (item) => (
+        <IconButton
+          size="small"
+          aria-label={`Messwert ${formatMeasurement(item.value)} von ${item.generatorCode.toUpperCase()} bearbeiten`}
+          onClick={() => onEditRecentMeasurement(item)}
         >
-          {formatMeasurement(item.value)}
-        </Typography>
-
-        <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.2 }}>
-          {formatElapsedTime(item.createdAt)}
-        </Typography>
-      </Box>
-    )
-  }
+          <EditNoteIcon fontSize="small" />
+        </IconButton>
+      ),
+    },
+  ]
 
   return (
     <Grid container spacing={{ xs: 2, md: 3 }}>
@@ -169,16 +142,8 @@ export function AdminScanSection({
                 ariaLabel="Letzte eigene Messwerte"
                 emptyPrimary="Noch keine eigenen Messwerte"
                 emptySecondary="Sobald du Werte speicherst, erscheinen sie hier."
-                renderItemAction={(item) => (
-                  <IconButton
-                    size="small"
-                    aria-label={`Messwert ${formatMeasurement(item.value)} von ${item.generatorCode.toUpperCase()} bearbeiten`}
-                    onClick={() => onEditRecentMeasurement(item)}
-                  >
-                    <EditNoteIcon fontSize="small" />
-                  </IconButton>
-                )}
-                renderMobileRow={renderRecentMeasurementMobileRow}
+                forceDesktopLayoutOnMobile
+                minDesktopWidth={420}
               />
               {hiddenRecentCount > 0 ? (
                 <Accordion
@@ -207,16 +172,8 @@ export function AdminScanSection({
                       getItemKey={(item) => item.id}
                       ariaLabel="Weitere eigene Messwerte"
                       emptyPrimary="Keine weiteren Messwerte"
-                      renderItemAction={(item) => (
-                        <IconButton
-                          size="small"
-                          aria-label={`Messwert ${formatMeasurement(item.value)} von ${item.generatorCode.toUpperCase()} bearbeiten`}
-                          onClick={() => onEditRecentMeasurement(item)}
-                        >
-                          <EditNoteIcon fontSize="small" />
-                        </IconButton>
-                      )}
-                      renderMobileRow={renderRecentMeasurementMobileRow}
+                      forceDesktopLayoutOnMobile
+                      minDesktopWidth={420}
                     />
                   </AccordionDetails>
                 </Accordion>
