@@ -4,6 +4,7 @@ import { render, type RenderOptions } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import type { ReactElement, ReactNode } from 'react'
 import { theme } from './theme'
+import { AppSnackbarProvider } from '../common/AppSnackbarProvider'
 
 interface WrapperProps {
   children: ReactNode
@@ -13,7 +14,9 @@ function Providers({ children }: WrapperProps) {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <MemoryRouter>{children}</MemoryRouter>
+      <AppSnackbarProvider>
+        <MemoryRouter>{children}</MemoryRouter>
+      </AppSnackbarProvider>
     </ThemeProvider>
   )
 }

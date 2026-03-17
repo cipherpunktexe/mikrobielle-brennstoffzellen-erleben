@@ -4,7 +4,6 @@
   Card,
   CardContent,
   Grid,
-  Snackbar,
   Stack,
   Typography,
   useMediaQuery,
@@ -31,6 +30,7 @@ import { GeneratorMeasurementsDialog } from './createQr/GeneratorMeasurementsDia
 import { ScanMeasurementDialog } from './createQr/ScanMeasurementDialog'
 import { MeasurementFormDialog } from './createQr/MeasurementFormDialog'
 import { AuthCard } from '../common/AuthCard'
+import { useAppSnackbar } from '../common/AppSnackbarProvider'
 import { QrScannerDialog } from '../common/qr/QrScannerDialog'
 import { formatCode } from '../common/format'
 import {
@@ -153,6 +153,7 @@ export function AdminPage() {
   const routeCode = formatCode(params.code ?? '')
   const routeTab = params.tab
   const activeTab: AdminTabValue = isAdminTabValue(routeTab) ? routeTab : 'scan'
+  const { showSnackbar } = useAppSnackbar()
 
   const [authUserId, setAuthUserId] = useState('')
   const [profile, setProfile] = useState<UserProfile | null>(null)
@@ -180,8 +181,6 @@ export function AdminPage() {
   const [scanMeasurementCodeLocked, setScanMeasurementCodeLocked] = useState(false)
   const [scanStatus, setScanStatus] = useState('')
   const [scanError, setScanError] = useState('')
-  const [unlinkedScanNoticeOpen, setUnlinkedScanNoticeOpen] = useState(false)
-  const [unlinkedScanNotice, setUnlinkedScanNotice] = useState('')
   const [scanMeasurementDialogOpen, setScanMeasurementDialogOpen] = useState(false)
   const [scanMeasurementInput, setScanMeasurementInput] = useState('1.42')
   const [scanMeasurementUnit, setScanMeasurementUnit] = useState<MeasurementUnit>('V')
@@ -523,17 +522,6 @@ export function AdminPage() {
     setScanMeasurementError('')
   }
 
-  function handleCloseUnlinkedScanNotice(
-    _event?: Event | SyntheticEvent,
-    reason?: string,
-  ) {
-    if (reason === 'clickaway') {
-      return
-    }
-
-    setUnlinkedScanNoticeOpen(false)
-  }
-
   async function handleDetectedQrValue(value: string) {
     const code = extractGeneratorCodeFromQrValue(value)
 
@@ -563,17 +551,16 @@ export function AdminPage() {
 
     if (!foundGenerator) {
       setScanStatus('')
-      setUnlinkedScanNotice(
-        `Code ${code.toUpperCase()} ist noch nicht verknüpft. Bitte zuerst in Moderieren verknüpfen.`,
-      )
-      setUnlinkedScanNoticeOpen(true)
+      showSnackbar({
+        message: `Code ${code.toUpperCase()} ist noch nicht verknüpft. Bitte zuerst in Moderieren verknüpfen.`,
+        severity: 'info',
+        autoHideDuration: 4500,
+      })
       setScanMeasurementDialogOpen(false)
       setScanMeasurementCodeLocked(false)
       lastHandledScanRef.current = { code, timestamp: now }
       return
     }
-
-    setUnlinkedScanNoticeOpen(false)
     setScanStatus(`QR-Code erkannt: ${code}`)
     openScanMeasurementDialog(code, true)
     lastHandledScanRef.current = { code, timestamp: now }
@@ -1211,21 +1198,6 @@ export function AdminPage() {
         onDetected={handleDetectedQrValue}
         mode="admin"
       />
-      <Snackbar
-        open={unlinkedScanNoticeOpen}
-        autoHideDuration={4500}
-        onClose={handleCloseUnlinkedScanNotice}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        <Alert
-          severity="info"
-          variant="filled"
-          onClose={handleCloseUnlinkedScanNotice}
-          sx={{ width: '100%' }}
-        >
-          {unlinkedScanNotice}
-        </Alert>
-      </Snackbar>
 
       <ScanMeasurementDialog
         open={scanMeasurementDialogOpen}
