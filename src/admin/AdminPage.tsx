@@ -23,6 +23,7 @@ import { AdminScanSection } from './scan/AdminScanSection'
 import { AdminModerationSection } from './moderate/AdminModerationSection'
 import { ModerationMenus } from './moderate/ModerationMenus'
 import { EditUserDialog } from './createQr/EditUserDialog'
+import { BlockedDialog } from './moderate/BlockedDialog'
 import { TrashDialog } from './moderate/TrashDialog'
 import { GeneratorMeasurementsDialog } from './createQr/GeneratorMeasurementsDialog'
 import { ScanMeasurementDialog } from './createQr/ScanMeasurementDialog'
@@ -178,6 +179,7 @@ export function AdminPage() {
   const [moderationSearchOpen, setModerationSearchOpen] = useState(false)
   const [mobileAdminNavOpen, setMobileAdminNavOpen] = useState(false)
   const [trashMenuAnchorEl, setTrashMenuAnchorEl] = useState<HTMLElement | null>(null)
+  const [blockedDialogOpen, setBlockedDialogOpen] = useState(false)
   const [trashDialogOpen, setTrashDialogOpen] = useState(false)
   const [moderationMenuAnchorEl, setModerationMenuAnchorEl] = useState<HTMLElement | null>(null)
   const [menuUser, setMenuUser] = useState<UserProfile | null>(null)
@@ -605,6 +607,15 @@ export function AdminPage() {
     handleCloseTrashMenu()
   }
 
+  function handleOpenBlockedDialog() {
+    setBlockedDialogOpen(true)
+    handleCloseTrashMenu()
+  }
+
+  function handleCloseBlockedDialog() {
+    setBlockedDialogOpen(false)
+  }
+
   function handleCloseTrashDialog() {
     setTrashDialogOpen(false)
   }
@@ -964,9 +975,9 @@ export function AdminPage() {
           moderationSearch={moderationSearch}
           moderationSearchOpen={moderationSearchOpen}
           moderationEntriesCount={moderationEntries.length}
+          blockedModerationEntriesCount={blockedModerationEntries.length}
           trashedModerationEntriesCount={trashedModerationEntries.length}
           activeModerationEntries={activeModerationEntries}
-          blockedModerationEntries={blockedModerationEntries}
           onSetModerationSearch={setModerationSearch}
           onSetModerationSearchOpen={setModerationSearchOpen}
           onOpenTrashMenu={handleOpenTrashMenu}
@@ -980,10 +991,12 @@ export function AdminPage() {
       <ModerationMenus
         trashMenuAnchorEl={trashMenuAnchorEl}
         moderationMenuAnchorEl={moderationMenuAnchorEl}
+        blockedModerationEntriesCount={blockedModerationEntries.length}
         trashedModerationEntriesCount={trashedModerationEntries.length}
         menuUser={menuUser}
         menuGenerator={menuGenerator}
         onCloseTrashMenu={handleCloseTrashMenu}
+        onOpenBlockedDialog={handleOpenBlockedDialog}
         onOpenTrashDialog={handleOpenTrashDialog}
         onCloseModerationMenu={handleCloseModerationMenu}
         onOpenUserDialog={handleOpenUserDialog}
@@ -1013,6 +1026,16 @@ export function AdminPage() {
         open={trashDialogOpen}
         entries={trashedModerationEntries}
         onClose={handleCloseTrashDialog}
+        onOpenActions={handleModerationMenuOpen}
+        onOpenMeasurements={(generator) => {
+          void handleOpenGeneratorMeasurements(generator)
+        }}
+      />
+
+      <BlockedDialog
+        open={blockedDialogOpen}
+        entries={blockedModerationEntries}
+        onClose={handleCloseBlockedDialog}
         onOpenActions={handleModerationMenuOpen}
         onOpenMeasurements={(generator) => {
           void handleOpenGeneratorMeasurements(generator)

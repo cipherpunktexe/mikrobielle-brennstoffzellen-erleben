@@ -1,4 +1,4 @@
-import CloseIcon from '@mui/icons-material/Close'
+﻿import CloseIcon from '@mui/icons-material/Close'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import SearchIcon from '@mui/icons-material/Search'
 import {
@@ -24,9 +24,9 @@ interface AdminModerationSectionProps {
   moderationSearch: string
   moderationSearchOpen: boolean
   moderationEntriesCount: number
+  blockedModerationEntriesCount: number
   trashedModerationEntriesCount: number
   activeModerationEntries: ModerationListEntry[]
-  blockedModerationEntries: ModerationListEntry[]
   onSetModerationSearch: (value: string) => void
   onSetModerationSearchOpen: (value: boolean | ((current: boolean) => boolean)) => void
   onOpenTrashMenu: (event: MouseEvent<HTMLElement>) => void
@@ -45,9 +45,9 @@ export function AdminModerationSection({
   moderationSearch,
   moderationSearchOpen,
   moderationEntriesCount,
+  blockedModerationEntriesCount,
   trashedModerationEntriesCount,
   activeModerationEntries,
-  blockedModerationEntries,
   onSetModerationSearch,
   onSetModerationSearchOpen,
   onOpenTrashMenu,
@@ -56,6 +56,7 @@ export function AdminModerationSection({
 }: AdminModerationSectionProps) {
   const searchAreaRef = useRef<HTMLDivElement | null>(null)
   const searchInputRef = useRef<HTMLInputElement | null>(null)
+  const secondaryEntriesCount = blockedModerationEntriesCount + trashedModerationEntriesCount
 
   useEffect(() => {
     if (!moderationSearchOpen) {
@@ -98,7 +99,7 @@ export function AdminModerationSection({
 
           {moderationLoading ? (
             <Stack alignItems="center" justifyContent="center" sx={{ py: 6 }}>
-              <Typography color="text.secondary">EintrÃ¤ge werden geladen...</Typography>
+              <Typography color="text.secondary">Einträge werden geladen...</Typography>
             </Stack>
           ) : null}
 
@@ -186,7 +187,7 @@ export function AdminModerationSection({
               </Box>
 
               <IconButton
-                aria-label={`Weitere Aktionen${trashedModerationEntriesCount ? ` (${trashedModerationEntriesCount})` : ''}`}
+                aria-label={`Weitere Aktionen${secondaryEntriesCount ? ` (${secondaryEntriesCount})` : ''}`}
                 onClick={onOpenTrashMenu}
                 sx={{
                   ml: 'auto',
@@ -203,7 +204,7 @@ export function AdminModerationSection({
                 }}
               >
                 <Badge
-                  badgeContent={trashedModerationEntriesCount > 0 ? trashedModerationEntriesCount : null}
+                  badgeContent={secondaryEntriesCount > 0 ? secondaryEntriesCount : null}
                   color="warning"
                   max={99}
                 >
@@ -216,30 +217,15 @@ export function AdminModerationSection({
           <ModerationList
             entries={activeModerationEntries}
             ariaLabel="Moderationsliste"
-            emptyPrimary={moderationEntriesCount ? 'Keine Treffer' : 'Noch keine EintrÃ¤ge'}
+            emptyPrimary={moderationEntriesCount ? 'Keine Treffer' : 'Noch keine Einträge'}
             emptySecondary={
               moderationEntriesCount
-                ? 'Passe den Suchbegriff an, um weitere EintrÃ¤ge zu sehen.'
+                ? 'Passe den Suchbegriff an, um weitere Einträge zu sehen.'
                 : 'Registrierte Konten erscheinen hier automatisch.'
             }
             onOpenActions={onOpenActions}
             onOpenMeasurements={onOpenMeasurements}
           />
-
-          <Stack spacing={1}>
-            <Typography variant="h6" sx={{ fontSize: { xs: '1.1rem', sm: '1.2rem' } }}>
-              Gesperrt
-            </Typography>
-            <ModerationList
-              entries={blockedModerationEntries}
-              ariaLabel="Gesperrte Nutzer"
-              emptyPrimary="Keine gesperrten Nutzer"
-              emptySecondary="Gesperrte Konten erscheinen hier und können entsperrt werden."
-              showStatus
-              onOpenActions={onOpenActions}
-              onOpenMeasurements={onOpenMeasurements}
-            />
-          </Stack>
         </Stack>
       </CardContent>
     </Card>

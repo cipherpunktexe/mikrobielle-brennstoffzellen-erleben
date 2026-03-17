@@ -1,4 +1,5 @@
 import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined'
+import BlockOutlinedIcon from '@mui/icons-material/BlockOutlined'
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined'
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline'
 import ShowChartIcon from '@mui/icons-material/ShowChart'
@@ -8,10 +9,12 @@ import type { Generator, UserProfile } from '../../data/domain'
 interface ModerationMenusProps {
   trashMenuAnchorEl: HTMLElement | null
   moderationMenuAnchorEl: HTMLElement | null
+  blockedModerationEntriesCount: number
   trashedModerationEntriesCount: number
   menuUser: UserProfile | null
   menuGenerator: Generator | null
   onCloseTrashMenu: () => void
+  onOpenBlockedDialog: () => void
   onOpenTrashDialog: () => void
   onCloseModerationMenu: () => void
   onOpenUserDialog: (user: UserProfile) => void
@@ -22,10 +25,12 @@ interface ModerationMenusProps {
 export function ModerationMenus({
   trashMenuAnchorEl,
   moderationMenuAnchorEl,
+  blockedModerationEntriesCount,
   trashedModerationEntriesCount,
   menuUser,
   menuGenerator,
   onCloseTrashMenu,
+  onOpenBlockedDialog,
   onOpenTrashDialog,
   onCloseModerationMenu,
   onOpenUserDialog,
@@ -51,6 +56,10 @@ export function ModerationMenus({
           },
         }}
       >
+        <MenuItem onClick={onOpenBlockedDialog} sx={{ gap: 1.25 }}>
+          <BlockOutlinedIcon fontSize="small" />
+          {blockedModerationEntriesCount ? `Gesperrt (${blockedModerationEntriesCount})` : 'Gesperrt'}
+        </MenuItem>
         <MenuItem onClick={onOpenTrashDialog} sx={{ gap: 1.25 }}>
           <DeleteOutlineOutlinedIcon fontSize="small" />
           {trashedModerationEntriesCount ? `Papierkorb (${trashedModerationEntriesCount})` : 'Papierkorb'}
