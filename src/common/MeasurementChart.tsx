@@ -20,7 +20,10 @@ function formatShortTimestamp(measurement: Measurement) {
     month: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
-  }).format(date)
+    hour12: false,
+  })
+    .format(date)
+    .replace(',', '')
 }
 
 export function MeasurementChart({ measurements }: MeasurementChartProps) {
@@ -88,7 +91,6 @@ export function MeasurementChart({ measurements }: MeasurementChartProps) {
           value: measurement.value,
           label: formatTimestamp(measurement.createdAt),
           shortLabel: formatShortTimestamp(measurement),
-          xValue: measurement.createdAt?.toMillis(),
         }))}
         ariaLabel="Diagramm der Messwerthistorie"
         detailLabelTitle="Zeitpunkt"
