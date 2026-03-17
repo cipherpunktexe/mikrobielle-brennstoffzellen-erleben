@@ -13,7 +13,6 @@ import {
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import type { SyntheticEvent } from 'react'
-import { uiColor } from '../app/uiColor'
 import { adminTabItems } from './adminTabs'
 import type { AdminTabValue } from './types'
 
@@ -63,7 +62,8 @@ export function AdminNavigation({
                 bgcolor: (theme) =>
                   mobileAdminNavOpen ? theme.palette.action.hover : alpha(theme.palette.common.white, 0.72),
                 color: 'text.primary',
-                boxShadow: (theme) => (mobileAdminNavOpen ? uiColor.shadow.soft(theme) : 'none'),
+                boxShadow: (theme) =>
+                  mobileAdminNavOpen ? `0 14px 28px ${alpha(theme.palette.common.black, 0.14)}` : 'none',
                 '& .MuiButton-endIcon': {
                   color: 'text.secondary',
                 },
@@ -88,7 +88,7 @@ export function AdminNavigation({
                   border: (theme) => `1px solid ${alpha(theme.palette.secondary.main, 0.18)}`,
                   overflow: 'hidden',
                   bgcolor: (theme) => alpha(theme.palette.common.white, 0.9),
-                  boxShadow: (theme) => uiColor.shadow.panel(theme),
+                  boxShadow: (theme) => `0 18px 34px ${alpha(theme.palette.common.black, 0.12)}`,
                 }}
               >
                 <List disablePadding>

@@ -10,7 +10,7 @@ import {
   Typography,
   Button,
 } from '@mui/material'
-import { uiColor } from '../../app/uiColor'
+import { alpha } from '@mui/material/styles'
 import { UnifiedList, type UnifiedListColumn } from '../../common/UnifiedList'
 import { formatMeasurement, formatTimestamp } from '../../common/format'
 import type { Generator, Measurement } from '../../data/domain'
@@ -113,9 +113,9 @@ export function GeneratorMeasurementsDialog({
                       height: 34,
                       borderRadius: 1.75,
                       border: (theme) => `1px solid ${theme.palette.divider}`,
-                      bgcolor: (theme) => uiColor.surface.soft(theme),
+                      bgcolor: (theme) => alpha(theme.palette.common.white, 0.72),
                       '&:hover': {
-                        bgcolor: (theme) => uiColor.surface.softHover(theme),
+                        bgcolor: (theme) => alpha(theme.palette.common.white, 0.96),
                       },
                     }}
                   >

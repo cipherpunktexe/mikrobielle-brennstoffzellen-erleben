@@ -3,7 +3,6 @@ import SearchIcon from '@mui/icons-material/Search'
 import { Box, IconButton, InputBase } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { useEffect, useRef } from 'react'
-import { uiColor } from '../app/uiColor'
 
 interface CollapsibleSearchFieldProps {
   value: string
@@ -71,7 +70,8 @@ export function CollapsibleSearchField({
         borderRadius: 999,
         border: (theme) => `1px solid ${alpha(theme.palette.secondary.main, open ? 0.28 : 0.18)}`,
         bgcolor: (theme) => alpha(theme.palette.common.white, open ? 0.9 : 0.72),
-        boxShadow: (theme) => (open ? uiColor.shadow.soft(theme) : 'none'),
+        boxShadow: (theme) =>
+          open ? `0 14px 28px ${alpha(theme.palette.common.black, 0.14)}` : 'none',
         overflow: 'hidden',
         transition:
           'width 220ms ease, background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease',

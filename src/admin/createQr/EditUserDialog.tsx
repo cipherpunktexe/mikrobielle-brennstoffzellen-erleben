@@ -13,8 +13,8 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
+import { alpha } from '@mui/material/styles'
 import type { FormEvent } from 'react'
-import { uiColor } from '../../app/uiColor'
 import type { EntityLifecycleStatus, Generator, UserProfile } from '../../data/domain'
 import type { UserFormState } from '../types'
 
@@ -115,9 +115,9 @@ export function EditUserDialog({
 
             <Box
               sx={{
-                border: (theme) => `1px solid ${uiColor.surface.borderStrong(theme)}`,
+                border: (theme) => `1px solid ${alpha(theme.palette.secondary.main, 0.22)}`,
                 borderRadius: 2.5,
-                bgcolor: (theme) => uiColor.surface.muted(theme),
+                bgcolor: (theme) => alpha(theme.palette.common.white, 0.44),
                 px: 1.25,
                 py: 1,
               }}

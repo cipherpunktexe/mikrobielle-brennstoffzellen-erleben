@@ -1,5 +1,5 @@
 import { Box, Card, CardContent, Link, Stack, Typography } from '@mui/material'
-import { uiColor } from '../app/uiColor'
+import { alpha } from '@mui/material/styles'
 
 type SectionProps = {
   title: string
@@ -10,10 +10,10 @@ function Section({ title, children }: SectionProps) {
   return (
     <Box
       sx={{
-        border: (theme) => `1px solid ${uiColor.surface.border(theme)}`,
+        border: (theme) => `1px solid ${alpha(theme.palette.secondary.main, 0.18)}`,
         borderRadius: 3,
         p: { xs: 2, sm: 3 },
-        background: (theme) => uiColor.surface.subtle(theme),
+        background: (theme) => alpha(theme.palette.text.primary, 0.06),
       }}
     >
       <Typography variant="h5" sx={{ mb: 1.5, fontSize: { xs: '1.2rem', sm: '1.5rem' } }}>
