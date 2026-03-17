@@ -24,7 +24,7 @@ export function TrashDialog({
   onOpenMeasurements,
 }: TrashDialogProps) {
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
+    <Dialog open={open} onClose={onClose} fullScreen>
       <DialogTitle>Papierkorb</DialogTitle>
       <DialogContent>
         <ModerationList

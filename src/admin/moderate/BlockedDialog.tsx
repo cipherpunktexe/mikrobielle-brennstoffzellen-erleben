@@ -24,7 +24,7 @@ export function BlockedDialog({
   onOpenMeasurements,
 }: BlockedDialogProps) {
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
+    <Dialog open={open} onClose={onClose} fullScreen>
       <DialogTitle>Gesperrt</DialogTitle>
       <DialogContent>
         <ModerationList
