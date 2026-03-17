@@ -1,4 +1,4 @@
-import {
+﻿import {
   Alert,
   Button,
   Card,
@@ -199,7 +199,7 @@ export function AdminPage() {
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null)
   const [userForm, setUserForm] = useState<UserFormState>(createEmptyUserForm)
   const [userLifecycleActionLoading, setUserLifecycleActionLoading] = useState<
-    '' | Exclude<EntityLifecycleStatus, 'active'>
+    '' | EntityLifecycleStatus
   >('')
 
   const [formValues, setFormValues] = useState({
@@ -346,7 +346,8 @@ export function AdminPage() {
     return haystack.includes(normalizedModerationSearch)
   })
   const activeModerationEntries = filteredModerationEntries.filter((entry) => entry.status === 'active')
-  const trashedModerationEntries = filteredModerationEntries.filter((entry) => entry.status !== 'active')
+  const blockedModerationEntries = filteredModerationEntries.filter((entry) => entry.status === 'blocked')
+  const trashedModerationEntries = filteredModerationEntries.filter((entry) => entry.status === 'deleted')
   const editingUserGenerator =
     editingUser
       ? moderationEntries.find((entry) => entry.user.id === editingUser.id)?.generator ?? null
@@ -421,7 +422,7 @@ export function AdminPage() {
       }
 
       if (!Number.isFinite(qrSizeMm) || qrSizeMm <= 0) {
-        throw new Error('Bitte eine gültige QR-Größe angeben.')
+        throw new Error('Bitte eine gÃ¼ltige QR-GrÃ¶ÃŸe angeben.')
       }
 
       if (!Number.isFinite(digits) || digits < 1 || digits > 12) {
@@ -488,7 +489,7 @@ export function AdminPage() {
     const code = extractGeneratorCodeFromQrValue(value)
 
     if (!code) {
-      throw new Error('Der QR-Code enthält keinen gültigen Brennstoffzellen-Code.')
+      throw new Error('Der QR-Code enthÃ¤lt keinen gÃ¼ltigen Brennstoffzellen-Code.')
     }
 
     const foundGenerator = await getGeneratorByCode(code)
@@ -522,13 +523,13 @@ export function AdminPage() {
       const numericValue = Number.parseFloat(scanMeasurementInput)
 
       if (Number.isNaN(numericValue)) {
-        throw new Error('Bitte einen gültigen Messwert eingeben.')
+        throw new Error('Bitte einen gÃ¼ltigen Messwert eingeben.')
       }
 
       const measuredAt = new Date(scanMeasurementDateTime)
 
       if (Number.isNaN(measuredAt.getTime())) {
-        throw new Error('Bitte ein gültiges Datum und eine gültige Uhrzeit angeben.')
+        throw new Error('Bitte ein gÃ¼ltiges Datum und eine gÃ¼ltige Uhrzeit angeben.')
       }
 
       const linkedGenerator = await addMeasurementByCode({
@@ -542,7 +543,7 @@ export function AdminPage() {
       setScanCode(normalizedCode)
       setScanMeasurementDialogOpen(false)
       setScanMeasurementCodeLocked(false)
-      setScanStatus(`Messwert für ${linkedGenerator.code} wurde gespeichert.`)
+      setScanStatus(`Messwert fÃ¼r ${linkedGenerator.code} wurde gespeichert.`)
     } catch (submitIssue) {
       setScanMeasurementError(
         submitIssue instanceof Error
@@ -652,14 +653,23 @@ export function AdminPage() {
     }
   }
 
-  async function handleUserLifecycleAction(status: Exclude<EntityLifecycleStatus, 'active'>) {
+  async function handleUserLifecycleAction(status: EntityLifecycleStatus) {
     if (!editingUser || userLifecycleActionLoading) {
       return
     }
 
-    const actionLabel = status === 'blocked' ? 'sperren' : 'löschen'
+    const actionLabel =
+      status === 'active' ? 'wiederherstellen' : status === 'blocked' ? 'sperren' : 'löschen'
+    const successMessage =
+      status === 'active'
+        ? `${editingUser.name} wurde wiederhergestellt.`
+        : status === 'blocked'
+          ? `${editingUser.name} wurde gesperrt und in die Sektion "Gesperrt" verschoben.`
+          : `${editingUser.name} wurde gelöscht und in den Papierkorb verschoben.`
     const confirmed = window.confirm(
-      `Nutzer ${editingUser.name} wirklich ${actionLabel}? Der Eintrag wandert in den Papierkorb und die Messwerte werden nicht mehr normal angezeigt.`,
+      status === 'active'
+        ? `Nutzer ${editingUser.name} wirklich ${actionLabel}?`
+        : `Nutzer ${editingUser.name} wirklich ${actionLabel}? Die Messwerte werden nicht mehr normal angezeigt.`,
     )
 
     if (!confirmed) {
@@ -679,9 +689,7 @@ export function AdminPage() {
         handleCloseGeneratorMeasurementsDialog()
       }
 
-      setModerationStatus(
-        `${editingUser.name} wurde ${status === 'blocked' ? 'gesperrt' : 'gelöscht'} und in den Papierkorb verschoben.`,
-      )
+      setModerationStatus(successMessage)
       handleCloseUserDialog()
     } catch (actionIssue) {
       setModerationError(
@@ -693,7 +701,6 @@ export function AdminPage() {
       setUserLifecycleActionLoading('')
     }
   }
-
   async function loadGeneratorMeasurements(generatorId: string) {
     const measurements = await getMeasurementsForAdmin(generatorId)
     setGeneratorMeasurements(measurements)
@@ -746,7 +753,7 @@ export function AdminPage() {
       setScanError(
         editIssue instanceof Error
           ? editIssue.message
-          : 'Der Messwert konnte nicht zum Bearbeiten geöffnet werden.',
+          : 'Der Messwert konnte nicht zum Bearbeiten geÃ¶ffnet werden.',
       )
     }
   }
@@ -795,7 +802,7 @@ export function AdminPage() {
       const numericValue = Number.parseFloat(measurementForm.value)
 
       if (Number.isNaN(numericValue)) {
-        throw new Error('Bitte einen gültigen Messwert in V eingeben.')
+        throw new Error('Bitte einen gÃ¼ltigen Messwert in V eingeben.')
       }
 
       await updateMeasurementAsAdmin(measurementId, {
@@ -804,7 +811,7 @@ export function AdminPage() {
       })
 
       await loadGeneratorMeasurements(selectedMeasurementGenerator.id)
-      setModerationStatus(`Messwert für ${selectedMeasurementGenerator.code} aktualisiert.`)
+      setModerationStatus(`Messwert fÃ¼r ${selectedMeasurementGenerator.code} aktualisiert.`)
       handleCloseMeasurementEditor()
     } catch (saveIssue) {
       setMeasurementError(
@@ -849,7 +856,7 @@ export function AdminPage() {
         <Grid size={{ xs: 12, md: 6 }}>
           <AuthCard
             title="Admin-Login"
-            description="Admins melden sich über Firebase Authentication an und verwalten danach QR-Codes, Scans und Moderation an einer Stelle."
+            description="Admins melden sich Ã¼ber Firebase Authentication an und verwalten danach QR-Codes, Scans und Moderation an einer Stelle."
             values={formValues}
             submitLabel="Als Admin anmelden"
             googleLabel="Mit Google anmelden"
@@ -873,7 +880,7 @@ export function AdminPage() {
                   Die Admin-Seite ist jetzt in drei Bereiche getrennt: QR erstellen, Scannen und Moderieren.
                 </Typography>
                 <Typography color="text.secondary">
-                  Voraussetzung ist ein Firestore-User mit <code>role: "admin"</code> für das angemeldete Konto.
+                  Voraussetzung ist ein Firestore-User mit <code>role: "admin"</code> fÃ¼r das angemeldete Konto.
                 </Typography>
               </Stack>
             </CardContent>
@@ -959,6 +966,7 @@ export function AdminPage() {
           moderationEntriesCount={moderationEntries.length}
           trashedModerationEntriesCount={trashedModerationEntries.length}
           activeModerationEntries={activeModerationEntries}
+          blockedModerationEntries={blockedModerationEntries}
           onSetModerationSearch={setModerationSearch}
           onSetModerationSearchOpen={setModerationSearchOpen}
           onOpenTrashMenu={handleOpenTrashMenu}
@@ -1056,3 +1064,6 @@ export function AdminPage() {
     </Stack>
   )
 }
+
+
+

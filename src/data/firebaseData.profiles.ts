@@ -334,21 +334,22 @@ export async function updateUserProfileAsAdmin(userId: string, input: AdminUserP
 
 export async function setUserLifecycleStatusAsAdmin(
   user: UserProfile,
-  status: Exclude<EntityLifecycleStatus, 'active'>,
+  status: EntityLifecycleStatus,
 ) {
-  const archivedBy = auth.currentUser?.uid ?? null
+  const archivedBy = status === 'active' ? null : auth.currentUser?.uid ?? null
+  const archivedAt = status === 'active' ? null : serverTimestamp()
   const linkedGenerator = await findLinkedGeneratorForUser(user)
 
   await updateDoc(doc(usersCollection, user.id), {
     status,
-    archivedAt: serverTimestamp(),
+    archivedAt,
     archivedBy,
   })
 
   if (linkedGenerator) {
     await updateDoc(doc(generatorsCollection, linkedGenerator.id), {
       status,
-      archivedAt: serverTimestamp(),
+      archivedAt,
       archivedBy,
       updatedAt: serverTimestamp(),
     })

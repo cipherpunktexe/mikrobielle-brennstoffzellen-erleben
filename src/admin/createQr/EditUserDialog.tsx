@@ -11,12 +11,12 @@ interface EditUserDialogProps {
   editingUserGenerator: Generator | null
   userForm: UserFormState
   userDangerOpen: boolean
-  userLifecycleActionLoading: '' | Exclude<EntityLifecycleStatus, 'active'>
+  userLifecycleActionLoading: '' | EntityLifecycleStatus
   onClose: () => void
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
   onSetUserForm: (updater: (current: UserFormState) => UserFormState) => void
   onSetUserDangerOpen: (value: boolean | ((current: boolean) => boolean)) => void
-  onUserLifecycleAction: (status: Exclude<EntityLifecycleStatus, 'active'>) => void
+  onUserLifecycleAction: (status: EntityLifecycleStatus) => void
 }
 
 export function EditUserDialog({
@@ -88,10 +88,24 @@ export function EditUserDialog({
                 onClick={() => onSetUserDangerOpen((current) => !current)}
                 sx={{ px: 0, minWidth: 0 }}
               >
-                Sperren / Loeschen
+                Kontostatus
               </Button>
               <Collapse in={userDangerOpen}>
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ pt: 1.25 }}>
+                  <Button
+                    type="button"
+                    color="success"
+                    onClick={() => onUserLifecycleAction('active')}
+                    disabled={Boolean(userLifecycleActionLoading) || editingUser?.status === 'active'}
+                  >
+                    {userLifecycleActionLoading === 'active'
+                      ? 'Wiederherstellen...'
+                      : editingUser?.status === 'active'
+                        ? 'Aktiv'
+                        : editingUser?.status === 'blocked'
+                          ? 'Entsperren'
+                          : 'Wiederherstellen'}
+                  </Button>
                   <Button
                     type="button"
                     onClick={() => onUserLifecycleAction('blocked')}

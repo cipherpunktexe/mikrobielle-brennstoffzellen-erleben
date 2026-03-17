@@ -1,8 +1,8 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material'
-import { ModerationList } from './ModerationList'
-import type { ModerationListEntry } from '../types'
-import type { Generator, UserProfile } from '../../data/domain'
+﻿import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material'
 import type { MouseEvent } from 'react'
+import type { Generator, UserProfile } from '../../data/domain'
+import type { ModerationListEntry } from '../types'
+import { ModerationList } from './ModerationList'
 
 interface TrashDialogProps {
   open: boolean
@@ -31,7 +31,7 @@ export function TrashDialog({
           entries={entries}
           ariaLabel="Papierkorb"
           emptyPrimary="Papierkorb leer"
-          emptySecondary="Gesperrte oder gelöschte Nutzer erscheinen hier."
+          emptySecondary="Gelöschte Nutzer erscheinen hier und können wiederhergestellt werden."
           showStatus
           onOpenActions={onOpenActions}
           onOpenMeasurements={onOpenMeasurements}
@@ -43,3 +43,4 @@ export function TrashDialog({
     </Dialog>
   )
 }
+

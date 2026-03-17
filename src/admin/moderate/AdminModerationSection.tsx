@@ -26,6 +26,7 @@ interface AdminModerationSectionProps {
   moderationEntriesCount: number
   trashedModerationEntriesCount: number
   activeModerationEntries: ModerationListEntry[]
+  blockedModerationEntries: ModerationListEntry[]
   onSetModerationSearch: (value: string) => void
   onSetModerationSearchOpen: (value: boolean | ((current: boolean) => boolean)) => void
   onOpenTrashMenu: (event: MouseEvent<HTMLElement>) => void
@@ -46,6 +47,7 @@ export function AdminModerationSection({
   moderationEntriesCount,
   trashedModerationEntriesCount,
   activeModerationEntries,
+  blockedModerationEntries,
   onSetModerationSearch,
   onSetModerationSearchOpen,
   onOpenTrashMenu,
@@ -187,6 +189,7 @@ export function AdminModerationSection({
                 aria-label={`Weitere Aktionen${trashedModerationEntriesCount ? ` (${trashedModerationEntriesCount})` : ''}`}
                 onClick={onOpenTrashMenu}
                 sx={{
+                  ml: 'auto',
                   width: 44,
                   height: 44,
                   borderRadius: 2.25,
@@ -222,6 +225,21 @@ export function AdminModerationSection({
             onOpenActions={onOpenActions}
             onOpenMeasurements={onOpenMeasurements}
           />
+
+          <Stack spacing={1}>
+            <Typography variant="h6" sx={{ fontSize: { xs: '1.1rem', sm: '1.2rem' } }}>
+              Gesperrt
+            </Typography>
+            <ModerationList
+              entries={blockedModerationEntries}
+              ariaLabel="Gesperrte Nutzer"
+              emptyPrimary="Keine gesperrten Nutzer"
+              emptySecondary="Gesperrte Konten erscheinen hier und können entsperrt werden."
+              showStatus
+              onOpenActions={onOpenActions}
+              onOpenMeasurements={onOpenMeasurements}
+            />
+          </Stack>
         </Stack>
       </CardContent>
     </Card>
