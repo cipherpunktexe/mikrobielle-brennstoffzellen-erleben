@@ -54,6 +54,40 @@ const BARCODE_FORMATS_TIMEOUT_MS = 900
 const JSQR_MAX_FRAME_EDGE = 960
 const JSQR_CENTER_CROP_RATIO = 0.72
 
+function playScanSound() {
+  try {
+    const AudioCtx = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+
+    if (!AudioCtx) {
+      return
+    }
+
+    const audioContext = new AudioCtx()
+    const oscillator = audioContext.createOscillator()
+    const gainNode = audioContext.createGain()
+    const now = audioContext.currentTime
+
+    oscillator.type = 'sine'
+    oscillator.frequency.setValueAtTime(980, now)
+    oscillator.frequency.exponentialRampToValueAtTime(1240, now + 0.08)
+
+    gainNode.gain.setValueAtTime(0.0001, now)
+    gainNode.gain.exponentialRampToValueAtTime(0.07, now + 0.02)
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.1)
+
+    oscillator.connect(gainNode)
+    gainNode.connect(audioContext.destination)
+    oscillator.start(now)
+    oscillator.stop(now + 0.1)
+
+    oscillator.onended = () => {
+      void audioContext.close()
+    }
+  } catch {
+    // Audio feedback is optional and should never break scanning.
+  }
+}
+
 function getScannerErrorMessage(error: unknown) {
   if (error instanceof DOMException) {
     if (error.name === 'NotAllowedError') {
@@ -441,6 +475,7 @@ export function QrScannerDialog({
           }
 
           lastDetectedRef.current = { value: rawValue, timestamp: now }
+          playScanSound()
           processingRef.current = true
           setCameraState('processing')
 
