@@ -1,25 +1,137 @@
-# Mikrobielle Brennstoffzellen erleben
+# Mikrobielle Brennstoffzellen erlernen
 
-Web-App für ein Projekt rund um mikrobielle Brennstoffzellen. Die Anwendung kombiniert eine informative Landingpage mit einem User- und Admin-Bereich, QR-gesteuerten Abläufen sowie Firebase für Authentifizierung, Datenspeicherung und Bereitstellung.
+React- und Firebase-basierte Web-App fuer ein Schulprojekt rund um mikrobielle Brennstoffzellen.
+Die Anwendung kombiniert Landingpage, User-Flow, Admin-Workflow und ein Live-Leaderboard.
 
-## Überblick
+## Aktueller Stand
 
-Die App besteht aus drei Bereichen:
+- SPA mit React 19, Vite 8, TypeScript und MUI 7.
+- Authentifizierung ueber Firebase Authentication (E-Mail/Passwort und Google).
+- Datenhaltung in Cloud Firestore (`users`, `generators`, `measurements`, `adminState`).
+- Landingpage enthaelt aktuell noch Platzhalterinhalte (`Lorem ipsum`) plus eingebettete Canva-Praesentation.
 
-- `Landingpage`
-  - allgemeine Projektinformationen
-  - eingebettete Canva-Präsentation
-  - Footer mit Impressum und Datenschutz
-- `User`
-  - Registrierung über QR-Link
-  - Login per E-Mail/Passwort oder Google
-  - automatisches Anlegen und Verknüpfen eines Generators bei der Registrierung
-  - Anzeige von aktuellem Messwert, Verlauf und Leaderboard
-- `Admin`
-  - Login per E-Mail/Passwort oder Google
-  - druckfertiger Export von QR-Karten
-  - Aufruf eines Generators über QR-Link oder Stationscode
-  - Eintragen neuer Messwerte
+## Hauptfunktionen
+
+### Landing und oeffentliche Seiten
+
+- Projekt-Landingpage mit Hero-Bereich, Logo, Praesentation und Info-Karten.
+- Leaderboard mit Top-3-Podest, Abschnittstabellen (Top 5/10/25/...) und Detaildialog je Brennstoffzelle.
+- Rechtliche Seiten: `Ueber uns`, `Impressum`, `Datenschutz`.
+
+### User-Flow
+
+- Registrierung ueber QR-Link: `/register/:code`.
+- Login mit E-Mail/Passwort oder Google.
+- Verknuepfung einer Brennstoffzelle ueber Scanner oder Code-Eingabe im User-Dashboard.
+- Anzeige von:
+  - eigenem Brennstoffzellen-Code
+  - Platzierung im Leaderboard (nach Maximalwert)
+  - Messhistorie (Diagramm oder Liste)
+
+### Admin-Workflow
+
+- Admin-Bereich mit Tabs:
+  - `scan`: QR scannen oder manuell Messwert erfassen
+  - `qr`: QR-Codes als PDF exportieren
+  - `moderation`: Nutzer/Brennstoffzellen einsehen und moderieren
+- QR-Export reserviert fortlaufende Codes (hexadezimal) ueber `adminState/qr-export-counter`.
+- Moderation unterstuetzt u. a. Rollenpflege, Statuswechsel (`active`, `blocked`, `deleted`) und Messwertbearbeitung.
+
+## Routing
+
+- `/` -> Landingpage
+- `/register/:code` -> Registrierung
+- `/user` -> User-Dashboard
+- `/admin` -> Admin-Bereich (Standardtab)
+- `/admin/:tab` -> Admin-Bereich mit aktivem Tab (`scan`, `qr`, `moderation`)
+- `/admin/:tab/generator/:code` -> Admin-Scan/Messung fuer konkreten Code
+- `/leaderboard` -> Leaderboard
+- `/ueber-uns` -> Ueber uns
+- `/impressum` -> Impressum
+- `/datenschutz` -> Datenschutz
+
+## QR- und Code-Flow
+
+- Generierte QR-Werte sind URL-basiert und zeigen auf `/register/:code`.
+- Die Basis-URL kommt aus `VITE_PUBLIC_APP_URL` (falls gesetzt), sonst aus
+  `https://mikrobielle-brennstoffzellen.web.app`.
+- Parser-Unterstuetzung:
+  - Register-Links (`.../register/<code>`)
+  - reine Codes (z. B. `00AF`)
+- Legacy-Payloads/alte Admin-QR-Links werden nicht mehr unterstuetzt.
+- Ein `generator`-Dokument entsteht:
+  - bei Registrierung mit QR-Code
+  - oder beim spaeteren Verknuepfen eines bisher unbekannten Codes durch einen eingeloggten User
+
+## Datenmodell (Firestore)
+
+### `users/{uid}`
+
+```json
+{
+  "name": "Max Mustermann",
+  "email": "max@example.com",
+  "role": "user",
+  "status": "active",
+  "generatorId": "abc123",
+  "createdAt": "timestamp",
+  "archivedAt": "timestamp|null",
+  "archivedBy": "uid|null"
+}
+```
+
+### `generators/{id}`
+
+```json
+{
+  "ownerUid": "uid",
+  "ownerName": "Max Mustermann",
+  "code": "00AF",
+  "status": "active",
+  "createdAt": "timestamp",
+  "updatedAt": "timestamp",
+  "archivedAt": "timestamp|null",
+  "archivedBy": "uid|null"
+}
+```
+
+### `measurements/{id}`
+
+```json
+{
+  "generatorId": "abc123",
+  "value": 1.42,
+  "enteredBy": "admin@example.com",
+  "createdAt": "timestamp"
+}
+```
+
+### `adminState/qr-export-counter`
+
+```json
+{
+  "nextSequence": 123,
+  "createdAt": "timestamp",
+  "updatedAt": "timestamp"
+}
+```
+
+## Auth und Rollen
+
+- Login-Methoden:
+  - E-Mail/Passwort
+  - Google Popup
+- Bei erstem Google-Login wird automatisch ein Userprofil in `users/{uid}` angelegt.
+- Admin-Rechte werden ausschliesslich ueber `users/{uid}.role === "admin"` gesteuert.
+
+## Firestore Security Rules
+
+Die Regeln liegen in `firestore.rules`. Kerngedanken:
+
+- `users`: lesen nur selbst oder Admin; Rolle/Status bei Self-Updates eingeschraenkt.
+- `generators`: lesbar fuer alle; erstellen nur angemeldeter Owner; weitgehende Updates nur fuer Admin.
+- `measurements`: lesbar fuer alle; schreiben/aendern nur Admin.
+- `adminState`: lesen/schreiben nur Admin.
 
 ## Tech-Stack
 
@@ -27,227 +139,92 @@ Die App besteht aus drei Bereichen:
 - Vite 8
 - TypeScript
 - MUI 7 + Emotion
-- React Router
-- Firebase Authentication
-- Cloud Firestore
-- Firebase Analytics
-- Firebase Hosting
-- `qrcode` für QR-Code-Erzeugung
-
-## Routing
-
-Die wichtigsten Routen:
-
-- `/`
-  - Landingpage
-- `/register/:code`
-  - Registrierung für einen QR-/Stationscode
-- `/user`
-  - Nutzerbereich
-- `/admin`
-  - Admin-Bereich
-- `/admin/generator/:code`
-  - Admin-Maske für einen konkreten Generatorcode
-- `/impressum`
-  - Impressum
-- `/datenschutz`
-  - Datenschutz
-
-## QR-Konzept
-
-Die QR-Codes werden nicht in Firestore gespeichert. Stattdessen enthalten sie direkt die Ziel-URL.
-
-- User-QR:
-  - `/register/:code`
-- Admin-QR:
-  - `/admin/generator/:code`
-
-Logik:
-
-1. Ein Admin erzeugt QR-Codes als URL-basierte Karten.
-2. Ein Nutzer scannt einen User-QR-Code.
-3. Erst bei der Registrierung wird ein neuer Generator in Firestore angelegt.
-4. Der Generator wird automatisch mit dem neuen Nutzerkonto verknüpft.
-5. Ein Admin scannt denselben bzw. passenden Code und trägt Messwerte ein.
-6. Das Leaderboard aktualisiert sich aus den gespeicherten Messwerten.
-
-## Datenmodell
-
-Verwendete Firestore-Collections:
-
-### `users`
-
-```json
-{
-  "name": "Max Mustermann",
-  "email": "max@example.com",
-  "role": "user",
-  "generatorId": "gen_abc123",
-  "createdAt": "timestamp"
-}
-```
-
-### `generators`
-
-```json
-{
-  "ownerUid": "user_123",
-  "code": "station-017",
-  "createdAt": "timestamp",
-  "updatedAt": "timestamp"
-}
-```
-
-### `measurements`
-
-```json
-{
-  "generatorId": "gen_abc123",
-  "value": 1.42,
-  "enteredBy": "admin_001",
-  "createdAt": "timestamp"
-}
-```
-
-## Authentifizierung
-
-Die App unterstützt:
-
-- E-Mail/Passwort-Login
-- Google-Login per Popup
-
-Wichtig:
-
-- Neue Google-Logins bekommen automatisch ein minimales Firestore-Profil in `users/{uid}`.
-- Der Admin-Bereich ist nicht allein an den Login gekoppelt.
-- Ein Konto ist nur Admin, wenn in Firestore `users/{uid}.role === "admin"` gesetzt ist.
+- React Router 7
+- Firebase Authentication + Firestore
+- jsPDF + qrcode + jsQR
+- Vitest + Testing Library
+- ESLint + cspell
 
 ## Projektstruktur
 
 ```text
 src/
-  assets/
-  components/
-  lib/
-  pages/
-  services/
-  types/
-  App.tsx
-  firebase.ts
-  main.tsx
-  router.tsx
-  theme.ts
+  admin/          # Admin-UI, Tabs (scan/qr/moderation)
+  app/            # App-Shell, Router, Theme, Entry
+  common/         # gemeinsame Komponenten/Formatter/QR-Utilities
+  data/           # Firebase-Zugriffe, Domain-Typen, Helper
+  landing/        # Landingpage
+  leaderboard/    # Leaderboard-Seite
+  legal/          # Impressum / Datenschutz / Ueber uns
+  user/           # Registrierung und User-Dashboard
+public/
+  app-logo.png
 ```
-
-Wichtige Dateien:
-
-- `src/main.tsx`
-  - Einstiegspunkt, ThemeProvider, CssBaseline, Analytics-Start
-- `src/router.tsx`
-  - Routing und lazy geladene Seiten
-- `src/theme.ts`
-  - MUI-Farbschema und globale Komponenten-Anpassungen
-- `src/firebase.ts`
-  - Firebase-Konfiguration für App, Auth, Firestore und Analytics
-- `src/services/firebaseData.ts`
-  - Login, Registrierung, Firestore-Zugriffe und Listener
-- `src/pages/LandingPage.tsx`
-  - Landingpage mit Platzhaltertext und Canva-Einbettung
 
 ## Lokale Entwicklung
 
-Installation:
+### Voraussetzungen
+
+- Node.js 20+ (empfohlen)
+- npm
+
+### Installation
 
 ```bash
 npm install
 ```
 
-Entwicklungsserver:
+### Starten
 
 ```bash
 npm run dev
 ```
 
-Produktions-Build:
+Wenn PowerShell-Skripte blockiert sind, nutze auf Windows stattdessen:
+
+```bash
+npm.cmd run dev
+```
+
+## Skripte
+
+- `npm run dev` -> Vite Dev-Server
+- `npm run build` -> TypeScript Build + Vite Production Build
+- `npm run preview` -> lokale Vorschau auf den Build
+- `npm run lint` -> ESLint
+- `npm run spellcheck` -> cspell
+- `npm run test` -> Vitest (einmalig)
+- `npm run test:watch` -> Vitest Watch-Modus
+
+## Deployment (Firebase Hosting)
+
+Hosting-Konfiguration (`firebase.json`):
+
+- `public: "dist"`
+- SPA-Rewrite aller Routen auf `/index.html`
+
+Deploy:
 
 ```bash
 npm run build
-```
-
-Vorschau des Builds:
-
-```bash
-npm run preview
-```
-
-Lint:
-
-```bash
-npm run lint
-```
-
-## Firebase-Konfiguration
-
-Die App verwendet bereits eine feste Firebase-Konfiguration in `src/firebase.ts`.
-
-Aktuell eingebundene Firebase-Dienste:
-
-- Authentication
-- Firestore
-- Analytics
-
-Standardprojekt laut `.firebaserc`:
-
-- `mikrobielle-brennstoffzellen`
-
-## Deployment
-
-Firebase Hosting ist in `firebase.json` als SPA mit Rewrite auf `index.html` vorbereitet und zeigt auf den Vite-Buildordner `dist`.
-
-Aktuelle Konfiguration:
-
-```json
-{
-  "hosting": {
-    "public": "dist",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-    "rewrites": [
-      {
-        "source": "**",
-        "destination": "/index.html"
-      }
-    ]
-  }
-}
-```
-
-Deployment aus PowerShell kann an `firebase.ps1` scheitern. In dem Fall:
-
-```bash
 cmd /c "firebase deploy --only hosting"
 ```
 
-## Rechtliches
+`cmd /c` ist unter Windows nuetzlich, wenn `firebase.ps1` in PowerShell blockiert ist.
 
-Es gibt bereits Seiten für:
+## QA-Checkliste
 
-- `Impressum`
-- `Datenschutz`
-
-Die Texte sind aktuell Vorlagen und müssen vor Veröffentlichung inhaltlich und rechtlich vervollständigt werden.
-
-## Hinweise zum aktuellen Stand
-
-- Die Landingpage verwendet bewusst Platzhaltertext.
-- Die Canva-Präsentation ist eingebettet.
-- Das Header-Logo ist aktuell ein SVG-Platzhalter auf Basis einer Referenzgrafik.
-- Der User-Flow für Google-Login legt kein Generator-Objekt an. Ein Generator wird weiterhin nur über die Registrierung via `/register/:code` erstellt.
-
-## Qualitätssicherung
-
-Vor Abschluss von Änderungen mindestens ausführen:
+Vor dem Abschluss von Aenderungen:
 
 ```bash
 npm run lint
+npm run test
 npm run build
 ```
+
+Bei Routing-Aenderungen zusaetzlich manuell pruefen:
+
+- `/register/:code`
+- `/user`
+- `/admin`
+- `/admin/scan/generator/:code`
