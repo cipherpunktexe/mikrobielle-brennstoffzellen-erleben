@@ -87,6 +87,63 @@ export function AdminScanSection({
     },
   ]
 
+  function renderRecentMeasurementMobileRow(item: AdminRecentMeasurementItem) {
+    return (
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: 'minmax(0, 1fr) auto',
+          alignItems: 'center',
+          gap: 1,
+          minWidth: 0,
+        }}
+      >
+        <Stack spacing={0.5} sx={{ minWidth: 0 }}>
+          <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 0 }}>
+            <Typography variant="caption" color="text.secondary" sx={{ flexShrink: 0 }}>
+              Code
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{ fontFamily: '"Consolas", "Courier New", monospace', fontWeight: 700 }}
+            >
+              {item.generatorCode.toUpperCase()}
+            </Typography>
+            {item.ownerName ? (
+              <Typography variant="caption" color="text.secondary" noWrap>
+                {item.ownerName}
+              </Typography>
+            ) : null}
+          </Stack>
+
+          <Stack direction="row" spacing={1} alignItems="center">
+            <Typography variant="caption" color="text.secondary">
+              Wert
+            </Typography>
+            <Typography variant="body2" fontWeight={700}>
+              {formatMeasurement(item.value)}
+            </Typography>
+          </Stack>
+
+          <Typography variant="caption" color="text.secondary">
+            {formatTimestamp(item.createdAt)}
+          </Typography>
+        </Stack>
+
+        <IconButton
+          size="small"
+          aria-label={`Messwert ${formatMeasurement(item.value)} von ${item.generatorCode.toUpperCase()} bearbeiten`}
+          onClick={(event) => {
+            event.stopPropagation()
+            onEditRecentMeasurement(item)
+          }}
+        >
+          <EditNoteIcon fontSize="small" />
+        </IconButton>
+      </Box>
+    )
+  }
+
   return (
     <Grid container spacing={{ xs: 2, md: 3 }}>
       <Grid size={{ xs: 12, lg: 5 }}>
@@ -134,15 +191,18 @@ export function AdminScanSection({
                 ariaLabel="Letzte eigene Messwerte"
                 emptyPrimary="Noch keine eigenen Messwerte"
                 emptySecondary="Sobald du Werte speicherst, erscheinen sie hier."
+                onItemClick={onEditRecentMeasurement}
                 renderItemAction={(item) => (
                   <IconButton
                     size="small"
                     aria-label={`Messwert ${formatMeasurement(item.value)} von ${item.generatorCode.toUpperCase()} bearbeiten`}
                     onClick={() => onEditRecentMeasurement(item)}
+                    sx={{ display: { xs: 'none', sm: 'inline-flex' } }}
                   >
                     <EditNoteIcon fontSize="small" />
                   </IconButton>
                 )}
+                renderMobileRow={renderRecentMeasurementMobileRow}
               />
               {hiddenRecentCount > 0 ? (
                 <Button
