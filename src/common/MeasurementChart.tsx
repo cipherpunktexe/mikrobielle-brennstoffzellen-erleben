@@ -1,11 +1,12 @@
-import { Box, Stack, Typography } from '@mui/material'
-import { alpha } from '@mui/material/styles'
+import { Stack } from '@mui/material'
 import { LineChart } from './LineChart'
 import { createContextMeasurementFormatter, formatTimestamp } from './format'
+import { MeasurementMetricsCard } from './MeasurementMetricsCard'
 import type { Measurement } from '../data/domain'
 
 interface MeasurementChartProps {
   measurements: Measurement[]
+  showMetricsCard?: boolean
 }
 
 function formatShortTimestamp(measurement: Measurement) {
@@ -26,7 +27,7 @@ function formatShortTimestamp(measurement: Measurement) {
     .replace(',', '')
 }
 
-export function MeasurementChart({ measurements }: MeasurementChartProps) {
+export function MeasurementChart({ measurements, showMetricsCard = true }: MeasurementChartProps) {
   const orderedMeasurements = [...measurements].sort((left, right) => {
     const leftMs = left.createdAt?.toMillis() ?? 0
     const rightMs = right.createdAt?.toMillis() ?? 0
@@ -37,60 +38,12 @@ export function MeasurementChart({ measurements }: MeasurementChartProps) {
   const formatMeasurementInContext = createContextMeasurementFormatter(values)
   const maxValue = values.length > 0 ? Math.max(...values) : undefined
 
-  const metricCards = [
-    {
-      label: 'Aktueller Messwert',
-      value: formatMeasurementInContext(latestMeasurement?.value),
-    },
-    {
-      label: 'Maximalwert',
-      value: formatMeasurementInContext(maxValue),
-    },
-  ]
+  const currentValue = formatMeasurementInContext(latestMeasurement?.value)
+  const maxValueLabel = formatMeasurementInContext(maxValue)
 
   return (
     <Stack spacing={2}>
-      <Box
-        sx={{
-          borderRadius: '18px',
-          border: `1px solid ${alpha('#796542', 0.16)}`,
-          backgroundColor: alpha('#FFFFFF', 0.42),
-          px: { xs: 1.75, sm: 1.5 },
-          py: { xs: 1.6, sm: 1.35 },
-        }}
-      >
-        <Stack
-          direction="row"
-          spacing={1.5}
-          divider={
-            <Box
-              sx={{
-                width: '1px',
-                alignSelf: 'stretch',
-                bgcolor: 'rgba(121,101,66,0.14)',
-              }}
-            />
-          }
-        >
-          {metricCards.map((card) => (
-            <Box key={card.label} sx={{ flex: 1, minWidth: 0 }}>
-              <Typography variant="caption" color="text.secondary">
-                {card.label}
-              </Typography>
-              <Typography
-                variant="h6"
-                sx={{
-                  mt: 0.35,
-                  lineHeight: 1.15,
-                  fontSize: { xs: '2rem', sm: undefined },
-                }}
-              >
-                {card.value}
-              </Typography>
-            </Box>
-          ))}
-        </Stack>
-      </Box>
+      {showMetricsCard ? <MeasurementMetricsCard currentValue={currentValue} maxValue={maxValueLabel} /> : null}
 
       <LineChart
         data={orderedMeasurements.map((measurement) => ({

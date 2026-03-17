@@ -30,10 +30,11 @@ import {
 import { useEffect, useState, type FormEvent, type MouseEvent } from 'react'
 import { Link as RouterLink } from 'react-router-dom'
 import { MeasurementChart } from '../common/MeasurementChart'
+import { MeasurementMetricsCard } from '../common/MeasurementMetricsCard'
 import { AuthCard } from '../common/AuthCard'
 import { UnifiedList, type UnifiedListColumn } from '../common/UnifiedList'
 import { QrScannerDialog } from '../common/qr/QrScannerDialog'
-import { formatMeasurement, formatTimestamp } from '../common/format'
+import { createContextMeasurementFormatter, formatMeasurement, formatTimestamp } from '../common/format'
 import { extractGeneratorCodeFromQrValue } from '../common/qr/qr'
 import {
   linkCurrentUserToGeneratorByCode,
@@ -213,6 +214,17 @@ export function UserDashboardPage() {
   const ranking = generator
     ? leaderboard.findIndex((entry) => entry.generatorId === generator.id) + 1
     : 0
+  const orderedMeasurements = [...measurements].sort((left, right) => {
+    const leftMs = left.createdAt?.toMillis() ?? 0
+    const rightMs = right.createdAt?.toMillis() ?? 0
+    return leftMs - rightMs
+  })
+  const measurementValues = orderedMeasurements.map((measurement) => measurement.value)
+  const formatMeasurementInContext = createContextMeasurementFormatter(measurementValues)
+  const latestMeasurementValueLabel = formatMeasurementInContext(orderedMeasurements.at(-1)?.value)
+  const maxMeasurementValueLabel = formatMeasurementInContext(
+    measurementValues.length > 0 ? Math.max(...measurementValues) : undefined,
+  )
   const profileMenuOpen = Boolean(profileMenuAnchor)
   const measurementListColumns: UnifiedListColumn<Measurement>[] = [
     {
@@ -429,44 +441,52 @@ export function UserDashboardPage() {
               <Typography color="text.secondary">
                 Für diese Brennstoffzelle liegen noch keine Messwerte vor.
               </Typography>
-            ) : measurementViewMode === 'chart' ? (
-              <MeasurementChart measurements={measurements} />
             ) : (
-              <UnifiedList
-                items={measurements}
-                columns={measurementListColumns}
-                getItemKey={(measurement) => measurement.id}
-                ariaLabel="Messwerthistorie"
-                emptyPrimary="Noch keine Messwerte"
-                renderMobileRow={(measurement) => (
-                  <Stack
-                    direction="row"
-                    justifyContent="space-between"
-                    alignItems="center"
-                    spacing={1.5}
-                    sx={{ minWidth: 0 }}
-                  >
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ overflowWrap: 'anywhere', fontWeight: 600, pr: 1 }}
-                    >
-                      {formatTimestamp(measurement.createdAt)}
-                    </Typography>
-                    <Typography
-                      sx={{
-                        fontWeight: 800,
-                        fontSize: '1.15rem',
-                        lineHeight: 1.1,
-                        textAlign: 'right',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {formatMeasurement(measurement.value)}
-                    </Typography>
-                  </Stack>
+              <>
+                <MeasurementMetricsCard
+                  currentValue={latestMeasurementValueLabel}
+                  maxValue={maxMeasurementValueLabel}
+                />
+                {measurementViewMode === 'chart' ? (
+                  <MeasurementChart measurements={measurements} showMetricsCard={false} />
+                ) : (
+                  <UnifiedList
+                    items={measurements}
+                    columns={measurementListColumns}
+                    getItemKey={(measurement) => measurement.id}
+                    ariaLabel="Messwerthistorie"
+                    emptyPrimary="Noch keine Messwerte"
+                    renderMobileRow={(measurement) => (
+                      <Stack
+                        direction="row"
+                        justifyContent="space-between"
+                        alignItems="center"
+                        spacing={1.5}
+                        sx={{ minWidth: 0 }}
+                      >
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{ overflowWrap: 'anywhere', fontWeight: 600, pr: 1 }}
+                        >
+                          {formatTimestamp(measurement.createdAt)}
+                        </Typography>
+                        <Typography
+                          sx={{
+                            fontWeight: 800,
+                            fontSize: '1.15rem',
+                            lineHeight: 1.1,
+                            textAlign: 'right',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {formatMeasurement(measurement.value)}
+                        </Typography>
+                      </Stack>
+                    )}
+                  />
                 )}
-              />
+              </>
             )}
           </Stack>
         </CardContent>
