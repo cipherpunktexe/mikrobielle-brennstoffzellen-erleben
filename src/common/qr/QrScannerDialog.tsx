@@ -32,7 +32,6 @@ const DUPLICATE_DETECTION_COOLDOWN_MS = 1200
 const CAMERA_START_TIMEOUT_MS = 10000
 const VIDEO_READY_TIMEOUT_MS = 2500
 const ZXING_MAX_FRAME_EDGE = 1280
-const NO_DETECTION_HINT_DELAY_MS = 5000
 
 function playScanSound() {
   try {
@@ -253,12 +252,10 @@ export function QrScannerDialog({
   const sessionRef = useRef(0)
   const processingRef = useRef(false)
   const lastScanAtRef = useRef(0)
-  const noDetectionStartAtRef = useRef(0)
   const lastDetectedRef = useRef<{ value: string; timestamp: number }>({ value: '', timestamp: 0 })
   const detectedHandlerRef = useRef(onDetected)
   const [cameraState, setCameraState] = useState<CameraState>('idle')
   const [error, setError] = useState('')
-  const [showNoDetectionHint, setShowNoDetectionHint] = useState(false)
   const [lastRejectedValue, setLastRejectedValue] = useState('')
   const [manualOpen, setManualOpen] = useState(false)
   const [manualValue, setManualValue] = useState('')
@@ -275,7 +272,6 @@ export function QrScannerDialog({
     zxingReaderRef.current = null
     processingRef.current = false
     lastScanAtRef.current = 0
-    noDetectionStartAtRef.current = 0
     lastDetectedRef.current = { value: '', timestamp: 0 }
     stopStream(streamRef.current)
     streamRef.current = null
@@ -321,7 +317,6 @@ export function QrScannerDialog({
       resetScannerRuntime()
       setCameraState('idle')
       setError('')
-      setShowNoDetectionHint(false)
       setLastRejectedValue('')
       setManualOpen(false)
       setManualValue('')
@@ -339,10 +334,8 @@ export function QrScannerDialog({
     sessionRef.current = sessionId
     setCameraState('starting')
     setError('')
-    setShowNoDetectionHint(false)
     setLastRejectedValue('')
     processingRef.current = false
-    noDetectionStartAtRef.current = Date.now()
     lastDetectedRef.current = { value: '', timestamp: 0 }
 
     const startScanner = async () => {
@@ -429,9 +422,6 @@ export function QrScannerDialog({
           }
 
           if (!rawValue) {
-            if (Date.now() - noDetectionStartAtRef.current >= NO_DETECTION_HINT_DELAY_MS) {
-              setShowNoDetectionHint(true)
-            }
             scheduleNextScan(scanFrame)
             return
           }
@@ -449,7 +439,6 @@ export function QrScannerDialog({
 
           lastDetectedRef.current = { value: rawValue, timestamp: now }
           setLastRejectedValue('')
-          setShowNoDetectionHint(false)
           playScanSound()
           processingRef.current = true
           setCameraState('processing')
@@ -605,7 +594,6 @@ export function QrScannerDialog({
                   startIcon={<ReplayIcon />}
                   onClick={() => {
                     setError('')
-                    setShowNoDetectionHint(false)
                     setLastRejectedValue('')
                     setRestartCounter((current) => current + 1)
                   }}
@@ -620,11 +608,6 @@ export function QrScannerDialog({
           {lastRejectedValue ? (
             <Alert severity="warning">
               Letzter erkannter Inhalt konnte nicht verarbeitet werden: <strong>{lastRejectedValue}</strong>
-            </Alert>
-          ) : null}
-          {showNoDetectionHint ? (
-            <Alert severity="info">
-              Noch kein QR-Code erkannt. Halte den Code nah und mittig in den Rahmen, erhöhe die Beleuchtung und vermeide Reflexionen.
             </Alert>
           ) : null}
 
