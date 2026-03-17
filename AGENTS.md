@@ -35,6 +35,13 @@
 - **Keine Transliterationen** in sichtbaren Texten: `ä`, `ö`, `ü`, `ß` direkt verwenden.
 - Schreibweisen wie `ae`, `oe`, `ue` nur bei technischen Constraints (Identifier, Slugs, externe Schnittstellen ohne Unicode).
 
+## Farb- und Theme-System
+- **Palette-first**: Farben und Farbableitungen primär über `src/app/theme.ts` und `theme.palette`.
+- In Komponenten Farben über MUI-Theme ableiten (z. B. `theme.palette.*`, `alpha(...)`).
+- Keine zusätzliche zentrale Farb-Token-Datei (z. B. `uiColor.ts`) einführen.
+- Ausnahmen (spezielle Gradients/Visuals) lokal im betroffenen Modul halten und aus der Palette ableiten.
+- Ziel: konsistente App-Farben ohne parallele Farbquellen.
+
 ## Accessibility
 - Interaktive Elemente müssen per Tastatur erreichbar sein.
 - Verwende semantische Controls wie `Button`, `IconButton`, `TextField` und andere MUI-Komponenten statt klickbarer `div`-Container.
