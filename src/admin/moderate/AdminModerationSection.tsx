@@ -113,84 +113,89 @@ export function AdminModerationSection({
               </Typography>
             </Stack>
 
-            <Stack direction="row" spacing={1} alignItems="center" ref={searchAreaRef}>
-              <IconButton
-                aria-label={moderationSearchOpen ? 'Suche einklappen' : 'Suche aufklappen'}
-                onClick={() => onSetModerationSearchOpen((current) => !current)}
-                sx={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 2.25,
-                  flexShrink: 0,
-                  color: moderationSearchOpen ? '#6C5A39' : 'rgba(110,103,95,0.92)',
-                  bgcolor: moderationSearchOpen ? 'rgba(121,101,66,0.12)' : 'rgba(255,255,255,0.72)',
-                  border: '1px solid rgba(121,101,66,0.18)',
-                  '&:hover': {
-                    bgcolor: moderationSearchOpen ? 'rgba(121,101,66,0.18)' : 'rgba(255,255,255,0.96)',
-                  },
-                }}
-              >
-                <SearchIcon fontSize="small" />
-              </IconButton>
-
+            <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', gap: 1 }}>
               <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  flex: moderationSearchOpen ? 1 : '0 0 0px',
-                  maxWidth: moderationSearchOpen ? '100%' : 0,
-                  height: 44,
-                  minWidth: 0,
-                  border: moderationSearchOpen ? '1px solid rgba(121,101,66,0.2)' : '1px solid transparent',
-                  borderRadius: 999,
-                  bgcolor: moderationSearchOpen ? 'rgba(255,255,255,0.9)' : 'transparent',
-                  px: moderationSearchOpen ? 0.75 : 0,
-                  opacity: moderationSearchOpen ? 1 : 0,
-                  boxShadow: moderationSearchOpen ? '0 6px 16px rgba(36,28,19,0.07)' : 'none',
-                  overflow: 'hidden',
-                  transition:
-                    'max-width 220ms ease, opacity 180ms ease, background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, padding 220ms ease',
-                }}
+                ref={searchAreaRef}
+                sx={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: 0, gap: 1 }}
               >
-                <InputBase
-                  inputRef={searchInputRef}
-                  value={moderationSearch}
-                  onChange={(event) => onSetModerationSearch(event.target.value)}
-                  placeholder="Suche nach Name, E-Mail oder Code"
-                  inputProps={{ 'aria-label': 'Suchen' }}
-                  sx={{
-                    flex: 1,
-                    minWidth: 0,
-                    color: 'rgba(60,48,33,0.96)',
-                    fontSize: '1rem',
-                    '& input::placeholder': {
-                      color: 'rgba(110,103,95,0.88)',
-                      opacity: 1,
-                    },
-                  }}
-                />
                 <IconButton
-                  aria-label="Suche leeren"
-                  size="small"
-                  onClick={() => onSetModerationSearch('')}
+                  aria-label={moderationSearchOpen ? 'Suche einklappen' : 'Suche aufklappen'}
+                  onClick={() => onSetModerationSearchOpen((current) => !current)}
                   sx={{
-                    ml: 0.5,
-                    color: 'rgba(110,103,95,0.9)',
-                    opacity: moderationSearch ? 1 : 0.5,
+                    width: 44,
+                    height: 44,
+                    borderRadius: 2.25,
+                    flexShrink: 0,
+                    color: moderationSearchOpen ? '#6C5A39' : 'rgba(110,103,95,0.92)',
+                    bgcolor: moderationSearchOpen ? 'rgba(121,101,66,0.12)' : 'rgba(255,255,255,0.72)',
+                    border: '1px solid rgba(121,101,66,0.18)',
                     '&:hover': {
-                      bgcolor: 'rgba(121,101,66,0.1)',
+                      bgcolor: moderationSearchOpen ? 'rgba(121,101,66,0.18)' : 'rgba(255,255,255,0.96)',
                     },
                   }}
                 >
-                  <CloseIcon fontSize="small" />
+                  <SearchIcon fontSize="small" />
                 </IconButton>
+
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    flex: moderationSearchOpen ? 1 : '0 0 0px',
+                    maxWidth: moderationSearchOpen ? '100%' : 0,
+                    height: 44,
+                    minWidth: 0,
+                    border: moderationSearchOpen ? '1px solid rgba(121,101,66,0.2)' : '1px solid transparent',
+                    borderRadius: 999,
+                    bgcolor: moderationSearchOpen ? 'rgba(255,255,255,0.9)' : 'transparent',
+                    px: moderationSearchOpen ? 0.75 : 0,
+                    opacity: moderationSearchOpen ? 1 : 0,
+                    boxShadow: moderationSearchOpen ? '0 6px 16px rgba(36,28,19,0.07)' : 'none',
+                    overflow: 'hidden',
+                    transition:
+                      'max-width 220ms ease, opacity 180ms ease, background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, padding 220ms ease',
+                  }}
+                >
+                  <InputBase
+                    inputRef={searchInputRef}
+                    value={moderationSearch}
+                    onChange={(event) => onSetModerationSearch(event.target.value)}
+                    placeholder="Suche nach Name, E-Mail oder Code"
+                    inputProps={{ 'aria-label': 'Suchen' }}
+                    sx={{
+                      flex: 1,
+                      minWidth: 0,
+                      color: 'rgba(60,48,33,0.96)',
+                      fontSize: '1rem',
+                      '& input::placeholder': {
+                        color: 'rgba(110,103,95,0.88)',
+                        opacity: 1,
+                      },
+                    }}
+                  />
+                  <IconButton
+                    aria-label="Suche leeren"
+                    size="small"
+                    onClick={() => onSetModerationSearch('')}
+                    sx={{
+                      ml: 0.5,
+                      color: 'rgba(110,103,95,0.9)',
+                      opacity: moderationSearch ? 1 : 0.5,
+                      '&:hover': {
+                        bgcolor: 'rgba(121,101,66,0.1)',
+                      },
+                    }}
+                  >
+                    <CloseIcon fontSize="small" />
+                  </IconButton>
+                </Box>
               </Box>
 
               <IconButton
                 aria-label={`Weitere Aktionen${secondaryEntriesCount ? ` (${secondaryEntriesCount})` : ''}`}
                 onClick={onOpenTrashMenu}
                 sx={{
-                  ml: 'auto',
+                  ml: 0.75,
                   width: 44,
                   height: 44,
                   borderRadius: 2.25,
@@ -211,7 +216,7 @@ export function AdminModerationSection({
                   <MoreVertIcon fontSize="small" />
                 </Badge>
               </IconButton>
-            </Stack>
+            </Box>
           </Stack>
 
           <ModerationList
