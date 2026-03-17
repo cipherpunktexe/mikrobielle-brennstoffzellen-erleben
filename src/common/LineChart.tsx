@@ -280,12 +280,22 @@ export function LineChart({
               return null
             }
 
+            const isFirstLabel = index === 0
+            const isLastLabel = index === data.length - 1
+            const labelPadding = 4
+            const labelX = isFirstLabel
+              ? Math.max(point.x, padding.left + labelPadding)
+              : isLastLabel
+                ? Math.min(point.x, padding.left + plotWidth - labelPadding)
+                : point.x
+            const labelAnchor = isFirstLabel ? 'start' : isLastLabel ? 'end' : 'middle'
+
             return (
               <text
                 key={point.point.id}
-                x={point.x}
+                x={labelX}
                 y={height - (isMobileViewport ? 8 : 12)}
-                textAnchor="middle"
+                textAnchor={labelAnchor}
                 fontSize={isMobileViewport ? '13' : '12'}
                 fill={alpha(chartColorDark, 0.78)}
               >
