@@ -19,25 +19,6 @@ import {
 } from '@mui/material'
 import { useEffect, useRef, useState } from 'react'
 
-interface DetectedBarcode {
-  rawValue?: string
-}
-
-interface BarcodeDetectorInstance {
-  detect(source: ImageBitmapSource | HTMLVideoElement | HTMLCanvasElement): Promise<DetectedBarcode[]>
-}
-
-interface BarcodeDetectorConstructor {
-  new (options?: { formats?: string[] }): BarcodeDetectorInstance
-  getSupportedFormats?: () => Promise<string[]>
-}
-
-declare global {
-  interface Window {
-    BarcodeDetector?: BarcodeDetectorConstructor
-  }
-}
-
 interface QrScannerDialogProps {
   open: boolean
   onClose: () => void
@@ -51,7 +32,6 @@ const SCAN_INTERVAL_MS = 180
 const DUPLICATE_DETECTION_COOLDOWN_MS = 1200
 const CAMERA_START_TIMEOUT_MS = 10000
 const VIDEO_READY_TIMEOUT_MS = 2500
-const BARCODE_FORMATS_TIMEOUT_MS = 900
 const JSQR_MAX_FRAME_EDGE = 960
 const JSQR_CENTER_CROP_RATIO = 0.72
 const NO_DETECTION_HINT_DELAY_MS = 5000
@@ -225,31 +205,6 @@ async function startCameraStream() {
   throw lastError ?? new Error('Die Kamera konnte nicht gestartet werden.')
 }
 
-async function createQrDetector(BarcodeDetectorApi?: BarcodeDetectorConstructor) {
-  if (!BarcodeDetectorApi) {
-    return null
-  }
-
-  try {
-    if (BarcodeDetectorApi.getSupportedFormats) {
-      const supportedFormats = await Promise.race([
-        BarcodeDetectorApi.getSupportedFormats(),
-        new Promise<never>((_, reject) => {
-          window.setTimeout(() => reject(new Error('timeout')), BARCODE_FORMATS_TIMEOUT_MS)
-        }),
-      ])
-
-      if (!supportedFormats.includes('qr_code')) {
-        return null
-      }
-    }
-
-    return new BarcodeDetectorApi({ formats: ['qr_code'] })
-  } catch {
-    return null
-  }
-}
-
 function detectWithZxing(canvas: HTMLCanvasElement, reader: BrowserQRCodeReader | null) {
   if (!reader) {
     return ''
@@ -359,7 +314,6 @@ export function QrScannerDialog({
 }: QrScannerDialogProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
-  const detectorRef = useRef<BarcodeDetectorInstance | null>(null)
   const zxingReaderRef = useRef<BrowserQRCodeReader | null>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const contextRef = useRef<CanvasRenderingContext2D | null>(null)
@@ -368,15 +322,11 @@ export function QrScannerDialog({
   const processingRef = useRef(false)
   const lastScanAtRef = useRef(0)
   const noDetectionStartAtRef = useRef(0)
-  const scanAttemptCountRef = useRef(0)
   const lastDetectedRef = useRef<{ value: string; timestamp: number }>({ value: '', timestamp: 0 })
   const detectedHandlerRef = useRef(onDetected)
   const [cameraState, setCameraState] = useState<CameraState>('idle')
   const [error, setError] = useState('')
-  const [decoderLabel, setDecoderLabel] = useState('Automatisch')
-  const [scanAttemptCount, setScanAttemptCount] = useState(0)
   const [showNoDetectionHint, setShowNoDetectionHint] = useState(false)
-  const [videoSizeLabel, setVideoSizeLabel] = useState('-')
   const [lastRejectedValue, setLastRejectedValue] = useState('')
   const [manualOpen, setManualOpen] = useState(false)
   const [manualValue, setManualValue] = useState('')
@@ -390,12 +340,10 @@ export function QrScannerDialog({
   function resetScannerRuntime() {
     window.cancelAnimationFrame(frameRef.current)
     frameRef.current = 0
-    detectorRef.current = null
     zxingReaderRef.current = null
     processingRef.current = false
     lastScanAtRef.current = 0
     noDetectionStartAtRef.current = 0
-    scanAttemptCountRef.current = 0
     lastDetectedRef.current = { value: '', timestamp: 0 }
     stopStream(streamRef.current)
     streamRef.current = null
@@ -441,10 +389,7 @@ export function QrScannerDialog({
       resetScannerRuntime()
       setCameraState('idle')
       setError('')
-      setDecoderLabel('Automatisch')
-      setScanAttemptCount(0)
       setShowNoDetectionHint(false)
-      setVideoSizeLabel('-')
       setLastRejectedValue('')
       setManualOpen(false)
       setManualValue('')
@@ -462,14 +407,10 @@ export function QrScannerDialog({
     sessionRef.current = sessionId
     setCameraState('starting')
     setError('')
-    setDecoderLabel('Automatisch')
-    setScanAttemptCount(0)
     setShowNoDetectionHint(false)
-    setVideoSizeLabel('-')
     setLastRejectedValue('')
     processingRef.current = false
     noDetectionStartAtRef.current = Date.now()
-    scanAttemptCountRef.current = 0
     lastDetectedRef.current = { value: '', timestamp: 0 }
 
     const startScanner = async () => {
@@ -496,7 +437,6 @@ export function QrScannerDialog({
         video.srcObject = stream
 
         await waitForVideoReady(video, VIDEO_READY_TIMEOUT_MS)
-        setVideoSizeLabel(`${video.videoWidth} x ${video.videoHeight}`)
 
         try {
           await video.play()
@@ -508,9 +448,7 @@ export function QrScannerDialog({
           return
         }
 
-        detectorRef.current = await createQrDetector(window.BarcodeDetector)
         zxingReaderRef.current = new BrowserQRCodeReader()
-        setDecoderLabel(detectorRef.current ? 'BarcodeDetector + jsQR + ZXing' : 'jsQR + ZXing')
 
         if (!canvasRef.current) {
           canvasRef.current = document.createElement('canvas')
@@ -530,11 +468,6 @@ export function QrScannerDialog({
           }
 
           lastScanAtRef.current = timestamp
-          scanAttemptCountRef.current += 1
-
-          if (scanAttemptCountRef.current % 4 === 0) {
-            setScanAttemptCount(scanAttemptCountRef.current)
-          }
 
           const scanVideo = videoRef.current
 
@@ -550,16 +483,7 @@ export function QrScannerDialog({
 
           let rawValue = ''
 
-          if (detectorRef.current) {
-            try {
-              const detectedCodes = await detectorRef.current.detect(scanVideo)
-              rawValue = detectedCodes.find((item) => item.rawValue?.trim())?.rawValue?.trim() ?? ''
-            } catch {
-              detectorRef.current = null
-            }
-          }
-
-          if (!rawValue && canvasRef.current && contextRef.current) {
+          if (canvasRef.current && contextRef.current) {
             try {
               rawValue = detectWithJsQr(
                 scanVideo,
@@ -644,7 +568,6 @@ export function QrScannerDialog({
     mode === 'admin'
       ? 'Richte die Kamera auf den QR-Code der Brennstoffzelle. Nach dem Scan wird der Code direkt für die Messwerterfassung übernommen.'
       : 'Richte die Kamera auf den QR-Code deiner Brennstoffzelle. Nach dem Scan startet die Verknüpfung automatisch.'
-  const showDiagnostics = mode === 'admin'
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
@@ -750,11 +673,8 @@ export function QrScannerDialog({
                   startIcon={<ReplayIcon />}
                   onClick={() => {
                     setError('')
-      setDecoderLabel('Automatisch')
-      setScanAttemptCount(0)
-      setShowNoDetectionHint(false)
-      setVideoSizeLabel('-')
-      setLastRejectedValue('')
+                    setShowNoDetectionHint(false)
+                    setLastRejectedValue('')
                     setRestartCounter((current) => current + 1)
                   }}
                 >
@@ -773,16 +693,6 @@ export function QrScannerDialog({
           {showNoDetectionHint ? (
             <Alert severity="info">
               Noch kein QR-Code erkannt. Halte den Code nah und mittig in den Rahmen, erhöhe die Beleuchtung und vermeide Reflexionen.
-            </Alert>
-          ) : null}
-          {showDiagnostics ? (
-            <Alert severity="info">
-              <Stack spacing={0.5}>
-                <Typography variant="body2">Diagnose: Kamera {cameraState}</Typography>
-                <Typography variant="body2">Diagnose: Decoder {decoderLabel}</Typography>
-                <Typography variant="body2">Diagnose: Auflösung {videoSizeLabel}</Typography>
-                <Typography variant="body2">Diagnose: Scan-Zyklen {scanAttemptCount}</Typography>
-              </Stack>
             </Alert>
           ) : null}
 

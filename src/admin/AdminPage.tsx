@@ -159,7 +159,7 @@ export function AdminPage() {
   const [exportQrSize, setExportQrSize] = useState('42')
   const [exportPageSize, setExportPageSize] = useState<QrPdfPageSize>('a4')
   const [exportDigits, setExportDigits] = useState('4')
-  const [exportCodePlacement, setExportCodePlacement] = useState<QrCodeNumberPlacement>('below')
+  const [exportCodePlacement, setExportCodePlacement] = useState<QrCodeNumberPlacement>('center')
   const [exportNextCode, setExportNextCode] = useState('')
   const [exportNextSequence, setExportNextSequence] = useState<number | null>(null)
   const [exportStatus, setExportStatus] = useState('')
