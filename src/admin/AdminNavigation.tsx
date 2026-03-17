@@ -42,7 +42,7 @@ export function AdminNavigation({
             <Button
               type="button"
               variant="outlined"
-              color="inherit"
+              color="primary"
               onClick={onToggleMobileNav}
               endIcon={
                 <ExpandMoreIcon
@@ -57,7 +57,17 @@ export function AdminNavigation({
                 px: 1.5,
                 py: 1.15,
                 borderRadius: 999,
-                borderColor: 'rgba(61,177,236,0.38)',
+                borderColor: 'rgba(121,101,66,0.35)',
+                bgcolor: mobileAdminNavOpen ? 'rgba(143,122,81,0.12)' : 'rgba(255,255,255,0.74)',
+                color: 'text.primary',
+                boxShadow: mobileAdminNavOpen ? '0 8px 20px rgba(36,28,19,0.1)' : 'none',
+                '& .MuiButton-endIcon': {
+                  color: 'rgba(77,67,49,0.9)',
+                },
+                '&:hover': {
+                  borderColor: 'rgba(121,101,66,0.52)',
+                  bgcolor: mobileAdminNavOpen ? 'rgba(143,122,81,0.18)' : 'rgba(255,255,255,0.92)',
+                },
               }}
             >
               <Stack direction="row" spacing={1.25} alignItems="center" sx={{ minWidth: 0 }}>
@@ -71,9 +81,10 @@ export function AdminNavigation({
               <Box
                 sx={{
                   borderRadius: 4,
-                  border: '1px solid rgba(121,101,66,0.14)',
+                  border: '1px solid rgba(121,101,66,0.2)',
                   overflow: 'hidden',
-                  bgcolor: 'rgba(255,255,255,0.82)',
+                  bgcolor: 'rgba(249,246,239,0.9)',
+                  boxShadow: '0 12px 28px rgba(36,28,19,0.1)',
                 }}
               >
                 <List disablePadding>
@@ -86,13 +97,17 @@ export function AdminNavigation({
                         px: 2,
                         py: 1.5,
                         borderBottom:
-                          index < adminTabItems.length - 1 ? '1px solid rgba(121,101,66,0.08)' : 'none',
+                          index < adminTabItems.length - 1 ? '1px solid rgba(121,101,66,0.12)' : 'none',
+                        color: 'text.primary',
+                        '&:hover': {
+                          bgcolor: 'rgba(143,122,81,0.1)',
+                        },
                         '&.Mui-selected': {
-                          bgcolor: 'rgba(61,177,236,0.08)',
-                          borderRight: '3px solid #0B6E69',
+                          bgcolor: 'rgba(143,122,81,0.17)',
+                          boxShadow: 'inset 3px 0 0 #796542',
                         },
                         '&.Mui-selected:hover': {
-                          bgcolor: 'rgba(61,177,236,0.12)',
+                          bgcolor: 'rgba(143,122,81,0.22)',
                         },
                       }}
                     >
