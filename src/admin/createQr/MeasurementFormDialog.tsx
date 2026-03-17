@@ -1,5 +1,5 @@
 ﻿import { Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, TextField, Typography } from '@mui/material'
-import type { FormEvent, ReactNode } from 'react'
+import { useEffect, useRef, type FormEvent, type ReactNode } from 'react'
 import type { MeasurementUnit } from '../types'
 
 interface MeasurementCodeField {
@@ -67,6 +67,31 @@ export function MeasurementFormDialog({
   enteredByField,
   dateTimeField,
 }: MeasurementFormDialogProps) {
+  const valueInputRef = useRef<HTMLInputElement | null>(null)
+
+  useEffect(() => {
+    if (!open) {
+      return
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      const valueInput = valueInputRef.current
+
+      if (!valueInput) {
+        return
+      }
+
+      if (!valueField.value.trim() || valueField.autoFocus) {
+        valueInput.focus()
+        valueInput.select()
+      }
+    }, 0)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+    }
+  }, [open, valueField.autoFocus, valueField.value])
+
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth={maxWidth}>
       <DialogTitle>{title}</DialogTitle>
@@ -90,6 +115,7 @@ export function MeasurementFormDialog({
                     label={valueField.label ?? 'Wert'}
                     value={valueField.value}
                     onChange={(event) => valueField.onChange(event.target.value)}
+                    inputRef={valueInputRef}
                     autoFocus={valueField.autoFocus}
                     fullWidth
                   />
@@ -117,6 +143,7 @@ export function MeasurementFormDialog({
                 label={valueField.label ?? 'Wert in V'}
                 value={valueField.value}
                 onChange={(event) => valueField.onChange(event.target.value)}
+                inputRef={valueInputRef}
                 autoFocus={valueField.autoFocus}
                 fullWidth
               />
