@@ -11,37 +11,26 @@ export function formatTimestamp(timestamp?: Timestamp | null) {
   }).format(timestamp.toDate())
 }
 
-const relativeTimeFormat = new Intl.RelativeTimeFormat('de-DE', { numeric: 'auto' })
-
 export function formatElapsedTime(timestamp?: Timestamp | null, now = new Date()) {
   if (!timestamp) {
     return 'unbekannt'
   }
 
-  const deltaSeconds = Math.round((timestamp.toDate().getTime() - now.getTime()) / 1000)
-  const absoluteSeconds = Math.abs(deltaSeconds)
+  const elapsedMs = Math.max(0, now.getTime() - timestamp.toDate().getTime())
+  const elapsedMinutes = Math.max(1, Math.round(elapsedMs / 60_000))
 
-  if (absoluteSeconds < 30) {
-    return 'gerade eben'
+  if (elapsedMinutes < 10) {
+    return `${elapsedMinutes}min`
   }
 
-  if (absoluteSeconds < 3600) {
-    return relativeTimeFormat.format(Math.round(deltaSeconds / 60), 'minute')
+  const hours = Math.floor(elapsedMinutes / 60)
+  const minutes = elapsedMinutes % 60
+
+  if (minutes === 0) {
+    return `${hours}h`
   }
 
-  if (absoluteSeconds < 86_400) {
-    return relativeTimeFormat.format(Math.round(deltaSeconds / 3600), 'hour')
-  }
-
-  if (absoluteSeconds < 2_592_000) {
-    return relativeTimeFormat.format(Math.round(deltaSeconds / 86_400), 'day')
-  }
-
-  if (absoluteSeconds < 31_536_000) {
-    return relativeTimeFormat.format(Math.round(deltaSeconds / 2_592_000), 'month')
-  }
-
-  return relativeTimeFormat.format(Math.round(deltaSeconds / 31_536_000), 'year')
+  return `${hours}:${minutes.toString().padStart(2, '0')}h`
 }
 
 function trimTrailingMantissaZeros(mantissa: string) {
