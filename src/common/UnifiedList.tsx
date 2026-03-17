@@ -160,6 +160,7 @@ export function UnifiedList<TItem>({
             py: 1,
             pr: renderItemAction ? 6 : 2,
             borderBottom: items.length ? '1px solid rgba(121,101,66,0.1)' : 'none',
+            bgcolor: 'rgba(121,101,66,0.08)',
             minWidth: minDesktopWidth,
           }}
         >
