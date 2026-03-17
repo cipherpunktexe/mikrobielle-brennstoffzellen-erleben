@@ -276,7 +276,18 @@ export function QrScannerDialog({
     const trimmedValue = manualValue.trim()
 
     if (!trimmedValue) {
-      setError('Bitte gib einen Code oder eine URL ein.')
+      setError('Bitte gib einen Brennstoffzellen-Code ein.')
+      return
+    }
+
+    const isUrlLikeInput =
+      /^https?:\/\//i.test(trimmedValue) ||
+      trimmedValue.includes('/') ||
+      trimmedValue.includes('?') ||
+      trimmedValue.includes('#')
+
+    if (isUrlLikeInput) {
+      setError('Bitte gib nur den Brennstoffzellen-Code ein, keine URL.')
       return
     }
 
@@ -615,7 +626,7 @@ export function QrScannerDialog({
                 <TextField
                   value={manualValue}
                   onChange={(event) => setManualValue(event.target.value)}
-                  placeholder="z. B. 001C oder https://.../register/001c"
+                  placeholder="z. B. 001C"
                   size="small"
                   fullWidth
                   disabled={manualSubmitting}
