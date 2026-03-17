@@ -697,9 +697,10 @@ export function AdminPage() {
   async function loadGeneratorMeasurements(generatorId: string) {
     const measurements = await getMeasurementsForAdmin(generatorId)
     setGeneratorMeasurements(measurements)
+    return measurements
   }
 
-  async function handleOpenGeneratorMeasurements(generator: Generator) {
+  async function handleOpenGeneratorMeasurements(generator: Generator, initialMeasurementId?: string) {
     setModerationStatus('')
     setModerationError('')
     setMeasurementError('')
@@ -711,13 +712,42 @@ export function AdminPage() {
     setGeneratorMeasurementsDialogOpen(true)
 
     try {
-      await loadGeneratorMeasurements(generator.id)
+      const measurements = await loadGeneratorMeasurements(generator.id)
+
+      if (initialMeasurementId) {
+        const initialMeasurement = measurements.find((measurement) => measurement.id === initialMeasurementId)
+
+        if (initialMeasurement) {
+          handleOpenMeasurementEditor(initialMeasurement)
+        }
+      }
     } catch (loadIssue) {
       setModerationError(
         loadIssue instanceof Error ? loadIssue.message : 'Messwerte konnten nicht geladen werden.',
       )
     } finally {
       setGeneratorMeasurementsLoading(false)
+    }
+  }
+
+  async function handleEditRecentMeasurement(item: AdminRecentMeasurementItem) {
+    setScanStatus('')
+    setScanError('')
+
+    try {
+      const generator = await getGeneratorByCode(item.generatorCode)
+
+      if (!generator) {
+        throw new Error('Die Brennstoffzelle zu diesem Eintrag wurde nicht gefunden.')
+      }
+
+      await handleOpenGeneratorMeasurements(generator, item.id)
+    } catch (editIssue) {
+      setScanError(
+        editIssue instanceof Error
+          ? editIssue.message
+          : 'Der Messwert konnte nicht zum Bearbeiten geöffnet werden.',
+      )
     }
   }
 
@@ -913,6 +943,9 @@ export function AdminPage() {
           recentMeasurements={recentMeasurements}
           onOpenScanner={() => setScannerOpen(true)}
           onOpenManualMeasurementDialog={handleOpenManualMeasurementDialog}
+          onEditRecentMeasurement={(measurement) => {
+            void handleEditRecentMeasurement(measurement)
+          }}
         />
       ) : null}
 

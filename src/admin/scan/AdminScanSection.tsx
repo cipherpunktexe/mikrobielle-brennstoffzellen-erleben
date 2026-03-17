@@ -1,5 +1,7 @@
 import EditNoteIcon from '@mui/icons-material/EditNote'
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+import ExpandLessIcon from '@mui/icons-material/ExpandLess'
 import {
   Alert,
   Box,
@@ -7,9 +9,11 @@ import {
   Card,
   CardContent,
   Grid,
+  IconButton,
   Stack,
   Typography,
 } from '@mui/material'
+import { useEffect, useState } from 'react'
 import { formatMeasurement, formatTimestamp } from '../../common/format'
 import { UnifiedList, type UnifiedListColumn } from '../../common/UnifiedList'
 import type { AdminRecentMeasurementItem } from '../../data/firebaseData'
@@ -20,6 +24,7 @@ interface AdminScanSectionProps {
   recentMeasurements: AdminRecentMeasurementItem[]
   onOpenScanner: () => void
   onOpenManualMeasurementDialog: () => void
+  onEditRecentMeasurement: (measurement: AdminRecentMeasurementItem) => void
 }
 
 export function AdminScanSection({
@@ -28,7 +33,18 @@ export function AdminScanSection({
   recentMeasurements,
   onOpenScanner,
   onOpenManualMeasurementDialog,
+  onEditRecentMeasurement,
 }: AdminScanSectionProps) {
+  const [showAllRecent, setShowAllRecent] = useState(false)
+  const hiddenRecentCount = Math.max(0, recentMeasurements.length - 3)
+  const visibleRecentMeasurements = showAllRecent ? recentMeasurements : recentMeasurements.slice(0, 3)
+
+  useEffect(() => {
+    if (recentMeasurements.length <= 3) {
+      setShowAllRecent(false)
+    }
+  }, [recentMeasurements.length])
+
   const columns: UnifiedListColumn<AdminRecentMeasurementItem>[] = [
     {
       key: 'code',
@@ -112,13 +128,33 @@ export function AdminScanSection({
                 Hier siehst du die zuletzt von dir eingetragenen Messwerte.
               </Typography>
               <UnifiedList
-                items={recentMeasurements}
+                items={visibleRecentMeasurements}
                 columns={columns}
                 getItemKey={(item) => item.id}
                 ariaLabel="Letzte eigene Messwerte"
                 emptyPrimary="Noch keine eigenen Messwerte"
                 emptySecondary="Sobald du Werte speicherst, erscheinen sie hier."
+                renderItemAction={(item) => (
+                  <IconButton
+                    size="small"
+                    aria-label={`Messwert ${formatMeasurement(item.value)} von ${item.generatorCode.toUpperCase()} bearbeiten`}
+                    onClick={() => onEditRecentMeasurement(item)}
+                  >
+                    <EditNoteIcon fontSize="small" />
+                  </IconButton>
+                )}
               />
+              {hiddenRecentCount > 0 ? (
+                <Button
+                  variant="text"
+                  color="inherit"
+                  startIcon={showAllRecent ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                  onClick={() => setShowAllRecent((current) => !current)}
+                  sx={{ alignSelf: 'flex-start', px: 0.5 }}
+                >
+                  {showAllRecent ? 'Weniger anzeigen' : `Mehr anzeigen (${hiddenRecentCount})`}
+                </Button>
+              ) : null}
             </Stack>
           </CardContent>
         </Card>
