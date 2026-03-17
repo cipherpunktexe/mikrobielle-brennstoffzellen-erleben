@@ -72,6 +72,9 @@
 - If a change affects Firebase data flow, verify that user registration, generator creation, measurement entry, and leaderboard updates still match the Firestore schema.
 
 ## Git workflow
-- Do not revert unrelated user changes.
 - Keep commits focused and aligned with one logical change.
 - Nach jeder Ã„nderung ein Commit erstellen und commit-Nachicht angeben
+
+## Language rule
+- In user-facing German text, do not transliterate umlauts (`ae`, `oe`, `ue`). Use proper characters (`ä`, `ö`, `ü`, `ß`).
+- Exception: transliteration is allowed only when technically required (for example in URLs, slugs, identifiers, or external interface constraints).
