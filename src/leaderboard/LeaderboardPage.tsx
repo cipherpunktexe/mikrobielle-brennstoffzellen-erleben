@@ -18,15 +18,11 @@ import {
   DialogTitle,
   IconButton,
   Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
   Typography,
 } from '@mui/material'
 import { useEffect, useState, type KeyboardEvent } from 'react'
 import { MeasurementChart } from '../common/MeasurementChart'
+import { UnifiedList, type UnifiedListColumn } from '../common/UnifiedList'
 import { formatMeasurement } from '../common/format'
 import {
   subscribeToLeaderboard,
@@ -128,6 +124,59 @@ export function LeaderboardPage() {
     }
   }
 
+  const rankSource = leaderboard ?? []
+  const leaderboardColumns: UnifiedListColumn<LeaderboardEntry>[] = [
+    {
+      key: 'rank',
+      header: 'Platz',
+      mobileLabel: 'Platz',
+      width: '90px',
+      render: (entry) => {
+        const rank = rankSource.findIndex((item) => item.generatorId === entry.generatorId) + 1
+
+        return (
+          <Chip
+            label={`#${rank}`}
+            size="small"
+            sx={{
+              minWidth: 52,
+              fontWeight: 700,
+              color: 'text.primary',
+              bgcolor: rank <= 3 ? 'rgba(121,101,66,0.08)' : 'rgba(121,101,66,0.06)',
+            }}
+          />
+        )
+      },
+    },
+    {
+      key: 'name',
+      header: 'Nutzer',
+      mobileLabel: 'Nutzer',
+      width: 'minmax(0, 1fr)',
+      render: (entry) => (
+        <Stack direction="row" alignItems="center" spacing={1}>
+          <Typography sx={{ fontWeight: 600 }}>{entry.displayName}</Typography>
+          <KeyboardArrowRightIcon
+            fontSize="small"
+            sx={{ color: 'text.secondary', opacity: 0.8 }}
+          />
+        </Stack>
+      ),
+    },
+    {
+      key: 'value',
+      header: 'Maximalwert',
+      mobileLabel: 'Maximalwert',
+      width: '130px',
+      align: 'right',
+      render: (entry) => (
+        <Typography sx={{ fontWeight: 800, fontSize: '1.05rem' }}>
+          {formatMeasurement(entry.maxValue)}
+        </Typography>
+      ),
+    },
+  ]
+
   if (!leaderboard) {
     return (
       <Stack sx={{ minHeight: 320, display: 'grid', placeItems: 'center' }}>
@@ -212,12 +261,11 @@ export function LeaderboardPage() {
               <Box
                 sx={{
                   position: 'relative',
-                  display: { xs: 'grid', sm: 'flex' },
-                  gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', sm: 'none' },
+                  display: 'flex',
                   alignItems: 'flex-end',
                   justifyContent: 'center',
-                  gap: { xs: 1, sm: 1.5, md: 2 },
-                  minHeight: { xs: 0, sm: 300, md: 380 },
+                  gap: { xs: 0.75, sm: 1.5, md: 2 },
+                  minHeight: { xs: 170, sm: 300, md: 380 },
                 }}
               >
                 {podiumEntries.map(({ entry, rank, height }) => {
@@ -231,12 +279,10 @@ export function LeaderboardPage() {
                       onClick={() => handleOpenEntry(entry)}
                       onKeyDown={(event) => handleRowKeyDown(event, entry)}
                       sx={{
-                        flex: { sm: 1 },
-                        order: { xs: rank === 1 ? 1 : rank === 2 ? 2 : 3, sm: rank === 2 ? 1 : rank === 1 ? 2 : 3 },
-                        gridColumn: { xs: rank === 1 ? '1 / -1' : 'span 1', sm: 'auto' },
-                        justifySelf: { xs: rank === 1 ? 'center' : 'stretch', sm: 'auto' },
+                        flex: 1,
+                        order: rank === 2 ? 1 : rank === 1 ? 2 : 3,
                         width: '100%',
-                        maxWidth: { xs: rank === 1 ? 240 : 'none', sm: 180, md: 240 },
+                        maxWidth: { xs: 140, sm: 180, md: 240 },
                         minWidth: 0,
                         display: 'flex',
                         flexDirection: 'column',
@@ -385,73 +431,16 @@ export function LeaderboardPage() {
                   </Stack>
                 </AccordionSummary>
 
-                <AccordionDetails sx={{ px: 0, pb: 0, overflowX: 'auto' }}>
-                  <Table sx={{ minWidth: 520 }}>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell sx={{ color: 'text.secondary', fontWeight: 700 }}>Platz</TableCell>
-                        <TableCell sx={{ color: 'text.secondary', fontWeight: 700 }}>Nutzer</TableCell>
-                        <TableCell align="right" sx={{ color: 'text.secondary', fontWeight: 700 }}>
-                          Maximalwert
-                        </TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {section.entries.map((entry, entryIndex) => {
-                        const rank = section.startRank + entryIndex
-
-                        return (
-                          <TableRow
-                            key={entry.generatorId}
-                            hover
-                            onClick={() => handleOpenEntry(entry)}
-                            tabIndex={0}
-                            onKeyDown={(event) => handleRowKeyDown(event, entry)}
-                            sx={{
-                              cursor: 'pointer',
-                              transition: 'background-color 160ms ease',
-                              '&:hover': {
-                                bgcolor: 'rgba(121,101,66,0.05)',
-                              },
-                              '&:focus-visible': {
-                                outline: '2px solid rgba(61,177,236,0.6)',
-                                outlineOffset: '-2px',
-                                bgcolor: 'rgba(61,177,236,0.08)',
-                              },
-                            }}
-                          >
-                            <TableCell>
-                              <Chip
-                                label={`#${rank}`}
-                                size="small"
-                                sx={{
-                                  minWidth: 52,
-                                  fontWeight: 700,
-                                  color: 'text.primary',
-                                  bgcolor:
-                                    rank <= 3 ? 'rgba(121,101,66,0.08)' : 'rgba(121,101,66,0.06)',
-                                }}
-                              />
-                            </TableCell>
-                            <TableCell>
-                              <Stack direction="row" alignItems="center" spacing={1}>
-                                <Typography sx={{ fontWeight: 600 }}>{entry.displayName}</Typography>
-                                <KeyboardArrowRightIcon
-                                  fontSize="small"
-                                  sx={{ color: 'text.secondary', opacity: 0.8 }}
-                                />
-                              </Stack>
-                            </TableCell>
-                            <TableCell align="right">
-                              <Typography sx={{ fontWeight: 800, fontSize: '1.05rem' }}>
-                                {formatMeasurement(entry.maxValue)}
-                              </Typography>
-                            </TableCell>
-                          </TableRow>
-                        )
-                      })}
-                    </TableBody>
-                  </Table>
+                <AccordionDetails sx={{ px: 0, pb: 0 }}>
+                  <UnifiedList
+                    items={section.entries}
+                    columns={leaderboardColumns}
+                    getItemKey={(entry) => entry.generatorId}
+                    ariaLabel={`${section.title} Liste`}
+                    emptyPrimary="Keine Einträge"
+                    onItemClick={(entry) => handleOpenEntry(entry)}
+                    getItemAriaLabel={(entry) => `Messverlauf von ${entry.displayName} öffnen`}
+                  />
                 </AccordionDetails>
               </Accordion>
             ))}

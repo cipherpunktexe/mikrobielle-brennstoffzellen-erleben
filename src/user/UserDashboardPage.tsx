@@ -14,7 +14,6 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  Divider,
   Grid,
   IconButton,
   List,
@@ -23,22 +22,16 @@ import {
   Menu,
   MenuItem,
   Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
   TextField,
   ToggleButton,
   ToggleButtonGroup,
   Typography,
-  useMediaQuery,
-  useTheme,
 } from '@mui/material'
 import { useEffect, useState, type FormEvent, type MouseEvent } from 'react'
 import { Link as RouterLink } from 'react-router-dom'
 import { MeasurementChart } from '../common/MeasurementChart'
 import { AuthCard } from '../common/AuthCard'
+import { UnifiedList, type UnifiedListColumn } from '../common/UnifiedList'
 import { QrScannerDialog } from '../common/qr/QrScannerDialog'
 import { formatMeasurement, formatTimestamp } from '../common/format'
 import { extractGeneratorCodeFromQrValue } from '../common/qr/qr'
@@ -63,8 +56,6 @@ import type {
 type MeasurementViewMode = 'chart' | 'list'
 
 export function UserDashboardPage() {
-  const theme = useTheme()
-  const isMobileViewport = useMediaQuery(theme.breakpoints.down('sm'))
   const [authUserId, setAuthUserId] = useState('')
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [generator, setGenerator] = useState<Generator | null>(null)
@@ -223,6 +214,29 @@ export function UserDashboardPage() {
     ? leaderboard.findIndex((entry) => entry.generatorId === generator.id) + 1
     : 0
   const profileMenuOpen = Boolean(profileMenuAnchor)
+  const measurementListColumns: UnifiedListColumn<Measurement>[] = [
+    {
+      key: 'time',
+      header: 'Zeitpunkt',
+      mobileLabel: 'Zeitpunkt',
+      width: 'minmax(0, 1fr)',
+      render: (measurement) => (
+        <Typography variant="body2">{formatTimestamp(measurement.createdAt)}</Typography>
+      ),
+    },
+    {
+      key: 'value',
+      header: 'Wert',
+      mobileLabel: 'Wert',
+      width: '130px',
+      align: 'right',
+      render: (measurement) => (
+        <Typography variant="body2" sx={{ fontWeight: 700 }}>
+          {formatMeasurement(measurement.value)}
+        </Typography>
+      ),
+    },
+  ]
 
   if (loadingAuth) {
     return (
@@ -424,63 +438,14 @@ export function UserDashboardPage() {
               </Typography>
             ) : measurementViewMode === 'chart' ? (
               <MeasurementChart measurements={measurements} />
-            ) : isMobileViewport ? (
-              <Stack
-                divider={<Divider flexItem />}
-                sx={{
-                  border: '1px solid rgba(121,101,66,0.16)',
-                  borderRadius: '16px',
-                  overflow: 'hidden',
-                  bgcolor: 'rgba(248,242,231,0.42)',
-                }}
-              >
-                {measurements.map((measurement) => (
-                  <Stack
-                    key={measurement.id}
-                    direction="row"
-                    justifyContent="space-between"
-                    alignItems="flex-start"
-                    spacing={2}
-                    sx={{ px: 1.5, py: 1.25 }}
-                  >
-                    <Box sx={{ minWidth: 0 }}>
-                      <Typography variant="caption" color="text.secondary">
-                        Zeitpunkt
-                      </Typography>
-                      <Typography variant="body2">{formatTimestamp(measurement.createdAt)}</Typography>
-                    </Box>
-                    <Box sx={{ textAlign: 'right', flexShrink: 0 }}>
-                      <Typography variant="caption" color="text.secondary">
-                        Wert
-                      </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 700 }}>
-                        {formatMeasurement(measurement.value)}
-                      </Typography>
-                    </Box>
-                  </Stack>
-                ))}
-              </Stack>
             ) : (
-              <Box sx={{ overflowX: 'auto', mx: { xs: -0.5, sm: 0 } }}>
-                <Table size="small" sx={{ minWidth: 520 }}>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Zeitpunkt</TableCell>
-                      <TableCell align="right">Wert</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {measurements.map((measurement) => (
-                      <TableRow key={measurement.id}>
-                        <TableCell>{formatTimestamp(measurement.createdAt)}</TableCell>
-                        <TableCell align="right">
-                          {formatMeasurement(measurement.value)}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </Box>
+              <UnifiedList
+                items={measurements}
+                columns={measurementListColumns}
+                getItemKey={(measurement) => measurement.id}
+                ariaLabel="Messwerthistorie"
+                emptyPrimary="Noch keine Messwerte"
+              />
             )}
           </Stack>
         </CardContent>
