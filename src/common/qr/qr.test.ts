@@ -21,10 +21,15 @@ describe('qr utils', () => {
     ).toBe('001c')
   })
 
-  test('rejects legacy payload formats and admin links', () => {
+  test('rejects legacy payload formats', () => {
     expect(extractGeneratorCodeFromQrValue('mbz:generator:station-009')).toBe('')
     expect(extractGeneratorCodeFromQrValue('https://example.com/admin/generator/station-009')).toBe('')
-    expect(extractGeneratorCodeFromQrValue('https://example.com/admin/scan/generator/00AF')).toBe('')
+  })
+
+  test('parses admin scan links and query based qr payloads', () => {
+    expect(extractGeneratorCodeFromQrValue('https://example.com/admin/scan/generator/00AF')).toBe('00af')
+    expect(extractGeneratorCodeFromQrValue('https://example.com/scan?code=00B1')).toBe('00b1')
+    expect(extractGeneratorCodeFromQrValue('https://example.com/scan?generator=00B2')).toBe('00b2')
   })
 
   test('falls back to plain generator codes', () => {

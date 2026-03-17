@@ -262,6 +262,28 @@ export async function generateQrDataUrl(value: string, badgeLabel?: string) {
   return renderStyledQrToCanvas(value, badgeLabel).toDataURL('image/png')
 }
 
+function extractCodeFromPathSegments(pathSegments: string[]) {
+  const normalizedSegments = pathSegments.map((segment) => segment.toLowerCase())
+  const registerIndex = normalizedSegments.findIndex((segment) => segment === 'register')
+
+  if (registerIndex >= 0 && pathSegments[registerIndex + 1]) {
+    return formatCode(decodeURIComponent(pathSegments[registerIndex + 1]))
+  }
+
+  const adminScanGeneratorIndex = normalizedSegments.findIndex(
+    (segment, index) =>
+      segment === 'admin' &&
+      normalizedSegments[index + 1] === 'scan' &&
+      normalizedSegments[index + 2] === 'generator',
+  )
+
+  if (adminScanGeneratorIndex >= 0 && pathSegments[adminScanGeneratorIndex + 3]) {
+    return formatCode(decodeURIComponent(pathSegments[adminScanGeneratorIndex + 3]))
+  }
+
+  return ''
+}
+
 export function extractGeneratorCodeFromQrValue(value: string, origin = window.location.origin) {
   const trimmedValue = value.trim()
   const looksLikePlainCode = !/[/?#:\s]/.test(trimmedValue)
@@ -270,7 +292,7 @@ export function extractGeneratorCodeFromQrValue(value: string, origin = window.l
     return ''
   }
 
-  const pathMatch = trimmedValue.match(/(?:^|\/)register\/([^/?#\s]+)/i)
+  const pathMatch = trimmedValue.match(/(?:^|\/)(?:register|admin\/scan\/generator)\/([^/?#\s]+)/i)
 
   if (pathMatch?.[1]) {
     return formatCode(decodeURIComponent(pathMatch[1]))
@@ -278,11 +300,20 @@ export function extractGeneratorCodeFromQrValue(value: string, origin = window.l
 
   try {
     const url = new URL(trimmedValue, origin)
-    const pathSegments = url.pathname.split('/').filter(Boolean)
-    const registerIndex = pathSegments.findIndex((segment) => segment.toLowerCase() === 'register')
+    const codeFromPath = extractCodeFromPathSegments(url.pathname.split('/').filter(Boolean))
 
-    if (registerIndex >= 0 && pathSegments[registerIndex + 1]) {
-      return formatCode(decodeURIComponent(pathSegments[registerIndex + 1]))
+    if (codeFromPath) {
+      return codeFromPath
+    }
+
+    const codeParamCandidates = ['code', 'generator', 'generatorCode']
+
+    for (const paramKey of codeParamCandidates) {
+      const paramValue = url.searchParams.get(paramKey)?.trim()
+
+      if (paramValue) {
+        return formatCode(decodeURIComponent(paramValue))
+      }
     }
   } catch {
     return looksLikePlainCode ? formatCode(trimmedValue) : ''
