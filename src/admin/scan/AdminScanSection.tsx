@@ -15,7 +15,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { formatElapsedTime, formatMeasurement } from '../../common/format'
 import { UnifiedList, type UnifiedListColumn } from '../../common/UnifiedList'
 import type { AdminRecentMeasurementItem } from '../../data/firebaseData'
@@ -41,12 +41,7 @@ export function AdminScanSection({
   const hiddenRecentCount = Math.max(0, recentMeasurements.length - 3)
   const recentPreviewMeasurements = recentMeasurements.slice(0, 3)
   const hiddenRecentMeasurements = recentMeasurements.slice(3)
-
-  useEffect(() => {
-    if (recentMeasurements.length <= 3) {
-      setShowAllRecent(false)
-    }
-  }, [recentMeasurements.length])
+  const isExpanded = hiddenRecentCount > 0 && showAllRecent
 
   const columns: UnifiedListColumn<AdminRecentMeasurementItem>[] = [
     {
@@ -164,7 +159,7 @@ export function AdminScanSection({
                 <Accordion
                   disableGutters
                   elevation={0}
-                  expanded={showAllRecent}
+                  expanded={isExpanded}
                   onChange={(_event, expanded) => setShowAllRecent(expanded)}
                   sx={{
                     border: '1px solid rgba(121,101,66,0.14)',
@@ -177,7 +172,7 @@ export function AdminScanSection({
                 >
                   <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ minHeight: 44 }}>
                     <Typography fontWeight={600}>
-                      {showAllRecent ? 'Weniger anzeigen' : `Mehr anzeigen (${hiddenRecentCount})`}
+                      {isExpanded ? 'Weniger anzeigen' : `Mehr anzeigen (${hiddenRecentCount})`}
                     </Typography>
                   </AccordionSummary>
                   <AccordionDetails sx={{ pt: 0 }}>
