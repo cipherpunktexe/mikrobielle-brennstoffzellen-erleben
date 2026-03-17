@@ -31,7 +31,7 @@ export function LineChart({
   showMobileNavigation = true,
 }: LineChartProps) {
   const theme = useTheme()
-  const chartColor = theme.palette.secondary.main
+  const chartColor = theme.palette.grey[600]
   const chartColorDark = theme.palette.text.primary
   const isMobileViewport = useMediaQuery(theme.breakpoints.down('sm'))
   const interactiveAreaRef = useRef<HTMLDivElement | null>(null)
