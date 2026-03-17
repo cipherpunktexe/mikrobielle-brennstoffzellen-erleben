@@ -1,4 +1,4 @@
-# AGENTS.md
+﻿# AGENTS.md
 
 ## Project overview
 - React 19 + Vite single-page app with TypeScript and ESM.
@@ -39,7 +39,6 @@
 - Prefer MUI components and `sx` styling over ad-hoc CSS.
 - Keep route screens in `src/pages/` and shared UI in `src/components/`.
 - Keep all user-facing copy in German.
-- Use proper umlauts (`ä`, `ö`, `ü`, `ß`) in German text.
 - Reuse helpers in `src/lib/` and `src/services/` instead of duplicating formatting, QR, or Firebase logic.
 - Normalize scanned or entered station codes with `formatCode()` before persisting or querying.
 - Prefer small focused components over growing page files further.
@@ -73,8 +72,8 @@
 
 ## Git workflow
 - Keep commits focused and aligned with one logical change.
-- Nach jeder Änderung ein Commit erstellen und commit-Nachicht angeben
+- Nach jeder Änderung ein Commit erstellen und Commit-Nachricht angeben.
 
 ## Language rule
-- In user-facing German text, do not transliterate umlauts (`ae`, `oe`, `ue`). Use proper characters (`�`, `�`, `�`, `�`).
+- In user-facing German text, do not transliterate umlauts (`ae`, `oe`, `ue`). Use proper characters (`ä`, `ö`, `ü`, `ß`).
 - Exception: transliteration is allowed only when technically required (for example in URLs, slugs, identifiers, or external interface constraints).
