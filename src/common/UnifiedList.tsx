@@ -23,6 +23,7 @@ interface UnifiedListProps<TItem> {
   isItemDisabled?: (item: TItem) => boolean
   getItemAriaLabel?: (item: TItem) => string
   renderItemAction?: (item: TItem) => ReactNode
+  renderMobileRow?: (item: TItem) => ReactNode
   minDesktopWidth?: number
 }
 
@@ -61,6 +62,7 @@ export function UnifiedList<TItem>({
   isItemDisabled,
   getItemAriaLabel,
   renderItemAction,
+  renderMobileRow,
   minDesktopWidth = 520,
 }: UnifiedListProps<TItem>) {
   const desktopGridTemplate = columns.map((column) => column.width ?? 'minmax(0,1fr)').join(' ')
@@ -99,16 +101,20 @@ export function UnifiedList<TItem>({
           ))}
         </Box>
 
-        <Stack spacing={1.1} sx={{ display: { xs: 'flex', sm: 'none' } }}>
-          {columns.map((column) => (
-            <Stack key={column.key} direction="row" spacing={1.5} justifyContent="space-between" alignItems="flex-start">
-              <Typography variant="caption" color="text.secondary" sx={{ flexShrink: 0, minWidth: 72 }}>
-                {column.mobileLabel ?? column.header}
-              </Typography>
-              <Box sx={{ minWidth: 0, textAlign: 'right' }}>{column.render(item)}</Box>
-            </Stack>
-          ))}
-        </Stack>
+        {renderMobileRow ? (
+          <Box sx={{ display: { xs: 'block', sm: 'none' } }}>{renderMobileRow(item)}</Box>
+        ) : (
+          <Stack spacing={1.1} sx={{ display: { xs: 'flex', sm: 'none' } }}>
+            {columns.map((column) => (
+              <Stack key={column.key} direction="row" spacing={1.5} justifyContent="space-between" alignItems="flex-start">
+                <Typography variant="caption" color="text.secondary" sx={{ flexShrink: 0, minWidth: 72 }}>
+                  {column.mobileLabel ?? column.header}
+                </Typography>
+                <Box sx={{ minWidth: 0, textAlign: 'right' }}>{column.render(item)}</Box>
+              </Stack>
+            ))}
+          </Stack>
+        )}
       </Box>
     )
   }

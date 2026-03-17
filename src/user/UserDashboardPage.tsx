@@ -445,6 +445,16 @@ export function UserDashboardPage() {
                 getItemKey={(measurement) => measurement.id}
                 ariaLabel="Messwerthistorie"
                 emptyPrimary="Noch keine Messwerte"
+                renderMobileRow={(measurement) => (
+                  <Stack spacing={0.4} sx={{ minWidth: 0 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>
+                      {formatTimestamp(measurement.createdAt)}
+                    </Typography>
+                    <Typography sx={{ fontWeight: 800, fontSize: '1.2rem', textAlign: 'right' }}>
+                      {formatMeasurement(measurement.value)}
+                    </Typography>
+                  </Stack>
+                )}
               />
             )}
           </Stack>
