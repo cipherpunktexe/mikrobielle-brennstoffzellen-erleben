@@ -334,13 +334,6 @@ export function UserDashboardPage() {
 
       {displayNameStatus ? <Alert severity="success">{displayNameStatus}</Alert> : null}
 
-      {profile?.role === 'admin' ? (
-        <Alert severity="info">
-          Dieses Konto ist als Admin markiert. Für die Messwertmaske ist der Bereich
-          `/admin` vorgesehen.
-        </Alert>
-      ) : null}
-
       {linkStatus ? <Alert severity="success">{linkStatus}</Alert> : null}
       {linkError ? <Alert severity="error">{linkError}</Alert> : null}
 
