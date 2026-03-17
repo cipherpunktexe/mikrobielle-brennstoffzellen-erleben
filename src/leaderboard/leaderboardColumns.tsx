@@ -1,5 +1,6 @@
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight'
 import { Chip, Stack, Typography } from '@mui/material'
+import { uiColor } from '../app/uiColor'
 import { type UnifiedListColumn } from '../common/UnifiedList'
 import { formatMeasurement } from '../common/format'
 import type { LeaderboardEntry } from '../data/domain'
@@ -25,7 +26,10 @@ export function createLeaderboardColumns(
               minWidth: 52,
               fontWeight: 700,
               color: 'text.primary',
-              bgcolor: rank <= 3 ? 'rgba(121,101,66,0.08)' : 'rgba(121,101,66,0.06)',
+              bgcolor: (theme) =>
+                rank <= 3
+                  ? uiColor.leaderboard.rankChipTop3(theme)
+                  : uiColor.leaderboard.rankChipDefault(theme),
             }}
           />
         )

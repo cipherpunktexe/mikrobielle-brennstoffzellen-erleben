@@ -1,11 +1,6 @@
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
-import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
-  Stack,
-  Typography,
-} from '@mui/material'
+import { Accordion, AccordionDetails, AccordionSummary, Stack, Typography } from '@mui/material'
+import { uiColor } from '../app/uiColor'
 import { UnifiedList, type UnifiedListColumn } from '../common/UnifiedList'
 import type { LeaderboardEntry } from '../data/domain'
 import type { LeaderboardSection } from './leaderboardSections'
@@ -38,9 +33,9 @@ export function LeaderboardSectionList({
           slotProps={{ transition: { unmountOnExit: true } }}
           sx={{
             mx: 0,
-            border: '1px solid rgba(121,101,66,0.12)',
+            border: (theme) => `1px solid ${uiColor.leaderboard.sectionBorder(theme)}`,
             borderRadius: '18px',
-            bgcolor: 'rgba(248,242,231,0.34)',
+            bgcolor: (theme) => uiColor.leaderboard.sectionBackground(theme),
             boxShadow: 'none',
             '&::before': {
               display: 'none',

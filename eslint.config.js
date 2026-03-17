@@ -19,5 +19,24 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+    rules: {
+      'no-restricted-syntax': [
+        'warn',
+        {
+          selector: 'Literal[value=/^#(?:[0-9a-fA-F]{3,8})$/]',
+          message: 'Verwende Theme-Palette/Tokens statt hartcodierter Hex-Farben.',
+        },
+        {
+          selector: 'Literal[value=/rgba?\\(/]',
+          message: 'Verwende Theme-Palette/Tokens statt hartcodierter RGB/RGBA-Farben.',
+        },
+      ],
+    },
+  },
+  {
+    files: ['src/app/theme.ts', 'src/app/uiColor.ts'],
+    rules: {
+      'no-restricted-syntax': 'off',
+    },
   },
 ])

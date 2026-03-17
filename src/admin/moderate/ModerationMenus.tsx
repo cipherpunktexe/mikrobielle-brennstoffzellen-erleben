@@ -4,6 +4,7 @@ import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline'
 import ShowChartIcon from '@mui/icons-material/ShowChart'
 import { Divider, Menu, MenuItem } from '@mui/material'
+import { uiColor } from '../../app/uiColor'
 import type { Generator, UserProfile } from '../../data/domain'
 
 interface ModerationMenusProps {
@@ -52,7 +53,7 @@ export function ModerationMenus({
             overflow: 'hidden',
             borderRadius: 3,
             border: (theme) => `1px solid ${theme.palette.divider}`,
-            boxShadow: '0 22px 44px rgba(36,28,19,0.16)',
+            boxShadow: (theme) => uiColor.shadow.menu(theme),
           },
         }}
       >
@@ -79,7 +80,7 @@ export function ModerationMenus({
             overflow: 'hidden',
             borderRadius: 3,
             border: (theme) => `1px solid ${theme.palette.divider}`,
-            boxShadow: '0 22px 44px rgba(36,28,19,0.16)',
+            boxShadow: (theme) => uiColor.shadow.menu(theme),
           },
         }}
         MenuListProps={{
