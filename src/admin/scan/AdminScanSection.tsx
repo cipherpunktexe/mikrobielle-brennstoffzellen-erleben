@@ -1,8 +1,10 @@
 import EditNoteIcon from '@mui/icons-material/EditNote'
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
-import ExpandLessIcon from '@mui/icons-material/ExpandLess'
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Alert,
   Box,
   Button,
@@ -37,7 +39,8 @@ export function AdminScanSection({
 }: AdminScanSectionProps) {
   const [showAllRecent, setShowAllRecent] = useState(false)
   const hiddenRecentCount = Math.max(0, recentMeasurements.length - 3)
-  const visibleRecentMeasurements = showAllRecent ? recentMeasurements : recentMeasurements.slice(0, 3)
+  const recentPreviewMeasurements = recentMeasurements.slice(0, 3)
+  const hiddenRecentMeasurements = recentMeasurements.slice(3)
 
   useEffect(() => {
     if (recentMeasurements.length <= 3) {
@@ -160,7 +163,7 @@ export function AdminScanSection({
               </Typography>
               
               <UnifiedList
-                items={visibleRecentMeasurements}
+                items={recentPreviewMeasurements}
                 columns={columns}
                 getItemKey={(item) => item.id}
                 ariaLabel="Letzte eigene Messwerte"
@@ -178,15 +181,45 @@ export function AdminScanSection({
                 renderMobileRow={renderRecentMeasurementMobileRow}
               />
               {hiddenRecentCount > 0 ? (
-                <Button
-                  variant="text"
-                  color="inherit"
-                  startIcon={showAllRecent ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                  onClick={() => setShowAllRecent((current) => !current)}
-                  sx={{ alignSelf: 'flex-start', px: 0.5 }}
+                <Accordion
+                  disableGutters
+                  elevation={0}
+                  expanded={showAllRecent}
+                  onChange={(_event, expanded) => setShowAllRecent(expanded)}
+                  sx={{
+                    border: '1px solid rgba(121,101,66,0.14)',
+                    borderRadius: 2.5,
+                    bgcolor: 'rgba(255,255,255,0.16)',
+                    '&:before': {
+                      display: 'none',
+                    },
+                  }}
                 >
-                  {showAllRecent ? 'Weniger anzeigen' : `Mehr anzeigen (${hiddenRecentCount})`}
-                </Button>
+                  <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ minHeight: 44 }}>
+                    <Typography fontWeight={600}>
+                      {showAllRecent ? 'Weniger anzeigen' : `Mehr anzeigen (${hiddenRecentCount})`}
+                    </Typography>
+                  </AccordionSummary>
+                  <AccordionDetails sx={{ pt: 0 }}>
+                    <UnifiedList
+                      items={hiddenRecentMeasurements}
+                      columns={columns}
+                      getItemKey={(item) => item.id}
+                      ariaLabel="Weitere eigene Messwerte"
+                      emptyPrimary="Keine weiteren Messwerte"
+                      renderItemAction={(item) => (
+                        <IconButton
+                          size="small"
+                          aria-label={`Messwert ${formatMeasurement(item.value)} von ${item.generatorCode.toUpperCase()} bearbeiten`}
+                          onClick={() => onEditRecentMeasurement(item)}
+                        >
+                          <EditNoteIcon fontSize="small" />
+                        </IconButton>
+                      )}
+                      renderMobileRow={renderRecentMeasurementMobileRow}
+                    />
+                  </AccordionDetails>
+                </Accordion>
               ) : null}
             </Stack>
           </CardContent>
