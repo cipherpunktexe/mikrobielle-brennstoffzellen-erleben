@@ -52,7 +52,7 @@ export function AdminScanSection({
       key: 'code',
       header: 'Code',
       mobileLabel: 'Code',
-      width: 'minmax(96px, 120px)',
+      width: '56px',
       render: (item) => (
         <Typography
           variant="body2"
@@ -66,32 +66,37 @@ export function AdminScanSection({
       key: 'value',
       header: 'Messwert',
       mobileLabel: 'Messwert',
-      width: 'minmax(110px, 140px)',
+      width: '84px',
       align: 'right',
       render: (item) => (
-        <Typography variant="body2" fontWeight={600}>
+        <Typography variant="body2" fontWeight={600} sx={{ whiteSpace: 'nowrap' }}>
           {formatMeasurement(item.value)}
         </Typography>
       ),
     },
     {
       key: 'elapsed',
-      header: 'Vergangene Zeit',
+      header: 'Zeit',
       mobileLabel: 'Zeit',
-      width: 'minmax(0, 1fr)',
-      render: (item) => <Typography variant="body2">{formatElapsedTime(item.createdAt)}</Typography>,
+      width: '68px',
+      render: (item) => (
+        <Typography variant="body2" sx={{ whiteSpace: 'nowrap' }}>
+          {formatElapsedTime(item.createdAt)}
+        </Typography>
+      ),
     },
     {
       key: 'action',
       header: '',
       mobileLabel: 'Aktion',
-      width: '44px',
+      width: '36px',
       align: 'right',
       render: (item) => (
         <IconButton
           size="small"
           aria-label={`Messwert ${formatMeasurement(item.value)} von ${item.generatorCode.toUpperCase()} bearbeiten`}
           onClick={() => onEditRecentMeasurement(item)}
+          sx={{ width: 30, height: 30, p: 0 }}
         >
           <EditNoteIcon fontSize="small" />
         </IconButton>
@@ -143,7 +148,7 @@ export function AdminScanSection({
                 emptyPrimary="Noch keine eigenen Messwerte"
                 emptySecondary="Sobald du Werte speicherst, erscheinen sie hier."
                 forceDesktopLayoutOnMobile
-                minDesktopWidth={420}
+                minDesktopWidth={260}
               />
               {hiddenRecentCount > 0 ? (
                 <Accordion
@@ -173,7 +178,7 @@ export function AdminScanSection({
                       ariaLabel="Weitere eigene Messwerte"
                       emptyPrimary="Keine weiteren Messwerte"
                       forceDesktopLayoutOnMobile
-                      minDesktopWidth={420}
+                      minDesktopWidth={260}
                     />
                   </AccordionDetails>
                 </Accordion>
