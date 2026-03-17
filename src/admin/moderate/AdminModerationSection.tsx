@@ -1,6 +1,4 @@
-﻿import CloseIcon from '@mui/icons-material/Close'
-import MoreVertIcon from '@mui/icons-material/MoreVert'
-import SearchIcon from '@mui/icons-material/Search'
+﻿import MoreVertIcon from '@mui/icons-material/MoreVert'
 import {
   Alert,
   Badge,
@@ -8,11 +6,11 @@ import {
   Card,
   CardContent,
   IconButton,
-  InputBase,
   Stack,
   Typography,
 } from '@mui/material'
-import { useEffect, useRef, type MouseEvent } from 'react'
+import type { MouseEvent } from 'react'
+import { CollapsibleSearchField } from '../../common/CollapsibleSearchField'
 import type { Generator, UserProfile } from '../../data/domain'
 import type { ModerationListEntry } from '../types'
 import { ModerationList } from './ModerationList'
@@ -54,41 +52,7 @@ export function AdminModerationSection({
   onOpenActions,
   onOpenMeasurements,
 }: AdminModerationSectionProps) {
-  const searchAreaRef = useRef<HTMLDivElement | null>(null)
-  const searchInputRef = useRef<HTMLInputElement | null>(null)
   const secondaryEntriesCount = blockedModerationEntriesCount + trashedModerationEntriesCount
-
-  useEffect(() => {
-    if (!moderationSearchOpen) {
-      return
-    }
-
-    function handlePointerDown(event: PointerEvent) {
-      const target = event.target
-
-      if (!(target instanceof Node)) {
-        return
-      }
-
-      if (!searchAreaRef.current?.contains(target)) {
-        onSetModerationSearchOpen(false)
-      }
-    }
-
-    window.addEventListener('pointerdown', handlePointerDown)
-
-    return () => {
-      window.removeEventListener('pointerdown', handlePointerDown)
-    }
-  }, [moderationSearchOpen, onSetModerationSearchOpen])
-
-  useEffect(() => {
-    if (!moderationSearchOpen) {
-      return
-    }
-
-    searchInputRef.current?.focus()
-  }, [moderationSearchOpen])
 
   return (
     <Card>
@@ -114,81 +78,15 @@ export function AdminModerationSection({
             </Stack>
 
             <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', gap: 1 }}>
-              <Box
-                ref={searchAreaRef}
-                sx={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: 0, gap: 1 }}
-              >
-                <IconButton
-                  aria-label={moderationSearchOpen ? 'Suche einklappen' : 'Suche aufklappen'}
-                  onClick={() => onSetModerationSearchOpen((current) => !current)}
-                  sx={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 2.25,
-                    flexShrink: 0,
-                    color: moderationSearchOpen ? '#6C5A39' : 'rgba(110,103,95,0.92)',
-                    bgcolor: moderationSearchOpen ? 'rgba(121,101,66,0.12)' : 'rgba(255,255,255,0.72)',
-                    border: '1px solid rgba(121,101,66,0.18)',
-                    '&:hover': {
-                      bgcolor: moderationSearchOpen ? 'rgba(121,101,66,0.18)' : 'rgba(255,255,255,0.96)',
-                    },
-                  }}
-                >
-                  <SearchIcon fontSize="small" />
-                </IconButton>
-
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    flex: moderationSearchOpen ? 1 : '0 0 0px',
-                    maxWidth: moderationSearchOpen ? '100%' : 0,
-                    height: 44,
-                    minWidth: 0,
-                    border: moderationSearchOpen ? '1px solid rgba(121,101,66,0.2)' : '1px solid transparent',
-                    borderRadius: 999,
-                    bgcolor: moderationSearchOpen ? 'rgba(255,255,255,0.9)' : 'transparent',
-                    px: moderationSearchOpen ? 0.75 : 0,
-                    opacity: moderationSearchOpen ? 1 : 0,
-                    boxShadow: moderationSearchOpen ? '0 6px 16px rgba(36,28,19,0.07)' : 'none',
-                    overflow: 'hidden',
-                    transition:
-                      'max-width 220ms ease, opacity 180ms ease, background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, padding 220ms ease',
-                  }}
-                >
-                  <InputBase
-                    inputRef={searchInputRef}
-                    value={moderationSearch}
-                    onChange={(event) => onSetModerationSearch(event.target.value)}
-                    placeholder="Suche nach Name, E-Mail oder Code"
-                    inputProps={{ 'aria-label': 'Suchen' }}
-                    sx={{
-                      flex: 1,
-                      minWidth: 0,
-                      color: 'rgba(60,48,33,0.96)',
-                      fontSize: '1rem',
-                      '& input::placeholder': {
-                        color: 'rgba(110,103,95,0.88)',
-                        opacity: 1,
-                      },
-                    }}
-                  />
-                  <IconButton
-                    aria-label="Suche leeren"
-                    size="small"
-                    onClick={() => onSetModerationSearch('')}
-                    sx={{
-                      ml: 0.5,
-                      color: 'rgba(110,103,95,0.9)',
-                      opacity: moderationSearch ? 1 : 0.5,
-                      '&:hover': {
-                        bgcolor: 'rgba(121,101,66,0.1)',
-                      },
-                    }}
-                  >
-                    <CloseIcon fontSize="small" />
-                  </IconButton>
-                </Box>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <CollapsibleSearchField
+                  value={moderationSearch}
+                  open={moderationSearchOpen}
+                  onChange={onSetModerationSearch}
+                  onOpenChange={onSetModerationSearchOpen}
+                  placeholder="Suche nach Name, E-Mail oder Code"
+                  ariaLabel="Suchen"
+                />
               </Box>
 
               <IconButton
