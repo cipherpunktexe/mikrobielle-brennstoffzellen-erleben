@@ -1,4 +1,4 @@
-import { Box, Stack, Typography } from '@mui/material'
+import { Box, Stack, Typography, useMediaQuery, useTheme } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { LineChart } from './LineChart'
 import { createContextMeasurementFormatter, formatTimestamp } from './format'
@@ -27,6 +27,8 @@ function formatShortTimestamp(measurement: Measurement) {
 }
 
 export function MeasurementChart({ measurements }: MeasurementChartProps) {
+  const theme = useTheme()
+  const isMobileViewport = useMediaQuery(theme.breakpoints.down('sm'))
   const orderedMeasurements = [...measurements].sort((left, right) => {
     const leftMs = left.createdAt?.toMillis() ?? 0
     const rightMs = right.createdAt?.toMillis() ?? 0
@@ -55,8 +57,8 @@ export function MeasurementChart({ measurements }: MeasurementChartProps) {
           borderRadius: '18px',
           border: `1px solid ${alpha('#796542', 0.16)}`,
           backgroundColor: alpha('#FFFFFF', 0.42),
-          px: 1.5,
-          py: 1.35,
+          px: { xs: 1.75, sm: 1.5 },
+          py: { xs: 1.6, sm: 1.35 },
         }}
       >
         <Stack
@@ -77,7 +79,14 @@ export function MeasurementChart({ measurements }: MeasurementChartProps) {
               <Typography variant="caption" color="text.secondary">
                 {card.label}
               </Typography>
-              <Typography variant="h6" sx={{ mt: 0.35, lineHeight: 1.15 }}>
+              <Typography
+                variant="h6"
+                sx={{
+                  mt: 0.35,
+                  lineHeight: 1.15,
+                  fontSize: { xs: '2rem', sm: undefined },
+                }}
+              >
                 {card.value}
               </Typography>
             </Box>
@@ -96,7 +105,7 @@ export function MeasurementChart({ measurements }: MeasurementChartProps) {
         detailLabelTitle="Zeitpunkt"
         valueLabelTitle="Wert"
         valueFormatter={(value) => formatMeasurementInContext(value)}
-        showActiveSummary={false}
+        showActiveSummary={isMobileViewport}
       />
     </Stack>
   )

@@ -19,6 +19,8 @@ import {
   IconButton,
   Stack,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material'
 import { useEffect, useState, type KeyboardEvent } from 'react'
 import { MeasurementChart } from '../common/MeasurementChart'
@@ -92,6 +94,8 @@ function buildLeaderboardSections(entries: LeaderboardEntry[], startingRank = 1)
 }
 
 export function LeaderboardPage() {
+  const theme = useTheme()
+  const isMobileViewport = useMediaQuery(theme.breakpoints.down('sm'))
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[] | null>(null)
   const [selectedEntry, setSelectedEntry] = useState<LeaderboardEntry | null>(null)
   const [selectedMeasurements, setSelectedMeasurements] = useState<Measurement[] | null>(null)
@@ -448,8 +452,25 @@ export function LeaderboardPage() {
         </Stack>
       </CardContent>
 
-      <Dialog open={Boolean(selectedEntry)} onClose={handleCloseDialog} fullWidth maxWidth="md">
-        <DialogTitle sx={{ pr: 6 }}>
+      <Dialog
+        open={Boolean(selectedEntry)}
+        onClose={handleCloseDialog}
+        fullWidth
+        fullScreen={isMobileViewport}
+        maxWidth="md"
+        PaperProps={{
+          sx: {
+            borderRadius: isMobileViewport ? 0 : '26px',
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            pr: 6,
+            py: { xs: 1.75, sm: 2 },
+            fontSize: { xs: '1.95rem', sm: undefined },
+          }}
+        >
           {selectedEntry ? `Messverlauf: ${selectedEntry.displayName}` : 'Messverlauf'}
           <IconButton
             aria-label="Dialog schließen"
@@ -459,7 +480,13 @@ export function LeaderboardPage() {
             <CloseIcon />
           </IconButton>
         </DialogTitle>
-        <DialogContent dividers>
+        <DialogContent
+          dividers
+          sx={{
+            px: { xs: 1.25, sm: 2.5 },
+            py: { xs: 1.5, sm: 2 },
+          }}
+        >
           {!selectedMeasurements ? (
             <Stack sx={{ minHeight: 240, display: 'grid', placeItems: 'center' }}>
               <CircularProgress color="inherit" />
@@ -472,7 +499,7 @@ export function LeaderboardPage() {
             <MeasurementChart measurements={selectedMeasurements} />
           )}
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ px: { xs: 2, sm: 3 }, py: { xs: 1.25, sm: 1.5 } }}>
           <Button onClick={handleCloseDialog}>Schliessen</Button>
         </DialogActions>
       </Dialog>

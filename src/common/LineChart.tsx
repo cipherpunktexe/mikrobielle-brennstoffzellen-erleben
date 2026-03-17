@@ -55,12 +55,12 @@ export function LineChart({
     })
   }, [data.length, isMobileViewport])
 
-  const width = 640
-  const height = isMobileViewport ? 248 : 292
+  const width = isMobileViewport ? 390 : 640
+  const height = isMobileViewport ? 300 : 292
   const basePadding = {
-    top: 18,
+    top: isMobileViewport ? 14 : 18,
     right: isMobileViewport ? 16 : 22,
-    bottom: isMobileViewport ? 34 : 42,
+    bottom: isMobileViewport ? 50 : 42,
     left: isMobileViewport ? 50 : 64,
   }
   const values = data.map((point) => point.value)
@@ -71,7 +71,11 @@ export function LineChart({
   const chartMin = minValue >= 0 ? 0 : minValue - paddedRange * 0.35
   const chartMax = maxValue <= 0 ? 0 : maxValue + paddedRange * 0.65
   const valueRange = chartMax - chartMin || 1
-  const yTicks = Array.from({ length: 4 }, (_, index) => chartMax - (valueRange / 3) * index)
+  const yTickCount = isMobileViewport ? 3 : 4
+  const yTicks = Array.from(
+    { length: yTickCount },
+    (_, index) => chartMax - (valueRange / Math.max(1, yTickCount - 1)) * index,
+  )
   const tickLabels = yTicks.map((tick) => valueFormatter(tick))
   const maxTickLabelLength = Math.max(...tickLabels.map((label) => label.length), 0)
   const padding = {
@@ -101,9 +105,7 @@ export function LineChart({
     `${padding.left + plotWidth},${padding.top + plotHeight}`,
   ].join(' ')
   const labelIndexes = isMobileViewport
-    ? Array.from(new Set([0, Math.floor((data.length - 1) / 2), data.length - 1])).filter(
-        (index) => index >= 0,
-      )
+    ? Array.from(new Set([0, data.length - 1])).filter((index) => index >= 0)
     : Array.from(
         new Set([0, Math.floor((data.length - 1) / 3), Math.floor(((data.length - 1) * 2) / 3), data.length - 1]),
       ).filter((index) => index >= 0)
@@ -148,11 +150,18 @@ export function LineChart({
   }
 
   const activeValueLabel = activePoint ? valueFormatter(activePoint.point.value) : ''
-  const activeTooltipWidth = Math.max(
-    isMobileViewport ? 112 : 128,
-    Math.round(activeValueLabel.length * (isMobileViewport ? 6.4 : 6.9) + 26),
+  const activeShortLabel = activePoint ? (activePoint.point.shortLabel ?? activePoint.point.label) : ''
+  const computedTooltipWidth = Math.max(
+    isMobileViewport ? 146 : 128,
+    Math.round(
+      Math.max(
+        activeValueLabel.length * (isMobileViewport ? 7.1 : 6.9),
+        activeShortLabel.length * (isMobileViewport ? 5.5 : 5.1),
+      ) + 26,
+    ),
   )
-  const activeTooltipHeight = 46
+  const activeTooltipWidth = Math.min(computedTooltipWidth, Math.max(112, plotWidth - 8))
+  const activeTooltipHeight = isMobileViewport ? 54 : 46
   const activeTooltipX = activePoint
     ? Math.min(
         Math.max(activePoint.x - activeTooltipWidth / 2, padding.left),
@@ -253,9 +262,9 @@ export function LineChart({
                 />
                 <text
                   x={padding.left - 10}
-                  y={y + 4}
+                  y={y + 5}
                   textAnchor="end"
-                  fontSize="12"
+                  fontSize={isMobileViewport ? '13' : '12'}
                   fill={alpha(chartColorDark, 0.78)}
                 >
                   {valueFormatter(tick)}
@@ -275,9 +284,9 @@ export function LineChart({
               <text
                 key={point.point.id}
                 x={point.x}
-                y={height - 12}
+                y={height - (isMobileViewport ? 8 : 12)}
                 textAnchor="middle"
-                fontSize="12"
+                fontSize={isMobileViewport ? '13' : '12'}
                 fill={alpha(chartColorDark, 0.78)}
               >
                 {point.point.shortLabel ?? point.point.label}
@@ -344,18 +353,18 @@ export function LineChart({
               />
               <text
                 x={activeTooltipX + activeTooltipWidth / 2}
-                y={activeTooltipY + 18}
+                y={activeTooltipY + (isMobileViewport ? 20 : 18)}
                 textAnchor="middle"
-                fontSize="11"
+                fontSize={isMobileViewport ? '12' : '11'}
                 fill={alpha(chartColorDark, 0.78)}
               >
                 {activePoint.point.shortLabel ?? activePoint.point.label}
               </text>
               <text
                 x={activeTooltipX + activeTooltipWidth / 2}
-                y={activeTooltipY + 33}
+                y={activeTooltipY + (isMobileViewport ? 39 : 33)}
                 textAnchor="middle"
-                fontSize="15"
+                fontSize={isMobileViewport ? '17' : '15'}
                 fontWeight="700"
                 fill={chartColorDark}
               >
@@ -374,8 +383,8 @@ export function LineChart({
           sx={{
             border: `1px solid ${alpha('#796542', 0.16)}`,
             borderRadius: '999px',
-            px: 0.5,
-            py: 0.25,
+            px: 0.75,
+            py: 0.4,
             bgcolor: alpha('#FFFFFF', 0.5),
           }}
         >
@@ -389,7 +398,7 @@ export function LineChart({
           >
             <ChevronLeftIcon />
           </IconButton>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700 }}>
             {(activeIndex ?? 0) + 1} / {data.length}
           </Typography>
           <IconButton
