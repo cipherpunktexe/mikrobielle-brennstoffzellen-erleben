@@ -423,11 +423,7 @@ export function UserDashboardPage() {
                 Für diese Brennstoffzelle liegen noch keine Messwerte vor.
               </Typography>
             ) : measurementViewMode === 'chart' ? (
-              <MeasurementChart
-                measurements={measurements}
-                latestLabel="Aktueller Messwert"
-                summaryVariant="compact"
-              />
+              <MeasurementChart measurements={measurements} />
             ) : isMobileViewport ? (
               <Stack
                 divider={<Divider flexItem />}

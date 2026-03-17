@@ -480,11 +480,7 @@ export function LeaderboardPage() {
               Fuer diese Brennstoffzelle liegen noch keine Messwerte vor.
             </Typography>
           ) : (
-            <MeasurementChart
-              measurements={selectedMeasurements}
-              latestLabel="Aktueller Messwert"
-              summaryVariant="compact"
-            />
+            <MeasurementChart measurements={selectedMeasurements} />
           )}
         </DialogContent>
         <DialogActions>
