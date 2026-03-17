@@ -46,6 +46,9 @@
   - `npx tsc -b --noEmit`
   - `npm run spellcheck`
   - `npm run build`
+- Bei Logikänderungen, Datenflussänderungen oder Bugfixes zusätzlich:
+  - `npm run test`
+- Für geänderte Module vorhandene Tests gezielt mit ausführen und bei fehlender Abdeckung einen Test ergänzen.
 
 ## Deploy
 - Frontend Build: `npm.cmd run build`
