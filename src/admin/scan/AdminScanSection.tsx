@@ -1,7 +1,6 @@
 import EditNoteIcon from '@mui/icons-material/EditNote'
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner'
 import {
-  Alert,
   Button,
   Card,
   CardContent,
@@ -16,8 +15,6 @@ import { UnifiedList, type UnifiedListColumn } from '../../common/UnifiedList'
 import type { AdminRecentMeasurementItem } from '../../data/firebaseData'
 
 interface AdminScanSectionProps {
-  scanStatus: string
-  scanError: string
   recentMeasurements: AdminRecentMeasurementItem[]
   onOpenScanner: () => void
   onOpenManualMeasurementDialog: () => void
@@ -77,8 +74,6 @@ function formatElapsedFromMs(createdAtMs: number | null, nowMs: number) {
 }
 
 export function AdminScanSection({
-  scanStatus,
-  scanError,
   recentMeasurements,
   onOpenScanner,
   onOpenManualMeasurementDialog,
@@ -172,9 +167,6 @@ export function AdminScanSection({
               <Typography variant="h4" sx={{ fontSize: { xs: '1.45rem', sm: '2rem' } }}>
                 Messwerte erfassen
               </Typography>
-              
-              {scanStatus ? <Alert severity="success">{scanStatus}</Alert> : null}
-              {scanError ? <Alert severity="error">{scanError}</Alert> : null}
               <Button variant="contained" startIcon={<QrCodeScannerIcon />} onClick={onOpenScanner} fullWidth>
                 Scanner öffnen
               </Button>

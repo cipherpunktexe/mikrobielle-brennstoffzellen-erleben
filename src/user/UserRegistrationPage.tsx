@@ -1,7 +1,6 @@
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1'
 import {
-  Alert,
   Button,
   Card,
   CardContent,
@@ -12,10 +11,12 @@ import {
 } from '@mui/material'
 import { type FormEvent, useState } from 'react'
 import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom'
+import { useAppSnackbar } from '../common/AppSnackbarProvider'
 import { formatCode } from '../common/format'
 import { registerUserWithGenerator } from '../data/firebaseData'
 
 export function UserRegistrationPage() {
+  const { showSnackbar } = useAppSnackbar()
   const navigate = useNavigate()
   const params = useParams()
   const scannedCode = formatCode(params.code ?? '')
@@ -24,29 +25,28 @@ export function UserRegistrationPage() {
     email: '',
     password: '',
   })
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setLoading(true)
-    setError('')
-    setSuccess('')
 
     try {
       await registerUserWithGenerator({
         ...formValues,
         code: scannedCode,
       })
-      setSuccess('Account und Brennstoffzelle wurden erfolgreich angelegt.')
+      showSnackbar({
+        message: 'Account und Brennstoffzelle wurden erfolgreich angelegt.',
+        severity: 'success',
+      })
       navigate('/user')
     } catch (submitError) {
       const message =
         submitError instanceof Error
           ? submitError.message
           : 'Registrierung konnte nicht abgeschlossen werden.'
-      setError(message)
+      showSnackbar({ message, severity: 'error' })
     } finally {
       setLoading(false)
     }
@@ -68,9 +68,6 @@ export function UserRegistrationPage() {
                   erstellt und direkt mit dem neuen Nutzerkonto verknüpft.
                 </Typography>
               </div>
-
-              {error ? <Alert severity="error">{error}</Alert> : null}
-              {success ? <Alert severity="success">{success}</Alert> : null}
 
               <Stack component="form" spacing={2} onSubmit={handleSubmit}>
                 <TextField

@@ -244,6 +244,54 @@ export function AdminPage() {
   })
 
   useEffect(() => {
+    if (!exportStatus.trim()) {
+      return
+    }
+
+    showSnackbar({ message: exportStatus, severity: 'success' })
+  }, [exportStatus, showSnackbar])
+
+  useEffect(() => {
+    if (!exportError.trim()) {
+      return
+    }
+
+    showSnackbar({ message: exportError, severity: 'error' })
+  }, [exportError, showSnackbar])
+
+  useEffect(() => {
+    if (!scanStatus.trim()) {
+      return
+    }
+
+    showSnackbar({ message: scanStatus, severity: 'success' })
+  }, [scanStatus, showSnackbar])
+
+  useEffect(() => {
+    if (!scanError.trim()) {
+      return
+    }
+
+    showSnackbar({ message: scanError, severity: 'error' })
+  }, [scanError, showSnackbar])
+
+  useEffect(() => {
+    if (!moderationStatus.trim()) {
+      return
+    }
+
+    showSnackbar({ message: moderationStatus, severity: 'success' })
+  }, [moderationStatus, showSnackbar])
+
+  useEffect(() => {
+    if (!moderationError.trim()) {
+      return
+    }
+
+    showSnackbar({ message: moderationError, severity: 'error' })
+  }, [moderationError, showSnackbar])
+
+  useEffect(() => {
     return subscribeToAuth((user) => {
       setAuthUserId(user?.uid ?? '')
     })
@@ -1045,8 +1093,6 @@ export function AdminPage() {
 
       {activeTab === 'qr' ? (
         <AdminQrSection
-          exportStatus={exportStatus}
-          exportError={exportError}
           exportStepOpen={exportStepOpen}
           exportCount={exportCount}
           exportQrSize={exportQrSize}
@@ -1071,8 +1117,6 @@ export function AdminPage() {
 
       {activeTab === 'scan' ? (
         <AdminScanSection
-          scanStatus={scanStatus}
-          scanError={scanError}
           recentMeasurements={recentMeasurements}
           onOpenScanner={() => setScannerOpen(true)}
           onOpenManualMeasurementDialog={handleOpenManualMeasurementDialog}
@@ -1082,8 +1126,6 @@ export function AdminPage() {
 
       {activeTab === 'moderation' ? (
         <AdminModerationSection
-          moderationStatus={moderationStatus}
-          moderationError={moderationError}
           moderationLoading={moderationLoading}
           moderationSearch={moderationSearch}
           moderationSearchOpen={moderationSearchOpen}

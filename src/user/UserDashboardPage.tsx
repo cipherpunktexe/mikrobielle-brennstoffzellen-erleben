@@ -32,6 +32,7 @@ import { Link as RouterLink } from 'react-router-dom'
 import { MeasurementChart } from '../common/MeasurementChart'
 import { MeasurementMetricsCard } from '../common/MeasurementMetricsCard'
 import { AuthCard } from '../common/AuthCard'
+import { useAppSnackbar } from '../common/AppSnackbarProvider'
 import { UnifiedList, type UnifiedListColumn } from '../common/UnifiedList'
 import { QrScannerDialog } from '../common/qr/QrScannerDialog'
 import { createContextMeasurementFormatter, formatMeasurement, formatTimestamp } from '../common/format'
@@ -57,6 +58,7 @@ import type {
 type MeasurementViewMode = 'chart' | 'list'
 
 export function UserDashboardPage() {
+  const { showSnackbar } = useAppSnackbar()
   const [authUserId, setAuthUserId] = useState('')
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [generator, setGenerator] = useState<Generator | null>(null)
@@ -65,16 +67,12 @@ export function UserDashboardPage() {
   const [loadingAuth, setLoadingAuth] = useState(true)
   const [authLoading, setAuthLoading] = useState(false)
   const [authError, setAuthError] = useState('')
-  const [linkStatus, setLinkStatus] = useState('')
-  const [linkError, setLinkError] = useState('')
   const [scannerOpen, setScannerOpen] = useState(false)
   const [measurementViewMode, setMeasurementViewMode] = useState<MeasurementViewMode>('list')
   const [profileMenuAnchor, setProfileMenuAnchor] = useState<null | HTMLElement>(null)
   const [nameDialogOpen, setNameDialogOpen] = useState(false)
   const [displayNameInput, setDisplayNameInput] = useState('')
   const [displayNameLoading, setDisplayNameLoading] = useState(false)
-  const [displayNameError, setDisplayNameError] = useState('')
-  const [displayNameStatus, setDisplayNameStatus] = useState('')
   const [formValues, setFormValues] = useState({
     email: '',
     password: '',
@@ -144,9 +142,6 @@ export function UserDashboardPage() {
   }
 
   async function handleQrDetected(value: string) {
-    setLinkError('')
-    setLinkStatus('')
-
     try {
       const code = extractGeneratorCodeFromQrValue(value)
 
@@ -155,14 +150,19 @@ export function UserDashboardPage() {
       }
 
       const linkedGenerator = await linkCurrentUserToGeneratorByCode(code)
-      setLinkStatus(`Brennstoffzelle ${linkedGenerator.code} wurde erfolgreich verknüpft.`)
+      showSnackbar({
+        message: `Brennstoffzelle ${linkedGenerator.code} wurde erfolgreich verknüpft.`,
+        severity: 'success',
+      })
       setScannerOpen(false)
     } catch (linkingError) {
-      setLinkError(
-        linkingError instanceof Error
-          ? linkingError.message
-          : 'Die Brennstoffzelle konnte nicht verknüpft werden.',
-      )
+      showSnackbar({
+        message:
+          linkingError instanceof Error
+            ? linkingError.message
+            : 'Die Brennstoffzelle konnte nicht verknüpft werden.',
+        severity: 'error',
+      })
     }
   }
 
@@ -177,7 +177,6 @@ export function UserDashboardPage() {
   function handleOpenNameDialog() {
     handleCloseProfileMenu()
     setDisplayNameInput(profile?.name ?? '')
-    setDisplayNameError('')
     setNameDialogOpen(true)
   }
 
@@ -187,25 +186,24 @@ export function UserDashboardPage() {
     }
 
     setNameDialogOpen(false)
-    setDisplayNameError('')
   }
 
   async function handleDisplayNameSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setDisplayNameLoading(true)
-    setDisplayNameError('')
-    setDisplayNameStatus('')
 
     try {
       await updateCurrentUserDisplayName(displayNameInput)
-      setDisplayNameStatus('Anzeigename aktualisiert.')
+      showSnackbar({ message: 'Anzeigename aktualisiert.', severity: 'success' })
       setNameDialogOpen(false)
     } catch (updateError) {
-      setDisplayNameError(
-        updateError instanceof Error
-          ? updateError.message
-          : 'Der Anzeigename konnte nicht aktualisiert werden.',
-      )
+      showSnackbar({
+        message:
+          updateError instanceof Error
+            ? updateError.message
+            : 'Der Anzeigename konnte nicht aktualisiert werden.',
+        severity: 'error',
+      })
     } finally {
       setDisplayNameLoading(false)
     }
@@ -344,11 +342,6 @@ export function UserDashboardPage() {
         </IconButton>
       </Stack>
 
-      {displayNameStatus ? <Alert severity="success">{displayNameStatus}</Alert> : null}
-
-      {linkStatus ? <Alert severity="success">{linkStatus}</Alert> : null}
-      {linkError ? <Alert severity="error">{linkError}</Alert> : null}
-
       <Card>
         <CardContent sx={{ p: { xs: 2.25, sm: 2.5 } }}>
           <Grid container spacing={{ xs: 1.5, sm: 2 }} alignItems="center">
@@ -368,8 +361,6 @@ export function UserDashboardPage() {
                     size="small"
                     sx={{ alignSelf: 'flex-start' }}
                     onClick={() => {
-                      setLinkError('')
-                      setLinkStatus('')
                       setScannerOpen(true)
                     }}
                   >
@@ -493,7 +484,6 @@ export function UserDashboardPage() {
                 autoFocus
                 fullWidth
               />
-              {displayNameError ? <Alert severity="error">{displayNameError}</Alert> : null}
             </Stack>
           </DialogContent>
           <DialogActions>

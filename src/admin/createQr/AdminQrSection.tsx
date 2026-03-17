@@ -1,7 +1,6 @@
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import SaveIcon from '@mui/icons-material/Save'
 import {
-  Alert,
   Box,
   Button,
   Card,
@@ -19,8 +18,6 @@ import type { QrCodeNumberPlacement, QrPdfPageSize } from '../../common/qr/qr'
 import type { QrExportStepKey } from '../types'
 
 interface AdminQrSectionProps {
-  exportStatus: string
-  exportError: string
   exportStepOpen: Record<QrExportStepKey, boolean>
   exportCount: string
   exportQrSize: string
@@ -43,8 +40,6 @@ interface AdminQrSectionProps {
 }
 
 export function AdminQrSection({
-  exportStatus,
-  exportError,
   exportStepOpen,
   exportCount,
   exportQrSize,
@@ -92,8 +87,6 @@ export function AdminQrSection({
                   QR-Export
                 </Typography>
               </Box>
-              {exportStatus ? <Alert severity="success">{exportStatus}</Alert> : null}
-              {exportError ? <Alert severity="error">{exportError}</Alert> : null}
               <Stack spacing={{ xs: 1.2, sm: 2 }}>
                 <Stack direction="row" spacing={{ xs: 1, sm: 1.5 }} alignItems="flex-start">
                   <Chip label="1" color="primary" sx={stepChipSx} />

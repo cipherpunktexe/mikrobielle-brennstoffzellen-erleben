@@ -1,6 +1,5 @@
-﻿import MoreVertIcon from '@mui/icons-material/MoreVert'
+import MoreVertIcon from '@mui/icons-material/MoreVert'
 import {
-  Alert,
   Badge,
   Box,
   Card,
@@ -16,8 +15,6 @@ import type { ModerationListEntry } from '../types'
 import { ModerationList } from './ModerationList'
 
 interface AdminModerationSectionProps {
-  moderationStatus: string
-  moderationError: string
   moderationLoading: boolean
   moderationSearch: string
   moderationSearchOpen: boolean
@@ -37,8 +34,6 @@ interface AdminModerationSectionProps {
 }
 
 export function AdminModerationSection({
-  moderationStatus,
-  moderationError,
   moderationLoading,
   moderationSearch,
   moderationSearchOpen,
@@ -58,8 +53,6 @@ export function AdminModerationSection({
     <Card>
       <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
         <Stack spacing={2}>
-          {moderationStatus ? <Alert severity="success">{moderationStatus}</Alert> : null}
-          {moderationError ? <Alert severity="error">{moderationError}</Alert> : null}
 
           {moderationLoading ? (
             <Stack alignItems="center" justifyContent="center" sx={{ py: 6 }}>
