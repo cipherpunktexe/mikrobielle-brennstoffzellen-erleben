@@ -321,34 +321,33 @@ export function UnifiedList<TItem>({
             </Typography>
           ))}
         </Box>
+        <List disablePadding aria-label={ariaLabel}>
+          {items.length ? (
+            items.map((item, index) => {
+              return (
+                <UnifiedListRow
+                  key={getItemKey(item, index)}
+                  item={item}
+                  isLastItem={index === items.length - 1}
+                  preparedColumns={preparedColumns}
+                  desktopGridTemplate={desktopGridTemplate}
+                  minDesktopWidth={minDesktopWidth}
+                  onItemClick={onItemClick}
+                  isItemDisabled={isItemDisabled}
+                  getItemAriaLabel={getItemAriaLabel}
+                  renderItemAction={renderItemAction}
+                  renderMobileRow={renderMobileRow}
+                  forceDesktopLayoutOnMobile={forceDesktopLayoutOnMobile}
+                />
+              )
+            })
+          ) : (
+            <ListItem sx={{ px: 1.5, py: 1.5 }}>
+              <ListItemText primary={emptyPrimary} secondary={emptySecondary} />
+            </ListItem>
+          )}
+        </List>
       </Box>
-
-      <List disablePadding aria-label={ariaLabel}>
-        {items.length ? (
-          items.map((item, index) => {
-            return (
-              <UnifiedListRow
-                key={getItemKey(item, index)}
-                item={item}
-                isLastItem={index === items.length - 1}
-                preparedColumns={preparedColumns}
-                desktopGridTemplate={desktopGridTemplate}
-                minDesktopWidth={minDesktopWidth}
-                onItemClick={onItemClick}
-                isItemDisabled={isItemDisabled}
-                getItemAriaLabel={getItemAriaLabel}
-                renderItemAction={renderItemAction}
-                renderMobileRow={renderMobileRow}
-                forceDesktopLayoutOnMobile={forceDesktopLayoutOnMobile}
-              />
-            )
-          })
-        ) : (
-          <ListItem sx={{ px: 1.5, py: 1.5 }}>
-            <ListItemText primary={emptyPrimary} secondary={emptySecondary} />
-          </ListItem>
-        )}
-      </List>
     </Box>
   )
 }

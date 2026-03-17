@@ -231,7 +231,7 @@ export function UserDashboardPage() {
       key: 'time',
       header: 'Zeitpunkt',
       mobileLabel: 'Zeitpunkt',
-      width: 'minmax(0, 1fr)',
+      width: 'minmax(120px, 1fr)',
       render: (measurement) => (
         <Typography variant="body2">{formatTimestamp(measurement.createdAt)}</Typography>
       ),
@@ -240,10 +240,10 @@ export function UserDashboardPage() {
       key: 'value',
       header: 'Wert',
       mobileLabel: 'Wert',
-      width: '130px',
+      width: '86px',
       align: 'right',
       render: (measurement) => (
-        <Typography variant="body2" sx={{ fontWeight: 700 }}>
+        <Typography variant="body2" sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>
           {formatMeasurement(measurement.value)}
         </Typography>
       ),
@@ -456,34 +456,7 @@ export function UserDashboardPage() {
                     getItemKey={(measurement) => measurement.id}
                     ariaLabel="Messwerthistorie"
                     emptyPrimary="Noch keine Messwerte"
-                    renderMobileRow={(measurement) => (
-                      <Stack
-                        direction="row"
-                        justifyContent="space-between"
-                        alignItems="center"
-                        spacing={1.5}
-                        sx={{ minWidth: 0 }}
-                      >
-                        <Typography
-                          variant="body2"
-                          color="text.secondary"
-                          sx={{ overflowWrap: 'anywhere', fontWeight: 600, pr: 1 }}
-                        >
-                          {formatTimestamp(measurement.createdAt)}
-                        </Typography>
-                        <Typography
-                          sx={{
-                            fontWeight: 800,
-                            fontSize: '1.15rem',
-                            lineHeight: 1.1,
-                            textAlign: 'right',
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          {formatMeasurement(measurement.value)}
-                        </Typography>
-                      </Stack>
-                    )}
+                    minDesktopWidth={236}
                   />
                 )}
               </>
