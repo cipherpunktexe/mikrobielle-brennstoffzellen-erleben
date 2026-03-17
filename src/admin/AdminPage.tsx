@@ -27,6 +27,7 @@ import { BlockedDialog } from './moderate/BlockedDialog'
 import { TrashDialog } from './moderate/TrashDialog'
 import { GeneratorMeasurementsDialog } from './createQr/GeneratorMeasurementsDialog'
 import { ScanMeasurementDialog } from './createQr/ScanMeasurementDialog'
+import { MeasurementFormDialog } from './createQr/MeasurementFormDialog'
 import { AuthCard } from '../common/AuthCard'
 import { QrScannerDialog } from '../common/qr/QrScannerDialog'
 import { formatCode } from '../common/format'
@@ -169,6 +170,13 @@ export function AdminPage() {
   const [scanMeasurementSaving, setScanMeasurementSaving] = useState(false)
   const [scanMeasurementError, setScanMeasurementError] = useState('')
   const [recentMeasurements, setRecentMeasurements] = useState<AdminRecentMeasurementItem[]>([])
+  const [editingRecentMeasurement, setEditingRecentMeasurement] =
+    useState<AdminRecentMeasurementItem | null>(null)
+  const [recentMeasurementForm, setRecentMeasurementForm] = useState<MeasurementFormState>(
+    createEmptyMeasurementForm,
+  )
+  const [recentMeasurementSaving, setRecentMeasurementSaving] = useState(false)
+  const [recentMeasurementError, setRecentMeasurementError] = useState('')
 
   const [moderationUsers, setModerationUsers] = useState<UserProfile[]>([])
   const [moderationGenerators, setModerationGenerators] = useState<Generator[]>([])
@@ -748,24 +756,73 @@ export function AdminPage() {
     }
   }
 
-  async function handleEditRecentMeasurement(item: AdminRecentMeasurementItem) {
+  function handleEditRecentMeasurement(item: AdminRecentMeasurementItem) {
+    setScanStatus('')
+    setScanError('')
+    setRecentMeasurementError('')
+    setEditingRecentMeasurement(item)
+    setRecentMeasurementForm({
+      value: item.value.toString(),
+      enteredBy: item.enteredBy,
+    })
+  }
+
+  function handleCloseRecentMeasurementEditor() {
+    if (recentMeasurementSaving) {
+      return
+    }
+
+    setEditingRecentMeasurement(null)
+    setRecentMeasurementForm(createEmptyMeasurementForm())
+    setRecentMeasurementError('')
+  }
+
+  async function handleSaveRecentMeasurement(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+
+    if (!editingRecentMeasurement) {
+      return
+    }
+
+    setRecentMeasurementSaving(true)
+    setRecentMeasurementError('')
     setScanStatus('')
     setScanError('')
 
     try {
-      const generator = await getGeneratorByCode(item.generatorCode)
+      const numericValue = Number.parseFloat(recentMeasurementForm.value)
 
-      if (!generator) {
-        throw new Error('Die Brennstoffzelle zu diesem Eintrag wurde nicht gefunden.')
+      if (Number.isNaN(numericValue)) {
+        throw new Error('Bitte einen gÃ¼ltigen Messwert in V eingeben.')
       }
 
-      await handleOpenGeneratorMeasurements(generator, item.id)
-    } catch (editIssue) {
-      setScanError(
-        editIssue instanceof Error
-          ? editIssue.message
-          : 'Der Messwert konnte nicht zum Bearbeiten geÃ¶ffnet werden.',
+      await updateMeasurementAsAdmin(editingRecentMeasurement.id, {
+        value: numericValue,
+        enteredBy: recentMeasurementForm.enteredBy,
+      })
+
+      const enteredBy = profile?.email?.trim() || authUserId
+
+      if (enteredBy) {
+        await loadRecentMeasurements(enteredBy)
+      }
+
+      if (selectedMeasurementGenerator?.id === editingRecentMeasurement.generatorId) {
+        await loadGeneratorMeasurements(selectedMeasurementGenerator.id)
+      }
+
+      setScanStatus(
+        `Messwert fÃ¼r ${editingRecentMeasurement.generatorCode.toUpperCase()} wurde aktualisiert.`,
       )
+      setEditingRecentMeasurement(null)
+      setRecentMeasurementForm(createEmptyMeasurementForm())
+      setRecentMeasurementError('')
+    } catch (saveIssue) {
+      setRecentMeasurementError(
+        saveIssue instanceof Error ? saveIssue.message : 'Messwert konnte nicht gespeichert werden.',
+      )
+    } finally {
+      setRecentMeasurementSaving(false)
     }
   }
 
@@ -961,9 +1018,7 @@ export function AdminPage() {
           recentMeasurements={recentMeasurements}
           onOpenScanner={() => setScannerOpen(true)}
           onOpenManualMeasurementDialog={handleOpenManualMeasurementDialog}
-          onEditRecentMeasurement={(measurement) => {
-            void handleEditRecentMeasurement(measurement)
-          }}
+          onEditRecentMeasurement={handleEditRecentMeasurement}
         />
       ) : null}
 
@@ -1083,6 +1138,37 @@ export function AdminPage() {
         onSetScanMeasurementUnit={setScanMeasurementUnit}
         onSetScanMeasurementDateTime={setScanMeasurementDateTime}
         formatScientificVolts={formatScientificVolts}
+      />
+
+      <MeasurementFormDialog
+        open={Boolean(editingRecentMeasurement)}
+        title={
+          editingRecentMeasurement
+            ? `Messwert ${editingRecentMeasurement.generatorCode.toUpperCase()} bearbeiten`
+            : 'Messwert bearbeiten'
+        }
+        submitLabel="Speichern"
+        saving={recentMeasurementSaving}
+        error={recentMeasurementError}
+        onClose={handleCloseRecentMeasurementEditor}
+        onSubmit={handleSaveRecentMeasurement}
+        valueField={{
+          value: recentMeasurementForm.value,
+          onChange: (value) =>
+            setRecentMeasurementForm((current) => ({
+              ...current,
+              value,
+            })),
+          autoFocus: true,
+        }}
+        enteredByField={{
+          value: recentMeasurementForm.enteredBy,
+          onChange: (enteredBy) =>
+            setRecentMeasurementForm((current) => ({
+              ...current,
+              enteredBy,
+            })),
+        }}
       />
     </Stack>
   )

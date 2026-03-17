@@ -14,7 +14,7 @@ import {
   Typography,
 } from '@mui/material'
 import { useEffect, useState } from 'react'
-import { formatMeasurement, formatTimestamp } from '../../common/format'
+import { formatElapsedTime, formatMeasurement } from '../../common/format'
 import { UnifiedList, type UnifiedListColumn } from '../../common/UnifiedList'
 import type { AdminRecentMeasurementItem } from '../../data/firebaseData'
 
@@ -52,26 +52,20 @@ export function AdminScanSection({
       mobileLabel: 'Code',
       width: 'minmax(96px, 120px)',
       render: (item) => (
-        <Box>
-          <Typography
-            variant="body2"
-            sx={{ fontFamily: '"Consolas", "Courier New", monospace', fontWeight: 700 }}
-          >
-            {item.generatorCode.toUpperCase()}
-          </Typography>
-          {item.ownerName ? (
-            <Typography variant="caption" color="text.secondary">
-              {item.ownerName}
-            </Typography>
-          ) : null}
-        </Box>
+        <Typography
+          variant="body2"
+          sx={{ fontFamily: '"Consolas", "Courier New", monospace', fontWeight: 700 }}
+        >
+          {item.generatorCode.toUpperCase()}
+        </Typography>
       ),
     },
     {
       key: 'value',
-      header: 'Wert',
-      mobileLabel: 'Wert',
+      header: 'Messwert',
+      mobileLabel: 'Messwert',
       width: 'minmax(110px, 140px)',
+      align: 'right',
       render: (item) => (
         <Typography variant="body2" fontWeight={600}>
           {formatMeasurement(item.value)}
@@ -79,11 +73,11 @@ export function AdminScanSection({
       ),
     },
     {
-      key: 'time',
-      header: 'Zeitpunkt',
-      mobileLabel: 'Zeitpunkt',
+      key: 'elapsed',
+      header: 'Vergangene Zeit',
+      mobileLabel: 'Zeit',
       width: 'minmax(0, 1fr)',
-      render: (item) => <Typography variant="body2">{formatTimestamp(item.createdAt)}</Typography>,
+      render: (item) => <Typography variant="body2">{formatElapsedTime(item.createdAt)}</Typography>,
     },
   ]
 
@@ -112,11 +106,6 @@ export function AdminScanSection({
           >
             {item.generatorCode.toUpperCase()}
           </Typography>
-          {item.ownerName ? (
-            <Typography variant="caption" color="text.secondary" noWrap>
-              {item.ownerName}
-            </Typography>
-          ) : null}
         </Stack>
 
         <Typography
@@ -128,7 +117,7 @@ export function AdminScanSection({
         </Typography>
 
         <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.2 }}>
-          {formatTimestamp(item.createdAt)}
+          {formatElapsedTime(item.createdAt)}
         </Typography>
       </Box>
     )
@@ -143,9 +132,7 @@ export function AdminScanSection({
               <Typography variant="h4" sx={{ fontSize: { xs: '1.45rem', sm: '2rem' } }}>
                 Messwerte erfassen
               </Typography>
-              <Typography color="text.secondary">
-                Scanne einen QR-Code oder trage einen Messwert manuell ein.
-              </Typography>
+              
               {scanStatus ? <Alert severity="success">{scanStatus}</Alert> : null}
               {scanError ? <Alert severity="error">{scanError}</Alert> : null}
               <Button variant="contained" startIcon={<QrCodeScannerIcon />} onClick={onOpenScanner} fullWidth>
@@ -171,9 +158,7 @@ export function AdminScanSection({
               <Typography variant="h4" sx={{ fontSize: { xs: '1.45rem', sm: '2rem' } }}>
                 Letzte eigene Einträge
               </Typography>
-              <Typography color="text.secondary">
-                Hier siehst du die zuletzt von dir eingetragenen Messwerte.
-              </Typography>
+              
               <UnifiedList
                 items={visibleRecentMeasurements}
                 columns={columns}
@@ -181,13 +166,11 @@ export function AdminScanSection({
                 ariaLabel="Letzte eigene Messwerte"
                 emptyPrimary="Noch keine eigenen Messwerte"
                 emptySecondary="Sobald du Werte speicherst, erscheinen sie hier."
-                onItemClick={onEditRecentMeasurement}
                 renderItemAction={(item) => (
                   <IconButton
                     size="small"
                     aria-label={`Messwert ${formatMeasurement(item.value)} von ${item.generatorCode.toUpperCase()} bearbeiten`}
                     onClick={() => onEditRecentMeasurement(item)}
-                    sx={{ display: { xs: 'none', sm: 'inline-flex' } }}
                   >
                     <EditNoteIcon fontSize="small" />
                   </IconButton>

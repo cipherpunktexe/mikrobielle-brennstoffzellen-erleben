@@ -11,6 +11,39 @@ export function formatTimestamp(timestamp?: Timestamp | null) {
   }).format(timestamp.toDate())
 }
 
+const relativeTimeFormat = new Intl.RelativeTimeFormat('de-DE', { numeric: 'auto' })
+
+export function formatElapsedTime(timestamp?: Timestamp | null, now = new Date()) {
+  if (!timestamp) {
+    return 'unbekannt'
+  }
+
+  const deltaSeconds = Math.round((timestamp.toDate().getTime() - now.getTime()) / 1000)
+  const absoluteSeconds = Math.abs(deltaSeconds)
+
+  if (absoluteSeconds < 30) {
+    return 'gerade eben'
+  }
+
+  if (absoluteSeconds < 3600) {
+    return relativeTimeFormat.format(Math.round(deltaSeconds / 60), 'minute')
+  }
+
+  if (absoluteSeconds < 86_400) {
+    return relativeTimeFormat.format(Math.round(deltaSeconds / 3600), 'hour')
+  }
+
+  if (absoluteSeconds < 2_592_000) {
+    return relativeTimeFormat.format(Math.round(deltaSeconds / 86_400), 'day')
+  }
+
+  if (absoluteSeconds < 31_536_000) {
+    return relativeTimeFormat.format(Math.round(deltaSeconds / 2_592_000), 'month')
+  }
+
+  return relativeTimeFormat.format(Math.round(deltaSeconds / 31_536_000), 'year')
+}
+
 function trimTrailingMantissaZeros(mantissa: string) {
   if (!mantissa.includes('.')) {
     return mantissa
