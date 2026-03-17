@@ -1,14 +1,11 @@
 # Mikrobielle Brennstoffzellen erlernen
 
-React- und Firebase-basierte Web-App fuer ein Schulprojekt rund um mikrobielle Brennstoffzellen.
-Die Anwendung kombiniert Landingpage, User-Flow, Admin-Workflow und ein Live-Leaderboard.
 
 ## Aktueller Stand
 
 - SPA mit React 19, Vite 8, TypeScript und MUI 7.
-- Authentifizierung ueber Firebase Authentication (E-Mail/Passwort und Google).
+- Authentifizierung über Firebase Authentication (E-Mail/Passwort und Google).
 - Datenhaltung in Cloud Firestore (`users`, `generators`, `measurements`, `adminState`).
-- Landingpage enthaelt aktuell noch Platzhalterinhalte (`Lorem ipsum`) plus eingebettete Canva-Praesentation.
 
 ## Hauptfunktionen
 
@@ -20,9 +17,9 @@ Die Anwendung kombiniert Landingpage, User-Flow, Admin-Workflow und ein Live-Lea
 
 ### User-Flow
 
-- Registrierung ueber QR-Link: `/register/:code`.
+- Registrierung über QR-Link: `/register/:code`.
 - Login mit E-Mail/Passwort oder Google.
-- Verknuepfung einer Brennstoffzelle ueber Scanner oder Code-Eingabe im User-Dashboard.
+- Verknuepfung einer Brennstoffzelle über Scanner oder Code-Eingabe im User-Dashboard.
 - Anzeige von:
   - eigenem Brennstoffzellen-Code
   - Platzierung im Leaderboard (nach Maximalwert)
@@ -34,7 +31,7 @@ Die Anwendung kombiniert Landingpage, User-Flow, Admin-Workflow und ein Live-Lea
   - `scan`: QR scannen oder manuell Messwert erfassen
   - `qr`: QR-Codes als PDF exportieren
   - `moderation`: Nutzer/Brennstoffzellen einsehen und moderieren
-- QR-Export reserviert fortlaufende Codes (hexadezimal) ueber `adminState/qr-export-counter`.
+- QR-Export reserviert fortlaufende Codes (hexadezimal) über `adminState/qr-export-counter`.
 - Moderation unterstuetzt u. a. Rollenpflege, Statuswechsel (`active`, `blocked`, `deleted`) und Messwertbearbeitung.
 
 ## Routing
@@ -46,9 +43,42 @@ Die Anwendung kombiniert Landingpage, User-Flow, Admin-Workflow und ein Live-Lea
 - `/admin/:tab` -> Admin-Bereich mit aktivem Tab (`scan`, `qr`, `moderation`)
 - `/admin/:tab/generator/:code` -> Admin-Scan/Messung fuer konkreten Code
 - `/leaderboard` -> Leaderboard
-- `/ueber-uns` -> Ueber uns
+- `/ueber-uns` -> Über uns
 - `/impressum` -> Impressum
 - `/datenschutz` -> Datenschutz
+- `/api/leaderboard` -> oeffentliche JSON-API fuer eingebettete Leaderboards
+
+## Externe Leaderboard API
+
+Die API ist fuer externe Webseiten gedacht (CORS: `*`).
+
+- Endpoint: `GET /api/leaderboard`
+- Optionaler Query-Parameter: `limit` (1-500, default 100)
+
+Beispiel:
+
+```bash
+curl "https://mikrobielle-brennstoffzellen.web.app/api/leaderboard?limit=10"
+```
+
+Antwort:
+
+```json
+{
+  "generatedAt": "2026-03-17T14:40:00.000Z",
+  "count": 10,
+  "entries": [
+    {
+      "rank": 1,
+      "generatorId": "abc123",
+      "code": "00AF",
+      "displayName": "Team A",
+      "maxValue": 2.1,
+      "maxMeasuredAt": "2026-03-17T12:00:00.000Z"
+    }
+  ]
+}
+```
 
 ## QR- und Code-Flow
 
@@ -207,7 +237,7 @@ Deploy:
 
 ```bash
 npm run build
-cmd /c "firebase deploy --only hosting"
+cmd /c "firebase deploy --only hosting,functions"
 ```
 
 `cmd /c` ist unter Windows nuetzlich, wenn `firebase.ps1` in PowerShell blockiert ist.
