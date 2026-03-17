@@ -1,10 +1,6 @@
 import EditNoteIcon from '@mui/icons-material/EditNote'
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner'
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
   Alert,
   Button,
   Card,
@@ -15,7 +11,6 @@ import {
   Stack,
   Typography,
 } from '@mui/material'
-import { useState } from 'react'
 import { formatElapsedTime, formatMeasurement } from '../../common/format'
 import { UnifiedList, type UnifiedListColumn } from '../../common/UnifiedList'
 import type { AdminRecentMeasurementItem } from '../../data/firebaseData'
@@ -37,11 +32,16 @@ export function AdminScanSection({
   onOpenManualMeasurementDialog,
   onEditRecentMeasurement,
 }: AdminScanSectionProps) {
-  const [showAllRecent, setShowAllRecent] = useState(false)
-  const hiddenRecentCount = Math.max(0, recentMeasurements.length - 3)
-  const recentPreviewMeasurements = recentMeasurements.slice(0, 3)
-  const hiddenRecentMeasurements = recentMeasurements.slice(3)
-  const isExpanded = hiddenRecentCount > 0 && showAllRecent
+  const sixHoursInMs = 6 * 60 * 60 * 1000
+  const nowMs = Date.now()
+  const recentMeasurementsInLastSixHours = recentMeasurements.filter((item) => {
+    if (!item.createdAt) {
+      return false
+    }
+
+    const elapsedMs = nowMs - item.createdAt.toDate().getTime()
+    return elapsedMs >= 0 && elapsedMs <= sixHoursInMs
+  })
 
   const columns: UnifiedListColumn<AdminRecentMeasurementItem>[] = [
     {
@@ -146,48 +146,15 @@ export function AdminScanSection({
               </Typography>
               
               <UnifiedList
-                items={recentPreviewMeasurements}
+                items={recentMeasurementsInLastSixHours}
                 columns={columns}
                 getItemKey={(item) => item.id}
                 ariaLabel="Letzte eigene Messwerte"
                 emptyPrimary="Noch keine eigenen Messwerte"
-                emptySecondary="Sobald du Werte speicherst, erscheinen sie hier."
+                emptySecondary="Es werden nur Einträge aus den letzten 6 Stunden angezeigt."
                 forceDesktopLayoutOnMobile
                 minDesktopWidth={260}
               />
-              {hiddenRecentCount > 0 ? (
-                <Accordion
-                  disableGutters
-                  elevation={0}
-                  expanded={isExpanded}
-                  onChange={(_event, expanded) => setShowAllRecent(expanded)}
-                  sx={{
-                    border: '1px solid rgba(121,101,66,0.14)',
-                    borderRadius: 2.5,
-                    bgcolor: 'rgba(255,255,255,0.16)',
-                    '&:before': {
-                      display: 'none',
-                    },
-                  }}
-                >
-                  <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ minHeight: 44 }}>
-                    <Typography fontWeight={600}>
-                      {isExpanded ? 'Weniger anzeigen' : `Mehr anzeigen (${hiddenRecentCount})`}
-                    </Typography>
-                  </AccordionSummary>
-                  <AccordionDetails sx={{ pt: 0 }}>
-                    <UnifiedList
-                      items={hiddenRecentMeasurements}
-                      columns={columns}
-                      getItemKey={(item) => item.id}
-                      ariaLabel="Weitere eigene Messwerte"
-                      emptyPrimary="Keine weiteren Messwerte"
-                      forceDesktopLayoutOnMobile
-                      minDesktopWidth={260}
-                    />
-                  </AccordionDetails>
-                </Accordion>
-              ) : null}
             </Stack>
           </CardContent>
         </Card>
