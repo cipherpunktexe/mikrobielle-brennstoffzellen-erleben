@@ -48,7 +48,7 @@ export function MeasurementChart({ measurements }: MeasurementChartProps) {
         sx={{
           borderRadius: '18px',
           border: `1px solid ${alpha('#796542', 0.16)}`,
-          background: `linear-gradient(180deg, ${alpha('#FFF9EF', 0.96)}, ${alpha('#EFE6D4', 0.72)})`,
+          backgroundColor: alpha('#FFFFFF', 0.42),
           px: 1.5,
           py: 1.35,
         }}

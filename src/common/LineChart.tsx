@@ -29,6 +29,8 @@ export function LineChart({
   showActiveSummary = true,
 }: LineChartProps) {
   const theme = useTheme()
+  const chartColor = '#5F6B7A'
+  const chartColorDark = '#2C3440'
   const isMobileViewport = useMediaQuery(theme.breakpoints.down('sm'))
   const svgRef = useRef<SVGSVGElement | null>(null)
   const [activeIndex, setActiveIndex] = useState<number | null>(
@@ -161,8 +163,7 @@ export function LineChart({
             borderRadius: '18px',
             px: 1.75,
             py: 1.5,
-            background: `linear-gradient(135deg, ${alpha('#F8F2E7', 0.88)}, ${alpha('#EFE6D4', 0.68)})`,
-            boxShadow: `inset 0 1px 0 ${alpha('#FFFFFF', 0.65)}`,
+            backgroundColor: alpha('#FFFFFF', 0.48),
           }}
         >
           <Box sx={{ minWidth: 0 }}>
@@ -177,7 +178,7 @@ export function LineChart({
             <Typography variant="caption" color="text.secondary">
               {valueLabelTitle}
             </Typography>
-            <Typography variant="h5" sx={{ lineHeight: 1.05, color: '#241C13' }}>
+            <Typography variant="h5" sx={{ lineHeight: 1.05, color: chartColorDark }}>
               {valueFormatter(activePoint.point.value)}
             </Typography>
           </Box>
@@ -188,10 +189,9 @@ export function LineChart({
         sx={{
           border: `1px solid ${alpha('#796542', 0.16)}`,
           borderRadius: '22px',
-          background: `linear-gradient(180deg, ${alpha('#FFF9EF', 0.96)}, ${alpha('#F3E9D6', 0.72)})`,
+          backgroundColor: alpha('#FFFFFF', 0.34),
           p: { xs: 1.25, sm: 1.75 },
           touchAction: 'none',
-          boxShadow: `inset 0 1px 0 ${alpha('#FFFFFF', 0.7)}`,
         }}
       >
         <Box
@@ -212,13 +212,8 @@ export function LineChart({
         >
           <defs>
             <linearGradient id="chart-area-fill" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={alpha('#3DB1EC', 0.36)} />
-              <stop offset="100%" stopColor={alpha('#3DB1EC', 0.02)} />
-            </linearGradient>
-            <linearGradient id="chart-line-stroke" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#1F7A8C" />
-              <stop offset="50%" stopColor="#3DB1EC" />
-              <stop offset="100%" stopColor="#7AD12C" />
+              <stop offset="0%" stopColor={alpha(chartColor, 0.22)} />
+              <stop offset="100%" stopColor={alpha(chartColor, 0.02)} />
             </linearGradient>
           </defs>
 
@@ -228,7 +223,7 @@ export function LineChart({
             width={plotWidth}
             height={plotHeight}
             rx="20"
-            fill={alpha('#FFFCF6', 0.8)}
+            fill={alpha('#FFFFFF', 0.52)}
           />
 
           {yTicks.map((tick, index) => {
@@ -249,7 +244,7 @@ export function LineChart({
                   y={y + 4}
                   textAnchor="end"
                   fontSize="12"
-                  fill="#6A5A41"
+                  fill={alpha(chartColorDark, 0.78)}
                 >
                   {valueFormatter(tick)}
                 </text>
@@ -271,7 +266,7 @@ export function LineChart({
                 y={height - 12}
                 textAnchor="middle"
                 fontSize="12"
-                fill="#6A5A41"
+                fill={alpha(chartColorDark, 0.78)}
               >
                 {point.point.shortLabel ?? point.point.label}
               </text>
@@ -284,7 +279,7 @@ export function LineChart({
               y1={padding.top}
               x2={activePoint.x}
               y2={padding.top + plotHeight}
-              stroke={alpha('#1F7A8C', 0.32)}
+              stroke={alpha(chartColor, 0.32)}
               strokeDasharray="4 6"
             />
           ) : null}
@@ -293,7 +288,7 @@ export function LineChart({
           <polyline
             points={linePoints}
             fill="none"
-            stroke="url(#chart-line-stroke)"
+            stroke={chartColor}
             strokeWidth="4"
             strokeLinejoin="round"
             strokeLinecap="round"
@@ -309,15 +304,15 @@ export function LineChart({
                     cx={point.x}
                     cy={point.y}
                     r={12}
-                    fill={alpha('#3DB1EC', 0.16)}
+                    fill={alpha(chartColor, 0.16)}
                   />
                 ) : null}
                 <circle
                   cx={point.x}
                   cy={point.y}
                   r={isActive ? 6.5 : 4.75}
-                  fill={isActive ? '#F7C948' : '#7AD12C'}
-                  stroke="#241C13"
+                  fill={isActive ? chartColor : '#FFFFFF'}
+                  stroke={chartColorDark}
                   strokeWidth={isActive ? '2.5' : '2'}
                 />
               </g>
@@ -332,14 +327,15 @@ export function LineChart({
                 width={activeTooltipWidth}
                 height={activeTooltipHeight}
                 rx="14"
-                fill={alpha('#241C13', 0.94)}
+                fill={alpha('#FFFFFF', 0.95)}
+                stroke={alpha(chartColorDark, 0.25)}
               />
               <text
                 x={activeTooltipX + activeTooltipWidth / 2}
                 y={activeTooltipY + 18}
                 textAnchor="middle"
                 fontSize="11"
-                fill="#F8F2E7"
+                fill={alpha(chartColorDark, 0.78)}
               >
                 {activePoint.point.shortLabel ?? activePoint.point.label}
               </text>
@@ -349,7 +345,7 @@ export function LineChart({
                 textAnchor="middle"
                 fontSize="15"
                 fontWeight="700"
-                fill="#F7C948"
+                fill={chartColorDark}
               >
                 {valueFormatter(activePoint.point.value)}
               </text>
@@ -368,7 +364,7 @@ export function LineChart({
             borderRadius: '999px',
             px: 0.5,
             py: 0.25,
-            bgcolor: alpha('#F8F2E7', 0.6),
+            bgcolor: alpha('#FFFFFF', 0.5),
           }}
         >
           <IconButton
