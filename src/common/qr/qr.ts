@@ -62,7 +62,6 @@ function formatCode(code: string) {
   return code.trim().toLowerCase()
 }
 
-const QR_PREFIX = 'mbz:generator:'
 const DEFAULT_PUBLIC_APP_ORIGIN = resolvePublicAppOrigin()
 const PAGE_FORMATS: Record<StaticQrPdfPageSize, PageFormat[]> = {
   a4: [
@@ -265,31 +264,31 @@ export async function generateQrDataUrl(value: string, badgeLabel?: string) {
 
 export function extractGeneratorCodeFromQrValue(value: string, origin = window.location.origin) {
   const trimmedValue = value.trim()
+  const looksLikePlainCode = !/[/?#:\s]/.test(trimmedValue)
 
   if (!trimmedValue) {
     return ''
   }
 
-  if (trimmedValue.startsWith(QR_PREFIX)) {
-    return formatCode(trimmedValue.slice(QR_PREFIX.length))
+  const pathMatch = trimmedValue.match(/(?:^|\/)register\/([^/?#\s]+)/i)
+
+  if (pathMatch?.[1]) {
+    return formatCode(decodeURIComponent(pathMatch[1]))
   }
 
   try {
     const url = new URL(trimmedValue, origin)
     const pathSegments = url.pathname.split('/').filter(Boolean)
+    const registerIndex = pathSegments.findIndex((segment) => segment.toLowerCase() === 'register')
 
-    if (pathSegments[0] === 'register' && pathSegments[1]) {
-      return formatCode(decodeURIComponent(pathSegments[1]))
-    }
-
-    if (pathSegments[0] === 'admin' && pathSegments[1] === 'generator' && pathSegments[2]) {
-      return formatCode(decodeURIComponent(pathSegments[2]))
+    if (registerIndex >= 0 && pathSegments[registerIndex + 1]) {
+      return formatCode(decodeURIComponent(pathSegments[registerIndex + 1]))
     }
   } catch {
-    return formatCode(trimmedValue)
+    return looksLikePlainCode ? formatCode(trimmedValue) : ''
   }
 
-  return formatCode(trimmedValue)
+  return looksLikePlainCode ? formatCode(trimmedValue) : ''
 }
 
 function clamp(value: number, min: number, max: number) {

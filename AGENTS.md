@@ -60,18 +60,18 @@
 
 ## QR flow rules
 - User QR routes should use `/register/:code`.
-- Admin QR routes should use `/admin/generator/:code`.
-- A generator is created only when a user completes registration from a QR flow.
-- Admins can export printable QR cards, but those QR definitions are generated from URLs and not persisted in Firestore.
+- Admin scan links should use `/admin/scan/generator/:code`.
+- A generator can be created during user registration or when a logged-in user links a previously unknown code.
+- Admin QR exports generate card URLs on demand; QR definitions are not persisted in Firestore (only the export counter state is stored).
 
 ## Testing
 - Before finishing work, run:
   - `npm run lint`
   - `npm run build`
-- If a change affects routing, also verify the direct routes `/register/:code`, `/user`, `/admin`, and `/admin/generator/:code`.
+- If a change affects routing, also verify the direct routes `/register/:code`, `/user`, `/admin`, and `/admin/scan/generator/:code`.
 - If a change affects Firebase data flow, verify that user registration, generator creation, measurement entry, and leaderboard updates still match the Firestore schema.
 
 ## Git workflow
 - Do not revert unrelated user changes.
 - Keep commits focused and aligned with one logical change.
-- Nach jeder Änderung ein Commit
+- Nach jeder Änderung ein Commit erstellen und commit-Nachicht angeben

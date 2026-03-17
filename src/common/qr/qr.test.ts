@@ -9,20 +9,22 @@ describe('qr utils', () => {
     expect(extractGeneratorCodeFromQrValue(value)).toBe('station-007')
   })
 
-  test('continues to parse legacy internal qr payloads', () => {
-    expect(extractGeneratorCodeFromQrValue('mbz:generator:station-007')).toBe('station-007')
-  })
-
-  test('continues to parse legacy register links', () => {
+  test('parses register links from any origin', () => {
     expect(
       extractGeneratorCodeFromQrValue('https://example.com/register/station-008'),
     ).toBe('station-008')
   })
 
-  test('continues to parse legacy admin links', () => {
+  test('parses register links without protocol and with query params', () => {
     expect(
-      extractGeneratorCodeFromQrValue('https://example.com/admin/generator/station-009'),
-    ).toBe('station-009')
+      extractGeneratorCodeFromQrValue('mikrobielle-brennstoffzellen.web.app/register/001C?source=camera'),
+    ).toBe('001c')
+  })
+
+  test('rejects legacy payload formats and admin links', () => {
+    expect(extractGeneratorCodeFromQrValue('mbz:generator:station-009')).toBe('')
+    expect(extractGeneratorCodeFromQrValue('https://example.com/admin/generator/station-009')).toBe('')
+    expect(extractGeneratorCodeFromQrValue('https://example.com/admin/scan/generator/00AF')).toBe('')
   })
 
   test('falls back to plain generator codes', () => {

@@ -66,7 +66,6 @@ export const router = createBrowserRouter([
       { path: 'user', element: withSuspense(<UserDashboardPage />) },
       { path: 'admin', element: withSuspense(<AdminPage />) },
       { path: 'admin/:tab', element: withSuspense(<AdminPage />) },
-      { path: 'admin/generator/:code', element: withSuspense(<AdminPage />) },
       { path: 'admin/:tab/generator/:code', element: withSuspense(<AdminPage />) },
       { path: 'leaderboard', element: withSuspense(<LeaderboardPage />) },
       { path: 'ueber-uns', element: withSuspense(<AboutPage />) },
