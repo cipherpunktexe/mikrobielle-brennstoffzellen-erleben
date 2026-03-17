@@ -439,11 +439,29 @@ export function UserDashboardPage() {
                 ariaLabel="Messwerthistorie"
                 emptyPrimary="Noch keine Messwerte"
                 renderMobileRow={(measurement) => (
-                  <Stack spacing={0.4} sx={{ minWidth: 0 }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>
+                  <Stack
+                    direction="row"
+                    justifyContent="space-between"
+                    alignItems="center"
+                    spacing={1.5}
+                    sx={{ minWidth: 0 }}
+                  >
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ overflowWrap: 'anywhere', fontWeight: 600, pr: 1 }}
+                    >
                       {formatTimestamp(measurement.createdAt)}
                     </Typography>
-                    <Typography sx={{ fontWeight: 800, fontSize: '1.2rem', textAlign: 'right' }}>
+                    <Typography
+                      sx={{
+                        fontWeight: 800,
+                        fontSize: '1.95rem',
+                        lineHeight: 1,
+                        textAlign: 'right',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
                       {formatMeasurement(measurement.value)}
                     </Typography>
                   </Stack>
