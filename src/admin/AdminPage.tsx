@@ -1092,7 +1092,7 @@ export function AdminPage() {
           exportLayoutPreview={exportLayoutPreview}
           onToggleExportStep={toggleExportStep}
           onSetExportCount={setExportCount}
-          onSetExportQrSize={setExportQrSize}
+          onSetExportQrSize={(value) => setExportQrSize(value.replace(/\./g, ','))}
           onSetExportPageSize={setExportPageSize}
           onSetExportDigits={setExportDigits}
           onSetExportCodePlacement={setExportCodePlacement}
@@ -1223,7 +1223,7 @@ export function AdminPage() {
         onClose={handleCloseScanMeasurementDialog}
         onSubmit={handleScanMeasurementSubmit}
         onSetScanCode={(value) => setScanCode(formatCode(value))}
-        onSetScanMeasurementInput={setScanMeasurementInput}
+        onSetScanMeasurementInput={(value) => setScanMeasurementInput(value.replace(/\./g, ','))}
         onSetScanMeasurementUnit={setScanMeasurementUnit}
         onSetScanMeasurementDateTime={setScanMeasurementDateTime}
         formatScientificVolts={formatScientificVolts}
@@ -1246,7 +1246,7 @@ export function AdminPage() {
           onChange: (value) =>
             setRecentMeasurementForm((current) => ({
               ...current,
-              value,
+              value: value.replace(/\./g, ','),
             })),
           autoFocus: true,
         }}

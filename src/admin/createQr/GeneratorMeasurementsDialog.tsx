@@ -147,7 +147,7 @@ export function GeneratorMeasurementsDialog({
           onChange: (value) =>
             onSetMeasurementForm((current) => ({
               ...current,
-              value,
+              value: value.replace(/\./g, ','),
             })),
           autoFocus: true,
         }}
