@@ -80,7 +80,7 @@ export function AdminNavigation({
             <Collapse in={mobileAdminNavOpen}>
               <Box
                 sx={{
-                  borderRadius: 4,
+                  borderRadius: 2,
                   border: '1px solid rgba(121,101,66,0.2)',
                   overflow: 'hidden',
                   bgcolor: 'rgba(249,246,239,0.9)',
