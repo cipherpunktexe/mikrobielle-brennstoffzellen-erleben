@@ -1,8 +1,8 @@
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import OpenInNewIcon from '@mui/icons-material/OpenInNew'
 import { Box, Button, Card, CardContent, Chip, Grid, Stack, Typography } from '@mui/material'
+import { alpha } from '@mui/material/styles'
 import { Link as RouterLink } from 'react-router-dom'
-import { uiColor } from '../app/uiColor'
 
 const canvaEditUrl =
   'https://www.canva.com/design/DAG07O2FJRM/I5SCR0qqx1-stjzMK3V_Qg/edit?utm_content=DAG07O2FJRM&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton'
@@ -14,7 +14,8 @@ export function LandingPage() {
       <Card
         sx={{
           overflow: 'hidden',
-          background: (theme) => uiColor.landing.heroGradient(theme),
+          background: (theme) =>
+            `linear-gradient(135deg, ${alpha(theme.palette.text.primary, 0.78)}, ${alpha(theme.palette.secondary.main, 0.76)}), radial-gradient(circle at top, ${alpha(theme.palette.primary.contrastText, 0.22)}, transparent 42%)`,
           color: 'primary.contrastText',
         }}
       >
@@ -30,7 +31,7 @@ export function LandingPage() {
                 <Typography variant="h1" sx={{ fontSize: { xs: '2.35rem', sm: undefined } }}>
                   Lorem ipsum dolor sit amet.
                 </Typography>
-                <Typography sx={{ maxWidth: 680, color: (theme) => uiColor.landing.heroBody(theme) }}>
+                <Typography sx={{ maxWidth: 680, color: (theme) => alpha(theme.palette.primary.contrastText, 0.82) }}>
                   Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere erat a ante venenatis dapibus posuere velit aliquet. Donec sed odio dui. Cras mattis consectetur purus sit amet fermentum.
                 </Typography>
                 <Button
@@ -50,9 +51,9 @@ export function LandingPage() {
                 elevation={0}
                 sx={{
                   borderRadius: { xs: '22px', sm: '28px' },
-                  background: (theme) => uiColor.landing.panelBackground(theme),
-                  border: (theme) => `1px solid ${uiColor.landing.panelBorder(theme)}`,
-                  boxShadow: (theme) => uiColor.landing.panelShadow(theme),
+                  background: (theme) => alpha(theme.palette.background.paper, 0.74),
+                  border: (theme) => `1px solid ${alpha(theme.palette.secondary.main, 0.18)}`,
+                  boxShadow: (theme) => `0 20px 42px ${alpha(theme.palette.common.black, 0.18)}`,
                 }}
               >
                 <CardContent
@@ -99,8 +100,8 @@ export function LandingPage() {
                 width: '100%',
                 overflow: 'hidden',
                 borderRadius: { xs: '18px', sm: '24px' },
-                border: (theme) => `1px solid ${uiColor.landing.panelBorder(theme)}`,
-                background: (theme) => uiColor.landing.panelBackground(theme),
+                border: (theme) => `1px solid ${alpha(theme.palette.secondary.main, 0.18)}`,
+                background: (theme) => alpha(theme.palette.background.paper, 0.74),
                 pt: { xs: '70%', sm: '56.25%' },
               }}
             >

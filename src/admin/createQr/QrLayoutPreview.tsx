@@ -1,4 +1,5 @@
 import { Alert, Box, Stack, Typography } from '@mui/material'
+import { alpha } from '@mui/material/styles'
 import { useEffect, useState } from 'react'
 import { uiColor } from '../../app/uiColor'
 import { buildGeneratorQrValue, generateQrDataUrl, getQrBadgeLabel } from '../../common/qr/qr'
@@ -90,7 +91,7 @@ export function QrLayoutPreview({
         sx={{
           p: { xs: 1.5, sm: 2.5 },
           borderRadius: 4,
-          bgcolor: (theme) => uiColor.preview.background(theme),
+          bgcolor: (theme) => uiColor.surface.subtle(theme),
           border: (theme) => `1px solid ${theme.palette.divider}`,
           display: 'flex',
           flex: 1,
@@ -114,10 +115,10 @@ export function QrLayoutPreview({
               maxWidth: '100%',
               maxHeight: '100%',
               aspectRatio: `${layout.pageWidthMm} / ${layout.pageHeightMm}`,
-              bgcolor: (theme) => uiColor.preview.pageBackground(theme),
+              bgcolor: (theme) => alpha(theme.palette.common.white, 0.9),
               borderRadius: 2,
-              border: (theme) => `1px solid ${uiColor.preview.pageBorder(theme)}`,
-              boxShadow: (theme) => uiColor.preview.pageShadow(theme),
+              border: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.14)}`,
+              boxShadow: (theme) => `0 12px 24px ${alpha(theme.palette.text.primary, 0.08)}`,
               overflow: 'hidden',
               flexShrink: 0,
             }}

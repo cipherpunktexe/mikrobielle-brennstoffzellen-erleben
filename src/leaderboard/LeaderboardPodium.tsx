@@ -1,7 +1,6 @@
 import { Box, Stack, Typography } from '@mui/material'
 import { alpha, darken, lighten, type Theme } from '@mui/material/styles'
 import { type KeyboardEvent } from 'react'
-import { uiColor } from '../app/uiColor'
 import { formatMeasurement } from '../common/format'
 import type { LeaderboardEntry } from '../data/domain'
 
@@ -82,9 +81,10 @@ export function LeaderboardPodium({ entries, onOpenEntry }: LeaderboardPodiumPro
         px: { xs: 1.5, sm: 2.25, md: 3 },
         pt: { xs: 2, md: 2.5 },
         pb: { xs: 1.5, md: 2 },
-        border: (theme) => `1px solid ${uiColor.leaderboard.podiumContainerBorder(theme)}`,
-        background: (theme) => uiColor.leaderboard.podiumContainerBackground(theme),
-        boxShadow: (theme) => uiColor.leaderboard.podiumContainerInset(theme),
+        border: (theme) => `1px solid ${alpha(theme.palette.secondary.main, 0.14)}`,
+        background: (theme) =>
+          `linear-gradient(180deg, ${alpha(theme.palette.primary.main, 0.26)}, ${alpha(theme.palette.secondary.main, 0.18)}), ${alpha(theme.palette.background.paper, 0.72)}`,
+        boxShadow: (theme) => `inset 0 1px 0 ${alpha(theme.palette.common.white, 0.36)}`,
       }}
     >
       <Box
@@ -92,7 +92,8 @@ export function LeaderboardPodium({ entries, onOpenEntry }: LeaderboardPodiumPro
           position: 'absolute',
           inset: 0,
           opacity: 0.55,
-          background: (theme) => uiColor.leaderboard.podiumTexture(theme),
+          background: (theme) =>
+            `radial-gradient(circle at 50% 42%, ${alpha(theme.palette.primary.contrastText, 0.5)}, transparent 18%), repeating-conic-gradient(from 0deg at 50% 42%, ${alpha(theme.palette.primary.contrastText, 0.22)} 0deg 11deg, ${alpha(theme.palette.secondary.main, 0.02)} 11deg 22deg)`,
           pointerEvents: 'none',
         }}
       />
@@ -140,7 +141,7 @@ export function LeaderboardPodium({ entries, onOpenEntry }: LeaderboardPodiumPro
                 cursor: 'pointer',
                 zIndex: rank === 1 ? 2 : 1,
                 '&:focus-visible': {
-                  outline: (theme) => `2px solid ${uiColor.leaderboard.focusOutline(theme)}`,
+                  outline: (theme) => `2px solid ${alpha(theme.palette.info.main, 0.75)}`,
                   outlineOffset: '4px',
                   borderRadius: '18px',
                 },
@@ -174,16 +175,16 @@ export function LeaderboardPodium({ entries, onOpenEntry }: LeaderboardPodiumPro
                   pb: { xs: 1.1, sm: 1.5, md: 1.75 },
                   borderRadius: '18px 18px 0 0',
                   background: (theme) => rankStyle.podiumBg(theme),
-                  color: (theme) => uiColor.leaderboard.podiumText(theme),
+                  color: (theme) => alpha(theme.palette.primary.contrastText, 0.96),
                   boxShadow: (theme) =>
                     rank === 1
-                      ? uiColor.leaderboard.podiumShadowStrong(theme)
-                      : uiColor.leaderboard.podiumShadowDefault(theme),
+                      ? `0 16px 28px ${alpha(theme.palette.common.black, 0.2)}`
+                      : `0 12px 22px ${alpha(theme.palette.common.black, 0.12)}`,
                   transition: 'transform 180ms ease, box-shadow 180ms ease, filter 180ms ease',
                   '&:hover': {
                     transform: 'translateY(-3px)',
                     filter: 'brightness(1.03)',
-                    boxShadow: (theme) => uiColor.leaderboard.podiumShadowHover(theme),
+                    boxShadow: (theme) => `0 18px 30px ${alpha(theme.palette.common.black, 0.18)}`,
                   },
                 }}
               >
@@ -213,9 +214,9 @@ export function LeaderboardPodium({ entries, onOpenEntry }: LeaderboardPodiumPro
                       background: (theme) => rankStyle.medalBg(theme),
                       borderStyle: 'solid',
                       borderWidth: { xs: 3, sm: 4 },
-                      borderColor: (theme) => uiColor.leaderboard.medalBorder(theme),
-                      boxShadow: (theme) => uiColor.leaderboard.medalInset(theme),
-                      textShadow: (theme) => uiColor.leaderboard.medalTextShadow(theme),
+                      borderColor: (theme) => alpha(theme.palette.primary.contrastText, 0.35),
+                      boxShadow: (theme) => `inset 0 2px 0 ${alpha(theme.palette.common.white, 0.35)}`,
+                      textShadow: (theme) => `0 1px 0 ${alpha(theme.palette.common.black, 0.18)}`,
                     }}
                   >
                     {rank}
