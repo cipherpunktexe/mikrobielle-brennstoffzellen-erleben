@@ -2,7 +2,7 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import { Box, IconButton, Stack, Typography, useMediaQuery, useTheme } from '@mui/material'
 import { alpha } from '@mui/material/styles'
-import { useEffect, useRef, useState, type PointerEvent } from 'react'
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 
 export interface LineChartPoint {
   id: string
@@ -18,6 +18,7 @@ interface LineChartProps {
   detailLabelTitle?: string
   valueLabelTitle?: string
   showActiveSummary?: boolean
+  showMobileNavigation?: boolean
 }
 
 export function LineChart({
@@ -27,14 +28,16 @@ export function LineChart({
   detailLabelTitle = 'Punkt',
   valueLabelTitle = 'Wert',
   showActiveSummary = true,
+  showMobileNavigation = true,
 }: LineChartProps) {
   const theme = useTheme()
   const chartColor = '#5F6B7A'
   const chartColorDark = '#2C3440'
   const isMobileViewport = useMediaQuery(theme.breakpoints.down('sm'))
+  const interactiveAreaRef = useRef<HTMLDivElement | null>(null)
   const svgRef = useRef<SVGSVGElement | null>(null)
   const [activeIndex, setActiveIndex] = useState<number | null>(
-    isMobileViewport && data.length ? Math.max(0, data.length - 1) : null,
+    isMobileViewport && showMobileNavigation && data.length ? Math.max(0, data.length - 1) : null,
   )
 
   useEffect(() => {
@@ -45,7 +48,7 @@ export function LineChart({
 
       if (isMobileViewport) {
         if (current === null) {
-          return Math.max(0, data.length - 1)
+          return showMobileNavigation ? Math.max(0, data.length - 1) : null
         }
 
         return Math.min(Math.max(0, current), Math.max(0, data.length - 1))
@@ -53,7 +56,31 @@ export function LineChart({
 
       return null
     })
-  }, [data.length, isMobileViewport])
+  }, [data.length, isMobileViewport, showMobileNavigation])
+
+  useEffect(() => {
+    if (activeIndex === null) {
+      return
+    }
+
+    function handlePointerDown(event: PointerEvent) {
+      const target = event.target
+
+      if (!(target instanceof Node)) {
+        return
+      }
+
+      if (!interactiveAreaRef.current?.contains(target)) {
+        setActiveIndex(null)
+      }
+    }
+
+    window.addEventListener('pointerdown', handlePointerDown)
+
+    return () => {
+      window.removeEventListener('pointerdown', handlePointerDown)
+    }
+  }, [activeIndex])
 
   const width = isMobileViewport ? 390 : 640
   const height = isMobileViewport ? 300 : 292
@@ -144,9 +171,7 @@ export function LineChart({
   }
 
   function clearActiveIndex() {
-    if (!isMobileViewport) {
-      setActiveIndex((current) => (current === null ? current : null))
-    }
+    setActiveIndex((current) => (current === null ? current : null))
   }
 
   const activeValueLabel = activePoint ? valueFormatter(activePoint.point.value) : ''
@@ -207,6 +232,7 @@ export function LineChart({
       ) : null}
 
       <Box
+        ref={interactiveAreaRef}
         sx={{
           border: `1px solid ${alpha('#796542', 0.16)}`,
           borderRadius: '22px',
@@ -222,10 +248,10 @@ export function LineChart({
           role="img"
           aria-label={ariaLabel}
           sx={{ width: '100%', height: 'auto', display: 'block' }}
-          onPointerMove={(event: PointerEvent<SVGSVGElement>) => {
+          onPointerMove={(event: ReactPointerEvent<SVGSVGElement>) => {
             updateActiveIndex(event.clientX)
           }}
-          onPointerDown={(event: PointerEvent<SVGSVGElement>) => {
+          onPointerDown={(event: ReactPointerEvent<SVGSVGElement>) => {
             updateActiveIndex(event.clientX)
           }}
           onPointerLeave={clearActiveIndex}
@@ -385,7 +411,7 @@ export function LineChart({
         </Box>
       </Box>
 
-      {isMobileViewport && data.length > 1 ? (
+      {isMobileViewport && showMobileNavigation && data.length > 1 ? (
         <Stack
           direction="row"
           justifyContent="space-between"

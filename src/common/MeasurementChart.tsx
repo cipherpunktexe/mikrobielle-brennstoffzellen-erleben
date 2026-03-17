@@ -1,4 +1,4 @@
-import { Box, Stack, Typography, useMediaQuery, useTheme } from '@mui/material'
+import { Box, Stack, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { LineChart } from './LineChart'
 import { createContextMeasurementFormatter, formatTimestamp } from './format'
@@ -27,8 +27,6 @@ function formatShortTimestamp(measurement: Measurement) {
 }
 
 export function MeasurementChart({ measurements }: MeasurementChartProps) {
-  const theme = useTheme()
-  const isMobileViewport = useMediaQuery(theme.breakpoints.down('sm'))
   const orderedMeasurements = [...measurements].sort((left, right) => {
     const leftMs = left.createdAt?.toMillis() ?? 0
     const rightMs = right.createdAt?.toMillis() ?? 0
@@ -105,7 +103,8 @@ export function MeasurementChart({ measurements }: MeasurementChartProps) {
         detailLabelTitle="Zeitpunkt"
         valueLabelTitle="Wert"
         valueFormatter={(value) => formatMeasurementInContext(value)}
-        showActiveSummary={isMobileViewport}
+        showActiveSummary={false}
+        showMobileNavigation={false}
       />
     </Stack>
   )
