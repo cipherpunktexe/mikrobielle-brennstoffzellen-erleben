@@ -456,8 +456,8 @@ export function UserDashboardPage() {
                     <Typography
                       sx={{
                         fontWeight: 800,
-                        fontSize: '1.95rem',
-                        lineHeight: 1,
+                        fontSize: '1.15rem',
+                        lineHeight: 1.1,
                         textAlign: 'right',
                         whiteSpace: 'nowrap',
                       }}
