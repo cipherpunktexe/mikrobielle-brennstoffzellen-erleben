@@ -1,6 +1,5 @@
 import { jsPDF } from 'jspdf'
 import QRCode from 'qrcode'
-import { theme } from '../../app/theme'
 
 export interface QrCardDefinition {
   code: string
@@ -101,12 +100,12 @@ const QR_BELOW_BADGE_MIN_WIDTH_RATIO = 0.22
 const QR_BELOW_BADGE_MAX_WIDTH_RATIO = 0.5
 const QR_BELOW_BADGE_HEIGHT_RATIO = 0.52
 const qrCanvasColor = {
-  finder: theme.palette.success.main,
-  module: theme.palette.text.primary,
-  canvasBackground: theme.palette.background.paper,
-  badgeFill: theme.palette.common.white,
-  badgeStroke: theme.palette.secondary.main,
-  badgeText: theme.palette.text.primary,
+  finder: '#00A651',
+  module: '#000000',
+  canvasBackground: '#FFFFFF',
+  badgeFill: '#FFFFFF',
+  badgeStroke: '#00A651',
+  badgeText: '#000000',
 }
 
 export function getQrBadgeLabel(code: string) {
