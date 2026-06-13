@@ -1,5 +1,6 @@
 import { jsPDF } from 'jspdf'
 import QRCode from 'qrcode'
+import { formatCode } from '../format'
 
 export interface QrCardDefinition {
   code: string
@@ -58,10 +59,7 @@ export interface QrPdfLayoutPreview {
   gapYmm: number
 }
 
-function formatCode(code: string) {
-  return code.trim().toLowerCase()
-}
-
+const FALLBACK_PUBLIC_APP_ORIGIN = 'https://mikrobielle-brennstoffzellen.web.app'
 const DEFAULT_PUBLIC_APP_ORIGIN = resolvePublicAppOrigin()
 const PAGE_FORMATS: Record<StaticQrPdfPageSize, PageFormat[]> = {
   a4: [
@@ -100,14 +98,19 @@ function resolvePublicAppOrigin() {
   const configuredOrigin = import.meta.env.VITE_PUBLIC_APP_URL?.trim()
 
   if (!configuredOrigin) {
-    return 'https://mikrobielle-brennstoffzellen-erleben.web.app'
+    return FALLBACK_PUBLIC_APP_ORIGIN
   }
 
   try {
     return new URL(configuredOrigin).origin
   } catch {
-    return 'https://mikrobielle-brennstoffzellen-erleben.web.app'
+    return FALLBACK_PUBLIC_APP_ORIGIN
   }
+}
+
+function normalizeGeneratorCode(code: string) {
+  const normalizedCode = formatCode(code)
+  return /^[0-9a-f]+$/.test(normalizedCode) ? normalizedCode : ''
 }
 
 function getQrLabel(value: string) {
@@ -203,7 +206,7 @@ function renderQrToCanvas(
 }
 
 export function buildGeneratorQrValue(code: string) {
-  const normalizedCode = formatCode(code)
+  const normalizedCode = normalizeGeneratorCode(code)
 
   if (!normalizedCode) {
     return ''
@@ -223,30 +226,21 @@ export async function generateQrDataUrl(
 }
 
 export function extractGeneratorCodeFromQrValue(value: string) {
-  const trimmedValue = value.trim()
-
-  if (!trimmedValue) {
-    return ''
-  }
-
   try {
-    const url = new URL(trimmedValue)
-    const queryKeys = [...url.searchParams.keys()]
-    const registrationCodes = url.searchParams.getAll('register')
+    const url = new URL(value.trim())
 
     if (
       url.protocol !== 'https:' ||
       url.origin !== DEFAULT_PUBLIC_APP_ORIGIN ||
       url.pathname !== '/user' ||
       url.hash ||
-      queryKeys.length !== 1 ||
-      queryKeys[0] !== 'register' ||
-      registrationCodes.length !== 1
+      url.searchParams.size !== 1 ||
+      !url.searchParams.has('register')
     ) {
       return ''
     }
 
-    return formatCode(registrationCodes[0])
+    return normalizeGeneratorCode(url.searchParams.get('register') ?? '')
   } catch {
     return ''
   }

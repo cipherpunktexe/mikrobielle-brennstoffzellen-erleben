@@ -57,7 +57,7 @@ Die API ist fuer externe Webseiten gedacht (CORS: `*`).
 Beispiel:
 
 ```bash
-curl "https://mikrobielle-brennstoffzellen-erleben.web.app/api/leaderboard?limit=10"
+curl "https://mikrobielle-brennstoffzellen.web.app/api/leaderboard?limit=10"
 ```
 
 Antwort:
@@ -83,9 +83,9 @@ Antwort:
 
 - Generierte QR-Werte sind URL-basiert und zeigen auf `/user?register=<code>`.
 - Die Basis-URL kommt aus `VITE_PUBLIC_APP_URL` (falls gesetzt), sonst aus
-  `https://mikrobielle-brennstoffzellen-erleben.web.app`.
+  `https://mikrobielle-brennstoffzellen.web.app`.
 - Der QR-Parser akzeptiert ausschließlich die vollständige URL der aktiven App im Format
-  `https://mikrobielle-brennstoffzellen-erleben.web.app/user?register=<code>`.
+  `https://mikrobielle-brennstoffzellen.web.app/user?register=<code>`.
 - Andere Domains, Pfade, Query-Parameter und reine Codes werden abgelehnt.
 - Ein `generator`-Dokument entsteht:
   - bei Registrierung mit QR-Code

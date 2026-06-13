@@ -9,23 +9,26 @@ import {
 
 describe('qr utils', () => {
   test('builds and parses user page registration links for newly generated qr codes', () => {
-    const value = buildGeneratorQrValue('Station-007')
+    const value = buildGeneratorQrValue('00AF')
 
     expect(value).toBe(
-      'https://mikrobielle-brennstoffzellen-erleben.web.app/user?register=station-007',
+      'https://mikrobielle-brennstoffzellen.web.app/user?register=00af',
     )
-    expect(extractGeneratorCodeFromQrValue(value)).toBe('station-007')
+    expect(extractGeneratorCodeFromQrValue(value)).toBe('00af')
   })
 
   test('rejects every payload outside the current qr format', () => {
-    expect(extractGeneratorCodeFromQrValue('https://example.com/user?register=station-008')).toBe('')
+    expect(extractGeneratorCodeFromQrValue('https://example.com/user?register=00b0')).toBe('')
     expect(extractGeneratorCodeFromQrValue('/user?register=station-008')).toBe('')
-    expect(extractGeneratorCodeFromQrValue('https://mikrobielle-brennstoffzellen-erleben.web.app/register/station-008')).toBe('')
-    expect(extractGeneratorCodeFromQrValue('https://mikrobielle-brennstoffzellen-erleben.web.app/user?code=station-008')).toBe('')
-    expect(extractGeneratorCodeFromQrValue('https://mikrobielle-brennstoffzellen-erleben.web.app/user?register=station-008&source=camera')).toBe('')
-    expect(extractGeneratorCodeFromQrValue('https://mikrobielle-brennstoffzellen-erleben.web.app/user?register=station-008#scan')).toBe('')
+    expect(extractGeneratorCodeFromQrValue('https://mikrobielle-brennstoffzellen.web.app/register/00b0')).toBe('')
+    expect(extractGeneratorCodeFromQrValue('https://mikrobielle-brennstoffzellen.web.app/user?code=00b0')).toBe('')
+    expect(extractGeneratorCodeFromQrValue('https://mikrobielle-brennstoffzellen.web.app/user?register=00b0&source=camera')).toBe('')
+    expect(extractGeneratorCodeFromQrValue('https://mikrobielle-brennstoffzellen.web.app/user?register=00b0#scan')).toBe('')
+    expect(extractGeneratorCodeFromQrValue('https://mikrobielle-brennstoffzellen-erleben.web.app/user?register=00b0')).toBe('')
+    expect(extractGeneratorCodeFromQrValue('https://mikrobielle-brennstoffzellen.web.app/user?register=station-008')).toBe('')
     expect(extractGeneratorCodeFromQrValue('mbz:generator:station-009')).toBe('')
     expect(extractGeneratorCodeFromQrValue('station-010')).toBe('')
+    expect(buildGeneratorQrValue('station-010')).toBe('')
   })
 
   test('uses the actual code as uppercase badge label', () => {

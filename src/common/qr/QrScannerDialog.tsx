@@ -18,6 +18,7 @@ import {
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { useEffect, useRef, useState } from 'react'
+import { buildGeneratorQrValue } from './qr'
 
 interface QrScannerDialogProps {
   open: boolean
@@ -292,11 +293,18 @@ export function QrScannerDialog({
       return
     }
 
+    const qrValue = buildGeneratorQrValue(trimmedValue)
+
+    if (!qrValue) {
+      setError('Bitte gib einen gültigen Brennstoffzellen-Code ein.')
+      return
+    }
+
     setManualSubmitting(true)
     setError('')
 
     try {
-      await detectedHandlerRef.current(trimmedValue)
+      await detectedHandlerRef.current(qrValue)
     } catch (detectError) {
       setError(getScannerErrorMessage(detectError))
       setLastRejectedValue(summarizeRawValue(trimmedValue))
@@ -433,12 +441,12 @@ export function QrScannerDialog({
 
           lastDetectedRef.current = { value: rawValue, timestamp: now }
           setLastRejectedValue('')
-          playScanSound()
           processingRef.current = true
           setCameraState('processing')
 
           try {
             await detectedHandlerRef.current(rawValue)
+            playScanSound()
 
             if (sessionRef.current === sessionId) {
               processingRef.current = false
@@ -650,4 +658,3 @@ export function QrScannerDialog({
     </Dialog>
   )
 }
-

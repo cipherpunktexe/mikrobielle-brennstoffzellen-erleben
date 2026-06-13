@@ -73,7 +73,7 @@ import type {
   QrExportStepKey,
   UserFormState,
 } from './types'
-import { formatMutedDecimal, formatScientificVolts } from './utils'
+import { formatMutedDecimal, formatScientificVolts, getGeneratorScanError } from './utils'
 
 function createEmptyUserForm(): UserFormState {
   return {
@@ -582,6 +582,7 @@ export function AdminPage() {
     navigate(`/admin/scan/generator/${code}`)
 
     if (!foundGenerator) {
+      setScannerOpen(false)
       setScanStatus('')
       showSnackbar({
         message: `Code ${code.toUpperCase()} ist noch nicht verknüpft.`,
@@ -593,6 +594,14 @@ export function AdminPage() {
       lastHandledScanRef.current = { code, timestamp: now }
       return
     }
+
+    const scanIssue = getGeneratorScanError(code, foundGenerator.status)
+
+    if (scanIssue) {
+      throw new Error(scanIssue)
+    }
+
+    setScannerOpen(false)
     setScanStatus(`QR-Code erkannt: ${code}`)
     openScanMeasurementDialog(code, true)
     lastHandledScanRef.current = { code, timestamp: now }

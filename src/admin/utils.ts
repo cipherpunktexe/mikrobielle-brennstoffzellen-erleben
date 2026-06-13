@@ -1,5 +1,17 @@
 import type { EntityLifecycleStatus } from '../data/domain'
 
+export function getGeneratorScanError(code: string, status?: EntityLifecycleStatus) {
+  if (status === 'blocked') {
+    return `Code ${code.toUpperCase()} ist gesperrt.`
+  }
+
+  if (status === 'deleted') {
+    return `Code ${code.toUpperCase()} wurde gelöscht.`
+  }
+
+  return ''
+}
+
 export function formatMutedDecimal(sequence: number) {
   return sequence.toString(10)
 }
