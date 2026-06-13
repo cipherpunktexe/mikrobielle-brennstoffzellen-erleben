@@ -117,6 +117,7 @@ export function MeasurementFormDialog({
                     onChange={(event) => valueField.onChange(event.target.value)}
                     inputRef={valueInputRef}
                     autoFocus={valueField.autoFocus}
+                    slotProps={{ htmlInput: { inputMode: 'decimal' } }}
                     fullWidth
                   />
                   <TextField
@@ -145,6 +146,7 @@ export function MeasurementFormDialog({
                 onChange={(event) => valueField.onChange(event.target.value)}
                 inputRef={valueInputRef}
                 autoFocus={valueField.autoFocus}
+                slotProps={{ htmlInput: { inputMode: 'decimal' } }}
                 fullWidth
               />
             )}
