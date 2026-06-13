@@ -2,7 +2,9 @@ import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettin
 import BiotechOutlinedIcon from '@mui/icons-material/BiotechOutlined'
 import ElectricBoltOutlinedIcon from '@mui/icons-material/ElectricBoltOutlined'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
+import LoginOutlinedIcon from '@mui/icons-material/LoginOutlined'
 import LogoutIcon from '@mui/icons-material/Logout'
+import MenuIcon from '@mui/icons-material/Menu'
 import {
   AppBar,
   Avatar,
@@ -36,6 +38,7 @@ export function AppShell() {
   const theme = useTheme()
   const isMobileViewport = useMediaQuery(theme.breakpoints.down('sm'))
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null)
+  const [authResolved, setAuthResolved] = useState(false)
   const [authUserId, setAuthUserId] = useState('')
   const [authEmail, setAuthEmail] = useState('')
   const [profile, setProfile] = useState<UserProfile | null>(null)
@@ -47,6 +50,7 @@ export function AppShell() {
       if (!user) {
         setProfile(null)
       }
+      setAuthResolved(true)
     })
   }, [])
 
@@ -161,25 +165,68 @@ export function AppShell() {
               })}
             </Stack>
 
-            <IconButton
-              aria-label="Account-Menü öffnen"
-              color="inherit"
-              onClick={handleOpenMenu}
-              sx={{ ml: { xs: 0, md: 1 } }}
-            >
-              <Avatar
+            {!authUserId && authResolved ? (
+              <>
+                <IconButton
+                  aria-label="Navigation öffnen"
+                  color="inherit"
+                  onClick={handleOpenMenu}
+                  sx={{ display: { xs: 'inline-flex', md: 'none' } }}
+                >
+                  <MenuIcon />
+                </IconButton>
+                <Button
+                  component={RouterLink}
+                  to="/user"
+                  variant="contained"
+                  startIcon={<LoginOutlinedIcon />}
+                  sx={{
+                    ml: { xs: 0, md: 1 },
+                    px: { xs: 1.5, sm: 2.25 },
+                    whiteSpace: 'nowrap',
+                    bgcolor: 'common.white',
+                    color: 'primary.dark',
+                    '&:hover': {
+                      bgcolor: (theme) => alpha(theme.palette.common.white, 0.88),
+                    },
+                    '& .MuiButton-startIcon': {
+                      display: { xs: 'none', sm: 'inherit' },
+                    },
+                  }}
+                >
+                  Anmelden
+                </Button>
+              </>
+            ) : authUserId ? (
+              <IconButton
+                aria-label="Account-Menü öffnen"
+                color="inherit"
+                onClick={handleOpenMenu}
+                sx={{ ml: { xs: 0, md: 1 } }}
+              >
+                <Avatar
+                  sx={{
+                    width: 38,
+                    height: 38,
+                    bgcolor: (theme) => alpha(theme.palette.common.white, 0.18),
+                    color: 'primary.contrastText',
+                    border: (theme) => `1px solid ${alpha(theme.palette.common.white, 0.22)}`,
+                    fontWeight: 700,
+                  }}
+                >
+                  {avatarLabel}
+                </Avatar>
+              </IconButton>
+            ) : (
+              <Box
+                aria-hidden="true"
                 sx={{
                   width: 38,
                   height: 38,
-                  bgcolor: (theme) => alpha(theme.palette.common.white, 0.18),
-                  color: 'primary.contrastText',
-                  border: (theme) => `1px solid ${alpha(theme.palette.common.white, 0.22)}`,
-                  fontWeight: 700,
+                  ml: { xs: 0, md: 1 },
                 }}
-              >
-                {avatarLabel}
-              </Avatar>
-            </IconButton>
+              />
+            )}
           </Toolbar>
         </Container>
       </AppBar>
@@ -200,18 +247,22 @@ export function AppShell() {
           },
         }}
       >
-        <Box sx={{ px: 2, py: 1.5 }}>
-          <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-            {accountName}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {accountEmail}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {accountRole}
-          </Typography>
-        </Box>
-        <Divider />
+        {authUserId ? (
+          <>
+            <Box sx={{ px: 2, py: 1.5 }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+                {accountName}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {accountEmail}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {accountRole}
+              </Typography>
+            </Box>
+            <Divider />
+          </>
+        ) : null}
         {isMobileViewport
           ? visibleNavigationItems.map((item) => (
               <MenuItem
@@ -241,13 +292,15 @@ export function AppShell() {
               </MenuItem>
             ))
           : null}
-        {isMobileViewport ? <Divider /> : null}
-        <MenuItem onClick={() => void handleLogout()} disabled={!authUserId}>
-          <Stack direction="row" spacing={1.25} alignItems="center">
-            <LogoutIcon fontSize="small" />
-            <span>Logout</span>
-          </Stack>
-        </MenuItem>
+        {isMobileViewport && authUserId ? <Divider /> : null}
+        {authUserId ? (
+          <MenuItem onClick={() => void handleLogout()}>
+            <Stack direction="row" spacing={1.25} alignItems="center">
+              <LogoutIcon fontSize="small" />
+              <span>Logout</span>
+            </Stack>
+          </MenuItem>
+        ) : null}
       </Menu>
 
       <Box sx={{ flexGrow: 1 }}>
