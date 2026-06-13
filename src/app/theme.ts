@@ -167,6 +167,30 @@ export const theme = createTheme({
         },
       },
     },
+    MuiLink: {
+      defaultProps: {
+        underline: 'always',
+      },
+      styleOverrides: {
+        root: {
+          color: paletteColor.textPrimary,
+          fontWeight: 700,
+          textDecorationColor: alpha(paletteColor.secondary, 0.72),
+          textDecorationThickness: '0.1em',
+          textUnderlineOffset: '0.18em',
+          transition: 'background-color 120ms ease, text-decoration-color 120ms ease',
+          '&:hover': {
+            backgroundColor: alpha(paletteColor.primary, 0.12),
+            textDecorationColor: paletteColor.textPrimary,
+          },
+          '&:focus-visible': {
+            borderRadius: 4,
+            outline: `3px solid ${alpha(paletteColor.secondary, 0.42)}`,
+            outlineOffset: 2,
+          },
+        },
+      },
+    },
     MuiChip: {
       styleOverrides: {
         root: {
