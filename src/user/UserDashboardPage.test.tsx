@@ -1,9 +1,11 @@
 import '@testing-library/jest-dom/vitest'
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { Route, Routes } from 'react-router-dom'
 import { vi } from 'vitest'
 import { renderWithProviders } from '../app/renderWithProviders'
 import { UserDashboardPage } from './UserDashboardPage'
+import { UserRegistrationPage } from './UserRegistrationPage'
 
 vi.mock('../data/firebaseData', () => ({
   linkCurrentUserToGeneratorByCode: vi.fn(),
@@ -39,5 +41,29 @@ describe('UserDashboardPage', () => {
 
     expect(screen.getByRole('dialog', { name: /anmelden/i })).toBeInTheDocument()
     expect(screen.getByRole('textbox', { name: /e-mail/i })).toBeInTheDocument()
+  })
+
+  test('opens registration with the qr code on the user page', async () => {
+    renderWithProviders(<UserDashboardPage />, {
+      initialEntries: ['/user?register=00AF'],
+    })
+
+    expect(await screen.findByRole('dialog', { name: /registrieren/i })).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: /brennstoffzellen-code/i })).toHaveValue('00af')
+  })
+
+  test('redirects previous register links to the registration dialog', async () => {
+    renderWithProviders(
+      <Routes>
+        <Route path="/register/:code" element={<UserRegistrationPage />} />
+        <Route path="/user" element={<UserDashboardPage />} />
+      </Routes>,
+      {
+        initialEntries: ['/register/00B1'],
+      },
+    )
+
+    expect(await screen.findByRole('dialog', { name: /registrieren/i })).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: /brennstoffzellen-code/i })).toHaveValue('00b1')
   })
 })

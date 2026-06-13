@@ -9,24 +9,31 @@ import { LoginDialogProvider } from '../common/LoginDialogProvider'
 
 interface WrapperProps {
   children: ReactNode
+  initialEntries?: string[]
 }
 
-function Providers({ children }: WrapperProps) {
+function Providers({ children, initialEntries }: WrapperProps) {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <AppSnackbarProvider>
         <LoginDialogProvider>
-          <MemoryRouter>{children}</MemoryRouter>
+          <MemoryRouter initialEntries={initialEntries}>{children}</MemoryRouter>
         </LoginDialogProvider>
       </AppSnackbarProvider>
     </ThemeProvider>
   )
 }
 
-export function renderWithProviders(ui: ReactElement, options?: Omit<RenderOptions, 'wrapper'>) {
+interface RenderWithProvidersOptions extends Omit<RenderOptions, 'wrapper'> {
+  initialEntries?: string[]
+}
+
+export function renderWithProviders(ui: ReactElement, options?: RenderWithProvidersOptions) {
+  const { initialEntries, ...renderOptions } = options ?? {}
+
   return render(ui, {
-    wrapper: Providers,
-    ...options,
+    wrapper: ({ children }) => <Providers initialEntries={initialEntries}>{children}</Providers>,
+    ...renderOptions,
   })
 }

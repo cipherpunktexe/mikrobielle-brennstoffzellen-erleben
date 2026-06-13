@@ -100,13 +100,13 @@ function resolvePublicAppOrigin() {
   const configuredOrigin = import.meta.env.VITE_PUBLIC_APP_URL?.trim()
 
   if (!configuredOrigin) {
-    return 'https://mikrobielle-brennstoffzellen.web.app'
+    return 'https://mikrobielle-brennstoffzellen-erleben.web.app'
   }
 
   try {
     return new URL(configuredOrigin).origin
   } catch {
-    return 'https://mikrobielle-brennstoffzellen.web.app'
+    return 'https://mikrobielle-brennstoffzellen-erleben.web.app'
   }
 }
 
@@ -209,7 +209,10 @@ export function buildGeneratorQrValue(code: string) {
     return ''
   }
 
-  return new URL(`/register/${encodeURIComponent(normalizedCode)}`, DEFAULT_PUBLIC_APP_ORIGIN).toString()
+  const registrationUrl = new URL('/user', DEFAULT_PUBLIC_APP_ORIGIN)
+  registrationUrl.searchParams.set('register', normalizedCode)
+
+  return registrationUrl.toString()
 }
 
 export async function generateQrDataUrl(
@@ -263,7 +266,7 @@ export function extractGeneratorCodeFromQrValue(value: string, origin = window.l
       return codeFromPath
     }
 
-    const codeParamCandidates = ['code', 'generator', 'generatorCode']
+    const codeParamCandidates = ['register', 'code', 'generator', 'generatorCode']
 
     for (const paramKey of codeParamCandidates) {
       const paramValue = url.searchParams.get(paramKey)?.trim()

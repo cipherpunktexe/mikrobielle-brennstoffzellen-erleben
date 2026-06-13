@@ -17,6 +17,7 @@ import {
 } from '@mui/material'
 import { useCallback, useMemo, useState, type FormEvent, type ReactNode } from 'react'
 import { login, registerUserWithGenerator, signInWithGoogle } from '../data/firebaseData'
+import { formatCode } from './format'
 import { LoginDialogContext } from './LoginDialogContext'
 
 interface LoginDialogProviderProps {
@@ -40,6 +41,13 @@ export function LoginDialogProvider({ children }: LoginDialogProviderProps) {
   const openLoginDialog = useCallback(() => {
     setMode('login')
     setError('')
+    setOpen(true)
+  }, [])
+
+  const openRegistrationDialog = useCallback((code = '') => {
+    setMode('register')
+    setError('')
+    setValues((current) => ({ ...current, code: formatCode(code) }))
     setOpen(true)
   }, [])
 
@@ -108,7 +116,10 @@ export function LoginDialogProvider({ children }: LoginDialogProviderProps) {
     }
   }
 
-  const contextValue = useMemo(() => ({ openLoginDialog }), [openLoginDialog])
+  const contextValue = useMemo(
+    () => ({ openLoginDialog, openRegistrationDialog }),
+    [openLoginDialog, openRegistrationDialog],
+  )
 
   return (
     <LoginDialogContext.Provider value={contextValue}>

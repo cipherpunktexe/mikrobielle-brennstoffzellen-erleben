@@ -8,10 +8,12 @@ import {
 } from './qr'
 
 describe('qr utils', () => {
-  test('builds and parses register links for newly generated qr codes', () => {
+  test('builds and parses user page registration links for newly generated qr codes', () => {
     const value = buildGeneratorQrValue('Station-007')
 
-    expect(value).toBe('https://mikrobielle-brennstoffzellen.web.app/register/station-007')
+    expect(value).toBe(
+      'https://mikrobielle-brennstoffzellen-erleben.web.app/user?register=station-007',
+    )
     expect(extractGeneratorCodeFromQrValue(value)).toBe('station-007')
   })
 

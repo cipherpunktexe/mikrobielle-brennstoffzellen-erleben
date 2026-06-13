@@ -28,14 +28,19 @@ import {
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { useEffect, useState, type FormEvent, type MouseEvent } from 'react'
-import { Link as RouterLink } from 'react-router-dom'
+import { Link as RouterLink, useSearchParams } from 'react-router-dom'
 import { MeasurementChart } from '../common/MeasurementChart'
 import { MeasurementMetricsCard } from '../common/MeasurementMetricsCard'
 import { useAppSnackbar } from '../common/AppSnackbarContext'
 import { useLoginDialog } from '../common/LoginDialogContext'
 import { UnifiedList, type UnifiedListColumn } from '../common/UnifiedList'
 import { QrScannerDialog } from '../common/qr/QrScannerDialog'
-import { createContextMeasurementFormatter, formatMeasurement, formatTimestamp } from '../common/format'
+import {
+  createContextMeasurementFormatter,
+  formatCode,
+  formatMeasurement,
+  formatTimestamp,
+} from '../common/format'
 import { extractGeneratorCodeFromQrValue } from '../common/qr/qr'
 import {
   linkCurrentUserToGeneratorByCode,
@@ -106,7 +111,8 @@ function GuestDashboardSkeleton({ onLogin }: { onLogin: () => void }) {
 
 export function UserDashboardPage() {
   const { showSnackbar } = useAppSnackbar()
-  const { openLoginDialog } = useLoginDialog()
+  const { openLoginDialog, openRegistrationDialog } = useLoginDialog()
+  const [searchParams] = useSearchParams()
   const [authUserId, setAuthUserId] = useState('')
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [generator, setGenerator] = useState<Generator | null>(null)
@@ -153,6 +159,14 @@ export function UserDashboardPage() {
   }, [profile?.generatorId])
 
   useEffect(() => subscribeToLeaderboard(setLeaderboard), [])
+
+  useEffect(() => {
+    const registrationCode = formatCode(searchParams.get('register') ?? '')
+
+    if (!loadingAuth && !authUserId && registrationCode) {
+      openRegistrationDialog(registrationCode)
+    }
+  }, [authUserId, loadingAuth, openRegistrationDialog, searchParams])
 
   async function handleQrDetected(value: string) {
     try {
