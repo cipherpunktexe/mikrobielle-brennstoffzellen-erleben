@@ -58,10 +58,13 @@
 - Für geänderte Module vorhandene Tests gezielt mit ausführen und bei fehlender Abdeckung einen Test ergänzen.
 
 ## Deploy
-- Frontend Build: `npm.cmd run build`
-- Komplettdeploy (Hosting + Functions + Rules): `firebase.cmd deploy --force`
-- Nur Functions: `firebase.cmd deploy --only functions --force`
-- In PowerShell bevorzugt `*.cmd`, um Script-Policy-Probleme zu vermeiden.
+- Frontend Build: `npm run build`
+- Dev-Server: `npm run dev` oder `./scripts/dev.sh`
+- Dev-Server im lokalen Netzwerk: `npm run dev:network`
+- Komplettdeploy (Hosting + Functions + Rules): `npm run deploy` oder `./scripts/deploy.sh`
+- Nur Hosting: `npm run deploy:hosting` oder `./scripts/deploy.sh hosting`
+- Nur Functions: `npm run deploy:functions` oder `./scripts/deploy.sh functions`
+- Die lokal installierte Firebase CLI verwenden; eine globale Installation ist nicht erforderlich.
 
 ## Git-Workflow
 - Kleine, logisch getrennte Commits.

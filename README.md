@@ -195,13 +195,21 @@ public/
 
 ### Voraussetzungen
 
-- Node.js 20+ (empfohlen)
+- Node.js 22
 - npm
+
+Mit nvm kann die passende Node-Version direkt aus `.nvmrc` geladen werden:
+
+```bash
+nvm install
+nvm use
+```
 
 ### Installation
 
 ```bash
 npm install
+npm install --prefix functions
 ```
 
 ### Starten
@@ -210,16 +218,26 @@ npm install
 npm run dev
 ```
 
-Wenn PowerShell-Skripte blockiert sind, nutze auf Windows stattdessen:
+Unter Linux kann alternativ das ausführbare Startskript verwendet werden:
 
 ```bash
-npm.cmd run dev
+./scripts/dev.sh
+```
+
+Für den Zugriff von anderen Geräten im lokalen Netzwerk:
+
+```bash
+npm run dev:network
 ```
 
 ## Skripte
 
 - `npm run dev` -> Vite Dev-Server
+- `npm run dev:network` -> Vite Dev-Server im lokalen Netzwerk
 - `npm run build` -> TypeScript Build + Vite Production Build
+- `npm run deploy` -> Build und vollständiger Firebase-Deploy
+- `npm run deploy:hosting` -> Build und Deploy nur des Hostings
+- `npm run deploy:functions` -> Deploy nur der Cloud Functions
 - `npm run preview` -> lokale Vorschau auf den Build
 - `npm run lint` -> ESLint
 - `npm run spellcheck` -> cspell
@@ -236,11 +254,20 @@ Hosting-Konfiguration (`firebase.json`):
 Deploy:
 
 ```bash
-npm run build
-cmd /c "firebase deploy --only hosting,functions"
+npm run deploy
 ```
 
-`cmd /c` ist unter Windows nuetzlich, wenn `firebase.ps1` in PowerShell blockiert ist.
+Alternativ steht unter Linux ein ausführbares Skript bereit:
+
+```bash
+./scripts/deploy.sh
+./scripts/deploy.sh hosting
+./scripts/deploy.sh functions
+```
+
+Die Firebase CLI wird lokal über die Projektabhängigkeiten ausgeführt. Eine globale
+Installation ist nicht erforderlich. Vor dem ersten Deploy ist gegebenenfalls
+`npx firebase login` nötig.
 
 ## QA-Checkliste
 
