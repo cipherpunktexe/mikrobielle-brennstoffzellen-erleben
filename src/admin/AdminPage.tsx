@@ -39,7 +39,7 @@ import {
   extractGeneratorCodeFromQrValue,
   getQrPdfLayoutPreview,
 } from '../common/qr/qr'
-import type { QrCodeNumberPlacement, QrPdfPageSize } from '../common/qr/qr'
+import type { QrPdfPageSize } from '../common/qr/qr'
 import {
   addMeasurementByCode,
   getGeneratorByCode,
@@ -150,7 +150,6 @@ export function AdminPage() {
   const [exportQrSize, setExportQrSize] = useState('42')
   const [exportPageSize, setExportPageSize] = useState<QrPdfPageSize>('a4')
   const [exportDigits, setExportDigits] = useState('4')
-  const [exportCodePlacement, setExportCodePlacement] = useState<QrCodeNumberPlacement>('center')
   const [exportNextCode, setExportNextCode] = useState('')
   const [exportNextSequence, setExportNextSequence] = useState<number | null>(null)
   const [exportStatus, setExportStatus] = useState('')
@@ -509,7 +508,6 @@ export function AdminPage() {
         mode: 'qrSize',
         qrSizeMm,
         pageSize: exportPageSize,
-        codePlacement: exportCodePlacement,
       })
       setExportNextCode(reservation.nextCode)
       setExportNextSequence(reservation.nextSequence)
@@ -1084,7 +1082,6 @@ export function AdminPage() {
           exportQrSize={exportQrSize}
           exportPageSize={exportPageSize}
           exportDigits={exportDigits}
-          exportCodePlacement={exportCodePlacement}
           exportNextCode={exportNextCode}
           exportNextSequence={exportNextSequence}
           parsedExportDigits={parsedExportDigits}
@@ -1095,7 +1092,6 @@ export function AdminPage() {
           onSetExportQrSize={(value) => setExportQrSize(value.replace(/\./g, ','))}
           onSetExportPageSize={setExportPageSize}
           onSetExportDigits={setExportDigits}
-          onSetExportCodePlacement={setExportCodePlacement}
           onExport={() => void handleExport()}
           formatMutedDecimal={formatMutedDecimal}
         />
@@ -1266,4 +1262,3 @@ export function AdminPage() {
     </Stack>
   )
 }
-

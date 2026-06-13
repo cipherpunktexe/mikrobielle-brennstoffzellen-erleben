@@ -1,5 +1,11 @@
 import { describe, expect, test } from 'vitest'
-import { buildGeneratorQrValue, extractGeneratorCodeFromQrValue, getQrBadgeLabel } from './qr'
+import {
+  buildGeneratorQrValue,
+  extractGeneratorCodeFromQrValue,
+  getQrBadgeLabel,
+  QR_BACKGROUND_COLOR,
+  QR_FOREGROUND_COLOR,
+} from './qr'
 
 describe('qr utils', () => {
   test('builds and parses register links for newly generated qr codes', () => {
@@ -39,5 +45,10 @@ describe('qr utils', () => {
   test('uses the actual code as uppercase badge label', () => {
     expect(getQrBadgeLabel('000a')).toBe('000A')
     expect(getQrBadgeLabel('000a')).toBe(getQrBadgeLabel('000A'))
+  })
+
+  test('uses only black on white for qr rendering', () => {
+    expect(QR_FOREGROUND_COLOR).toBe('#000000')
+    expect(QR_BACKGROUND_COLOR).toBe('#FFFFFF')
   })
 })
