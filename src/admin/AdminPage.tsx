@@ -4,6 +4,7 @@ import {
   Card,
   CardContent,
   Grid,
+  Skeleton,
   Stack,
   Typography,
   useMediaQuery,
@@ -143,6 +144,7 @@ export function AdminPage() {
 
   const [authUserId, setAuthUserId] = useState('')
   const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [profileLoadedForUid, setProfileLoadedForUid] = useState('')
   const [authError, setAuthError] = useState('')
   const [authLoading, setAuthLoading] = useState(false)
 
@@ -285,10 +287,33 @@ export function AdminPage() {
   useEffect(() => {
     if (!authUserId) {
       setProfile(null)
+      setProfileLoadedForUid('')
       return
     }
 
-    void getUserProfile(authUserId).then(setProfile)
+    let active = true
+
+    void getUserProfile(authUserId)
+      .then((nextProfile) => {
+        if (!active) {
+          return
+        }
+
+        setProfile(nextProfile)
+        setProfileLoadedForUid(authUserId)
+      })
+      .catch(() => {
+        if (!active) {
+          return
+        }
+
+        setProfile(null)
+        setProfileLoadedForUid(authUserId)
+      })
+
+    return () => {
+      active = false
+    }
   }, [authUserId])
 
   useEffect(() => {
@@ -313,12 +338,12 @@ export function AdminPage() {
   }, [activeTab, navigate, routeCode, routeTab])
 
   useEffect(() => {
-    if (activeTab !== 'moderation') {
+    if (activeTab !== 'moderation' || profile?.role !== 'admin') {
       return
     }
 
     void loadModerationEntries()
-  }, [activeTab])
+  }, [activeTab, profile?.role])
 
   useEffect(() => {
     setMobileAdminNavOpen(false)
@@ -347,12 +372,12 @@ export function AdminPage() {
   useEffect(() => {
     const enteredBy = profile?.email?.trim() || authUserId
 
-    if (activeTab !== 'scan' || !enteredBy) {
+    if (activeTab !== 'scan' || profile?.role !== 'admin' || !enteredBy) {
       return
     }
 
     void loadRecentMeasurements(enteredBy)
-  }, [activeTab, authUserId, profile?.email])
+  }, [activeTab, authUserId, profile?.email, profile?.role])
 
   const parsedExportCount = Number.parseInt(exportCount, 10)
   const requestedQrSize = parseDecimalInput(exportQrSize)
@@ -1052,6 +1077,26 @@ export function AdminPage() {
           </Card>
         </Grid>
       </Grid>
+    )
+  }
+
+  if (profileLoadedForUid !== authUserId) {
+    return (
+      <Stack
+        spacing={2.5}
+        role="status"
+        aria-label="Admin-Bereich wird geladen"
+      >
+        <Skeleton variant="rounded" height={52} />
+        <Grid container spacing={{ xs: 2, md: 3 }}>
+          <Grid size={{ xs: 12, md: 5 }}>
+            <Skeleton variant="rounded" height={220} />
+          </Grid>
+          <Grid size={{ xs: 12, md: 7 }}>
+            <Skeleton variant="rounded" height={220} />
+          </Grid>
+        </Grid>
+      </Stack>
     )
   }
 
