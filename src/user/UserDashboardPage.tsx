@@ -1,4 +1,5 @@
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
+import LoginOutlinedIcon from '@mui/icons-material/LoginOutlined'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner'
 import ShowChartIcon from '@mui/icons-material/ShowChart'
@@ -57,75 +58,48 @@ type MeasurementViewMode = 'chart' | 'list'
 function GuestDashboardSkeleton({ onLogin }: { onLogin: () => void }) {
   return (
     <Stack
-      spacing={{ xs: 2, md: 2.5 }}
+      spacing={{ xs: 2.5, md: 3 }}
       role="region"
-      aria-label="Vorschau deiner Brennstoffzellen-Seite"
+      aria-labelledby="guest-dashboard-title"
+      sx={{ maxWidth: 760, mx: 'auto' }}
     >
-      <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        justifyContent="space-between"
-        alignItems={{ xs: 'stretch', sm: 'center' }}
-        spacing={2}
-      >
-        <Skeleton variant="text" width="min(100%, 320px)" height={54} />
-        <Button variant="contained" size="large" onClick={onLogin}>
-          Anmelden
-        </Button>
-      </Stack>
-
-      <Card aria-hidden="true">
-        <CardContent sx={{ p: { xs: 2.25, sm: 2.5 } }}>
-          <Grid container spacing={{ xs: 2, sm: 3 }}>
-            <Grid size={{ xs: 12, sm: 5 }}>
-              <Stack spacing={0.75}>
-                <Skeleton variant="text" width={130} />
-                <Skeleton variant="rounded" width="75%" height={32} />
-              </Stack>
-            </Grid>
-            <Grid size={{ xs: 12, sm: 4 }}>
-              <Stack spacing={0.75}>
-                <Skeleton variant="text" width={180} />
-                <Skeleton variant="rounded" width={76} height={32} />
-              </Stack>
-            </Grid>
-            <Grid size={{ xs: 12, sm: 3 }}>
-              <Skeleton variant="rounded" width="100%" height={38} />
-            </Grid>
-          </Grid>
-        </CardContent>
-      </Card>
-
-      <Card aria-hidden="true">
-        <CardContent sx={{ p: { xs: 2.25, sm: 2.5 } }}>
-          <Stack spacing={2}>
-            <Stack
-              direction={{ xs: 'column', sm: 'row' }}
-              justifyContent="space-between"
-              spacing={1.5}
+      <Card>
+        <CardContent sx={{ p: { xs: 3, sm: 5 }, textAlign: 'center' }}>
+          <Stack spacing={2.5} alignItems="center">
+            <Stack spacing={1} alignItems="center">
+              <Typography
+                id="guest-dashboard-title"
+                variant="h2"
+                sx={{ fontSize: { xs: '2rem', sm: '2.6rem' } }}
+              >
+                Deine Brennstoffzelle
+              </Typography>
+              <Typography color="text.secondary" sx={{ maxWidth: 520 }}>
+                Melde dich an, um deine Messwerte, Platzierung und Brennstoffzelle zu sehen.
+              </Typography>
+            </Stack>
+            <Button
+              variant="contained"
+              size="large"
+              startIcon={<LoginOutlinedIcon />}
+              onClick={onLogin}
+              sx={{
+                minWidth: { xs: '100%', sm: 260 },
+                minHeight: 54,
+                fontSize: '1.05rem',
+              }}
             >
-              <Skeleton variant="text" width={210} height={38} />
-              <Skeleton
-                variant="rounded"
-                height={38}
-                sx={{ width: { xs: '100%', sm: 220 } }}
-              />
-            </Stack>
-            <Grid container spacing={1.5}>
-              <Grid size={{ xs: 6 }}>
-                <Skeleton variant="rounded" height={78} />
-              </Grid>
-              <Grid size={{ xs: 6 }}>
-                <Skeleton variant="rounded" height={78} />
-              </Grid>
-            </Grid>
-            <Stack spacing={1}>
-              {[0, 1, 2, 3].map((row) => (
-                <Skeleton key={row} variant="rounded" width="100%" height={42} />
-              ))}
-            </Stack>
+              Jetzt anmelden
+            </Button>
           </Stack>
         </CardContent>
       </Card>
+
+      <Stack spacing={1.25} aria-hidden="true" sx={{ opacity: 0.42, px: { xs: 1, sm: 4 } }}>
+        <Skeleton variant="rounded" height={28} width="42%" />
+        <Skeleton variant="rounded" height={72} />
+        <Skeleton variant="rounded" height={72} />
+      </Stack>
     </Stack>
   )
 }
