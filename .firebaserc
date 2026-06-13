@@ -1,5 +1,15 @@
 {
   "projects": {
     "default": "mikrobielle-brennstoffzellen"
-  }
+  },
+  "targets": {
+    "mikrobielle-brennstoffzellen": {
+      "hosting": {
+        "app": [
+          "mikrobielle-brennstoffzellen-erleben"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }

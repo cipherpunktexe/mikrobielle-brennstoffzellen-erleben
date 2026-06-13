@@ -248,6 +248,7 @@ npm run dev:network
 
 Hosting-Konfiguration (`firebase.json`):
 
+- Deploy-Target `app`: `mikrobielle-brennstoffzellen-erleben`
 - `public: "dist"`
 - SPA-Rewrite aller Routen auf `/index.html`
 
