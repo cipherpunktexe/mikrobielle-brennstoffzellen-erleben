@@ -39,6 +39,7 @@ export function AppShell() {
   const theme = useTheme()
   const { openLoginDialog } = useLoginDialog()
   const isMobileViewport = useMediaQuery(theme.breakpoints.down('sm'))
+  const isCompactNavigation = useMediaQuery(theme.breakpoints.down('md'))
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null)
   const [authResolved, setAuthResolved] = useState(false)
   const [authUserId, setAuthUserId] = useState('')
@@ -99,6 +100,11 @@ export function AppShell() {
 
   function handleCloseMenu() {
     setMenuAnchor(null)
+  }
+
+  function handleOpenLoginDialog() {
+    handleCloseMenu()
+    openLoginDialog()
   }
 
   async function handleLogout() {
@@ -168,36 +174,33 @@ export function AppShell() {
             </Stack>
 
             {!authUserId && authResolved ? (
-              <>
+              isCompactNavigation ? (
                 <IconButton
                   aria-label="Navigation öffnen"
                   color="inherit"
                   onClick={handleOpenMenu}
-                  sx={{ display: { xs: 'inline-flex', md: 'none' } }}
                 >
                   <MenuIcon />
                 </IconButton>
+              ) : (
                 <Button
                   variant="contained"
                   startIcon={<LoginOutlinedIcon />}
-                  onClick={openLoginDialog}
+                  onClick={handleOpenLoginDialog}
                   sx={{
-                    ml: { xs: 0, md: 1 },
-                    px: { xs: 1.5, sm: 2.25 },
+                    ml: 1,
+                    px: 2.25,
                     whiteSpace: 'nowrap',
                     bgcolor: 'common.white',
                     color: 'primary.dark',
                     '&:hover': {
                       bgcolor: (theme) => alpha(theme.palette.common.white, 0.88),
                     },
-                    '& .MuiButton-startIcon': {
-                      display: { xs: 'none', sm: 'inherit' },
-                    },
                   }}
                 >
                   Anmelden
                 </Button>
-              </>
+              )
             ) : authUserId ? (
               <IconButton
                 aria-label="Account-Menü öffnen"
@@ -264,7 +267,7 @@ export function AppShell() {
             <Divider />
           </>
         ) : null}
-        {isMobileViewport
+        {isCompactNavigation
           ? visibleNavigationItems.map((item) => (
               <MenuItem
                 key={item.to}
@@ -293,7 +296,16 @@ export function AppShell() {
               </MenuItem>
             ))
           : null}
-        {isMobileViewport && authUserId ? <Divider /> : null}
+        {isCompactNavigation && !authUserId ? <Divider /> : null}
+        {isCompactNavigation && !authUserId ? (
+          <MenuItem onClick={handleOpenLoginDialog}>
+            <Stack direction="row" spacing={1.25} alignItems="center">
+              <LoginOutlinedIcon fontSize="small" />
+              <span>Anmelden</span>
+            </Stack>
+          </MenuItem>
+        ) : null}
+        {isCompactNavigation && authUserId ? <Divider /> : null}
         {authUserId ? (
           <MenuItem onClick={() => void handleLogout()}>
             <Stack direction="row" spacing={1.25} alignItems="center">
