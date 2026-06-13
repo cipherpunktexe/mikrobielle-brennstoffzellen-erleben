@@ -17,9 +17,9 @@
 
 ### User-Flow
 
-- Registrierung über QR-Link: `/register/:code`.
+- Registrierung über QR-Link: `/user?register=<code>`.
 - Login mit E-Mail/Passwort oder Google.
-- Verknuepfung einer Brennstoffzelle über Scanner oder Code-Eingabe im User-Dashboard.
+- Verknuepfung einer Brennstoffzelle über den QR-Scanner im User-Dashboard.
 - Anzeige von:
   - eigenem Brennstoffzellen-Code
   - Platzierung im Leaderboard (nach Maximalwert)
@@ -37,8 +37,7 @@
 ## Routing
 
 - `/` -> Landingpage
-- `/register/:code` -> Registrierung
-- `/user` -> User-Dashboard
+- `/user` -> User-Dashboard; mit `?register=<code>` öffnet sich der Dialog zur Registrierung
 - `/admin` -> Admin-Bereich (Standardtab)
 - `/admin/:tab` -> Admin-Bereich mit aktivem Tab (`scan`, `qr`, `moderation`)
 - `/admin/:tab/generator/:code` -> Admin-Scan/Messung fuer konkreten Code
@@ -85,13 +84,9 @@ Antwort:
 - Generierte QR-Werte sind URL-basiert und zeigen auf `/user?register=<code>`.
 - Die Basis-URL kommt aus `VITE_PUBLIC_APP_URL` (falls gesetzt), sonst aus
   `https://mikrobielle-brennstoffzellen-erleben.web.app`.
-- Die bisherige Site `https://mikrobielle-brennstoffzellen.web.app` wird beim Hosting-Deploy
-  ebenfalls aktualisiert, damit bereits gedruckte QR-Codes weiter funktionieren.
-- Parser-Unterstuetzung:
-  - Links zur Registrierung (`.../user?register=<code>`)
-  - bisherige Register-Links (`.../register/<code>`)
-  - reine Codes (z. B. `00AF`)
-- Legacy-Payloads/alte Admin-QR-Links werden nicht mehr unterstuetzt.
+- Der QR-Parser akzeptiert ausschließlich die vollständige URL der aktiven App im Format
+  `https://mikrobielle-brennstoffzellen-erleben.web.app/user?register=<code>`.
+- Andere Domains, Pfade, Query-Parameter und reine Codes werden abgelehnt.
 - Ein `generator`-Dokument entsteht:
   - bei Registrierung mit QR-Code
   - oder beim spaeteren Verknuepfen eines bisher unbekannten Codes durch einen eingeloggten User
@@ -285,7 +280,7 @@ npm run build
 
 Bei Routing-Aenderungen zusaetzlich manuell pruefen:
 
-- `/register/:code`
 - `/user`
+- `/user?register=<code>`
 - `/admin`
 - `/admin/scan/generator/:code`

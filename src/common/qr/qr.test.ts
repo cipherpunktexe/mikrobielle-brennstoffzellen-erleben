@@ -17,31 +17,15 @@ describe('qr utils', () => {
     expect(extractGeneratorCodeFromQrValue(value)).toBe('station-007')
   })
 
-  test('parses register links from any origin', () => {
-    expect(
-      extractGeneratorCodeFromQrValue('https://example.com/register/station-008'),
-    ).toBe('station-008')
-  })
-
-  test('parses register links without protocol and with query params', () => {
-    expect(
-      extractGeneratorCodeFromQrValue('mikrobielle-brennstoffzellen.web.app/register/001C?source=camera'),
-    ).toBe('001c')
-  })
-
-  test('rejects legacy payload formats', () => {
+  test('rejects every payload outside the current qr format', () => {
+    expect(extractGeneratorCodeFromQrValue('https://example.com/user?register=station-008')).toBe('')
+    expect(extractGeneratorCodeFromQrValue('/user?register=station-008')).toBe('')
+    expect(extractGeneratorCodeFromQrValue('https://mikrobielle-brennstoffzellen-erleben.web.app/register/station-008')).toBe('')
+    expect(extractGeneratorCodeFromQrValue('https://mikrobielle-brennstoffzellen-erleben.web.app/user?code=station-008')).toBe('')
+    expect(extractGeneratorCodeFromQrValue('https://mikrobielle-brennstoffzellen-erleben.web.app/user?register=station-008&source=camera')).toBe('')
+    expect(extractGeneratorCodeFromQrValue('https://mikrobielle-brennstoffzellen-erleben.web.app/user?register=station-008#scan')).toBe('')
     expect(extractGeneratorCodeFromQrValue('mbz:generator:station-009')).toBe('')
-    expect(extractGeneratorCodeFromQrValue('https://example.com/admin/generator/station-009')).toBe('')
-  })
-
-  test('parses admin scan links and query based qr payloads', () => {
-    expect(extractGeneratorCodeFromQrValue('https://example.com/admin/scan/generator/00AF')).toBe('00af')
-    expect(extractGeneratorCodeFromQrValue('https://example.com/scan?code=00B1')).toBe('00b1')
-    expect(extractGeneratorCodeFromQrValue('https://example.com/scan?generator=00B2')).toBe('00b2')
-  })
-
-  test('falls back to plain generator codes', () => {
-    expect(extractGeneratorCodeFromQrValue('station-010')).toBe('station-010')
+    expect(extractGeneratorCodeFromQrValue('station-010')).toBe('')
   })
 
   test('uses the actual code as uppercase badge label', () => {

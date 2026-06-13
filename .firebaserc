@@ -7,9 +7,6 @@
       "hosting": {
         "app": [
           "mikrobielle-brennstoffzellen-erleben"
-        ],
-        "legacy": [
-          "mikrobielle-brennstoffzellen"
         ]
       }
     }

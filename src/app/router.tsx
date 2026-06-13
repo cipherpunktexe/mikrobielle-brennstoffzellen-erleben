@@ -9,11 +9,6 @@ const LandingPage = lazy(() =>
     default: module.LandingPage,
   })),
 )
-const UserRegistrationPage = lazy(() =>
-  import('../user/UserRegistrationPage').then((module) => ({
-    default: module.UserRegistrationPage,
-  })),
-)
 const UserDashboardPage = lazy(() =>
   import('../user/UserDashboardPage').then((module) => ({
     default: module.UserDashboardPage,
@@ -59,10 +54,6 @@ export const router = createBrowserRouter([
     element: <AppShell />,
     children: [
       { index: true, element: withSuspense(<LandingPage />) },
-      {
-        path: 'register/:code',
-        element: withSuspense(<UserRegistrationPage />),
-      },
       { path: 'user', element: withSuspense(<UserDashboardPage />) },
       { path: 'admin', element: withSuspense(<AdminPage />) },
       { path: 'admin/:tab', element: withSuspense(<AdminPage />) },

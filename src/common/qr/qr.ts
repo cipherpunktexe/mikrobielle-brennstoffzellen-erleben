@@ -111,7 +111,7 @@ function resolvePublicAppOrigin() {
 }
 
 function getQrLabel(value: string) {
-  const code = extractGeneratorCodeFromQrValue(value, 'https://mbz.local')
+  const code = extractGeneratorCodeFromQrValue(value)
   return getQrBadgeLabel(code || value.trim() || '000')
 }
 
@@ -222,64 +222,34 @@ export async function generateQrDataUrl(
   return renderQrToCanvas(value, label).toDataURL('image/png')
 }
 
-function extractCodeFromPathSegments(pathSegments: string[]) {
-  const normalizedSegments = pathSegments.map((segment) => segment.toLowerCase())
-  const registerIndex = normalizedSegments.findIndex((segment) => segment === 'register')
-
-  if (registerIndex >= 0 && pathSegments[registerIndex + 1]) {
-    return formatCode(decodeURIComponent(pathSegments[registerIndex + 1]))
-  }
-
-  const adminScanGeneratorIndex = normalizedSegments.findIndex(
-    (segment, index) =>
-      segment === 'admin' &&
-      normalizedSegments[index + 1] === 'scan' &&
-      normalizedSegments[index + 2] === 'generator',
-  )
-
-  if (adminScanGeneratorIndex >= 0 && pathSegments[adminScanGeneratorIndex + 3]) {
-    return formatCode(decodeURIComponent(pathSegments[adminScanGeneratorIndex + 3]))
-  }
-
-  return ''
-}
-
-export function extractGeneratorCodeFromQrValue(value: string, origin = window.location.origin) {
+export function extractGeneratorCodeFromQrValue(value: string) {
   const trimmedValue = value.trim()
-  const looksLikePlainCode = !/[/?#:\s]/.test(trimmedValue)
 
   if (!trimmedValue) {
     return ''
   }
 
-  const pathMatch = trimmedValue.match(/(?:^|\/)(?:register|admin\/scan\/generator)\/([^/?#\s]+)/i)
-
-  if (pathMatch?.[1]) {
-    return formatCode(decodeURIComponent(pathMatch[1]))
-  }
-
   try {
-    const url = new URL(trimmedValue, origin)
-    const codeFromPath = extractCodeFromPathSegments(url.pathname.split('/').filter(Boolean))
+    const url = new URL(trimmedValue)
+    const queryKeys = [...url.searchParams.keys()]
+    const registrationCodes = url.searchParams.getAll('register')
 
-    if (codeFromPath) {
-      return codeFromPath
+    if (
+      url.protocol !== 'https:' ||
+      url.origin !== DEFAULT_PUBLIC_APP_ORIGIN ||
+      url.pathname !== '/user' ||
+      url.hash ||
+      queryKeys.length !== 1 ||
+      queryKeys[0] !== 'register' ||
+      registrationCodes.length !== 1
+    ) {
+      return ''
     }
 
-    const codeParamCandidates = ['register', 'code', 'generator', 'generatorCode']
-
-    for (const paramKey of codeParamCandidates) {
-      const paramValue = url.searchParams.get(paramKey)?.trim()
-
-      if (paramValue) {
-        return formatCode(decodeURIComponent(paramValue))
-      }
-    }
+    return formatCode(registrationCodes[0])
   } catch {
-    return looksLikePlainCode ? formatCode(trimmedValue) : ''
+    return ''
   }
-
-  return looksLikePlainCode ? formatCode(trimmedValue) : ''
 }
 
 function clamp(value: number, min: number, max: number) {
