@@ -4,16 +4,18 @@ import { renderWithProviders } from '../app/renderWithProviders'
 import { LandingPage } from './LandingPage'
 
 describe('LandingPage', () => {
-  test('presents the actual project content without placeholders', () => {
+  test('shows only the project hero and presentation sections', () => {
     renderWithProviders(<LandingPage />)
 
     expect(
       screen.getByRole('heading', { name: /mikrobielle brennstoffzellen erleben/i }),
     ).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: /Mikroorganismen/i })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: /mikroskopieren/i })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: /eigene brennstoffzelle bauen/i })).toBeInTheDocument()
-    expect(screen.getByText(/Technischen Universität Braunschweig/)).toBeInTheDocument()
-    expect(screen.queryByText(/lorem ipsum/i)).not.toBeInTheDocument()
+    expect(screen.getByText('IdeenExpo-Projekt')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /projektpräsentation/i })).toBeInTheDocument()
+    expect(
+      screen.getByTitle(/projektpräsentation mikrobielle brennstoffzellen erleben/i),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: /mikroskopieren/i })).not.toBeInTheDocument()
+    expect(screen.queryByText(/Technischen Universität Braunschweig/)).not.toBeInTheDocument()
   })
 })
