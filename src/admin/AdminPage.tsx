@@ -607,7 +607,6 @@ export function AdminPage() {
     navigate(`/admin/scan/generator/${code}`)
 
     if (!foundGenerator) {
-      setScannerOpen(false)
       setScanStatus('')
       showSnackbar({
         message: `Code ${code.toUpperCase()} ist noch nicht verknüpft.`,
@@ -626,7 +625,6 @@ export function AdminPage() {
       throw new Error(scanIssue)
     }
 
-    setScannerOpen(false)
     setScanStatus(`QR-Code erkannt: ${code}`)
     openScanMeasurementDialog(code, true)
     lastHandledScanRef.current = { code, timestamp: now }

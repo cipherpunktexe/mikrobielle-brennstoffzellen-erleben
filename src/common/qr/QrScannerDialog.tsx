@@ -487,26 +487,38 @@ export function QrScannerDialog({
   const cameraReady = cameraState === 'ready' || cameraState === 'processing'
   const initializing = cameraState === 'starting'
   const processing = cameraState === 'processing'
-  const scannerDescription =
-    mode === 'admin'
-      ? 'Richte die Kamera auf den QR-Code der Brennstoffzelle. Nach dem Scan wird der Code direkt für die Messwerterfassung übernommen.'
-      : 'Richte die Kamera auf den QR-Code deiner Brennstoffzelle. Nach dem Scan startet die Verknüpfung automatisch.'
+  const isAdminMode = mode === 'admin'
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>QR-Code scannen</DialogTitle>
-      <DialogContent>
-        <Stack spacing={2}>
-          <Typography color="text.secondary">
-            {scannerDescription}
-          </Typography>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      fullWidth
+      maxWidth="sm"
+      PaperProps={{
+        sx: {
+          overflow: 'hidden',
+          borderRadius: { xs: 0, sm: 3 },
+        },
+      }}
+    >
+      <DialogTitle sx={{ pb: isAdminMode ? 1.5 : 1 }}>
+        {isAdminMode ? 'Brennstoffzelle scannen' : 'QR-Code scannen'}
+      </DialogTitle>
+      <DialogContent sx={{ px: { xs: 2, sm: 3 }, pb: 2 }}>
+        <Stack spacing={isAdminMode ? 1.5 : 2}>
+          {!isAdminMode ? (
+            <Typography color="text.secondary">
+              Nach dem Scan startet die Verknüpfung automatisch.
+            </Typography>
+          ) : null}
 
           <Box
             sx={{
               position: 'relative',
               overflow: 'hidden',
-              borderRadius: 3,
-              minHeight: { xs: 300, sm: 320 },
+              borderRadius: 2.5,
+              height: { xs: 280, sm: isAdminMode ? 360 : 320 },
               bgcolor: (theme) => alpha(theme.palette.text.primary, 0.92),
               display: 'grid',
               placeItems: 'center',
@@ -520,7 +532,7 @@ export function QrScannerDialog({
               playsInline
               sx={{
                 width: '100%',
-                minHeight: { xs: 300, sm: 320 },
+                height: '100%',
                 objectFit: 'cover',
                 display: 'block',
               }}
@@ -535,9 +547,9 @@ export function QrScannerDialog({
                 width: { xs: 190, sm: 220 },
                 height: { xs: 190, sm: 220 },
                 transform: 'translate(-50%, -50%)',
-                border: (theme) => `2px solid ${alpha(theme.palette.common.white, 0.72)}`,
-                borderRadius: 3,
-                boxShadow: (theme) => `0 0 0 9999px ${alpha(theme.palette.common.black, 0.14)}`,
+                border: (theme) => `3px solid ${alpha(theme.palette.common.white, 0.9)}`,
+                borderRadius: 2.5,
+                boxShadow: (theme) => `0 0 0 9999px ${alpha(theme.palette.common.black, 0.24)}`,
               }}
             />
 
@@ -569,18 +581,26 @@ export function QrScannerDialog({
 
             {!initializing && cameraReady && !processing ? (
               <Stack
-                spacing={1}
+                direction="row"
+                spacing={0.75}
                 alignItems="center"
                 sx={{
                   position: 'absolute',
-                  insetInline: 0,
-                  bottom: 16,
+                  left: '50%',
+                  bottom: 14,
+                  transform: 'translateX(-50%)',
                   pointerEvents: 'none',
+                  color: 'common.white',
+                  bgcolor: (theme) => alpha(theme.palette.common.black, 0.58),
+                  borderRadius: 999,
+                  px: 1.5,
+                  py: 0.75,
+                  whiteSpace: 'nowrap',
                 }}
               >
-                <QrCodeScannerIcon sx={{ color: 'common.white' }} />
-                <Typography variant="body2" color="common.white">
-                  QR-Code im Rahmen platzieren
+                <QrCodeScannerIcon fontSize="small" />
+                <Typography variant="body2" fontWeight={700}>
+                  Bereit zum Scannen
                 </Typography>
               </Stack>
             ) : null}
@@ -613,7 +633,15 @@ export function QrScannerDialog({
             </Alert>
           ) : null}
 
-          <Stack spacing={1}>
+          <Box
+            sx={{
+              border: (theme) => `1px solid ${theme.palette.divider}`,
+              borderRadius: 2,
+              bgcolor: (theme) => alpha(theme.palette.background.default, 0.55),
+              px: 1.5,
+              py: manualOpen ? 1.5 : 0.5,
+            }}
+          >
             <Button
               variant="text"
               color="inherit"
@@ -626,12 +654,12 @@ export function QrScannerDialog({
                 />
               }
               onClick={() => setManualOpen((current) => !current)}
-              sx={{ justifyContent: 'flex-start', width: 'fit-content', px: 0.5 }}
+              sx={{ justifyContent: 'flex-start', width: '100%', px: 0 }}
             >
-              Manuell eingeben
+              Code manuell eingeben
             </Button>
             <Collapse in={manualOpen} timeout={180}>
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ pt: 1 }}>
                 <TextField
                   value={manualValue}
                   onChange={(event) => setManualValue(event.target.value)}
@@ -649,11 +677,13 @@ export function QrScannerDialog({
                 </Button>
               </Stack>
             </Collapse>
-          </Stack>
+          </Box>
         </Stack>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Schließen</Button>
+      <DialogActions sx={{ px: { xs: 2, sm: 3 }, pt: 0, pb: 2 }}>
+        <Button onClick={onClose} fullWidth={isAdminMode} variant={isAdminMode ? 'outlined' : 'text'}>
+          Scanner schließen
+        </Button>
       </DialogActions>
     </Dialog>
   )

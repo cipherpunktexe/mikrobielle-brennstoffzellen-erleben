@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { expect, test, vi } from 'vitest'
 import { QrScannerDialog } from './QrScannerDialog'
 
-test('converts a manually entered code into the current qr link', async () => {
+test('uses the compact admin layout and converts a manual code into the current qr link', async () => {
   const user = userEvent.setup()
   const onDetected = vi.fn()
 
@@ -17,7 +17,10 @@ test('converts a manually entered code into the current qr link', async () => {
     />,
   )
 
-  await user.click(screen.getByRole('button', { name: /manuell eingeben/i }))
+  expect(screen.getByRole('dialog', { name: /brennstoffzelle scannen/i })).toBeInTheDocument()
+  expect(screen.queryByText(/Richte die Kamera/)).not.toBeInTheDocument()
+
+  await user.click(screen.getByRole('button', { name: /code manuell eingeben/i }))
   await user.type(screen.getByPlaceholderText(/001c/i), '00AF')
   await user.click(screen.getByRole('button', { name: /übernehmen/i }))
 
