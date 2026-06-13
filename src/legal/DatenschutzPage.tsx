@@ -1,8 +1,11 @@
 import { Box, Card, CardContent, Link, Stack, Typography } from '@mui/material'
+import type { ReactNode } from 'react'
+import { ContactDetails } from './ContactDetails'
+import { contactDetails, contactEmailHref } from './contactDetails'
 
-type SectionProps = {
+interface SectionProps {
   title: string
-  children: React.ReactNode
+  children: ReactNode
 }
 
 function Section({ title, children }: SectionProps) {
@@ -18,7 +21,7 @@ function Section({ title, children }: SectionProps) {
   )
 }
 
-function Subsection({ title, children }: { title: string; children: React.ReactNode }) {
+function Subsection({ title, children }: SectionProps) {
   return (
     <Box>
       <Typography variant="subtitle1" sx={{ mb: 0.75, fontWeight: 700 }}>
@@ -29,88 +32,21 @@ function Subsection({ title, children }: { title: string; children: React.ReactN
   )
 }
 
-type ServiceItem = {
-  title: string
-  description: string
-  dataItems: string[]
-  provider: string
-  providerUrl: string
-}
-
-function ServiceCard({ title, description, dataItems, provider, providerUrl }: ServiceItem) {
+function BulletList({ children }: { children: ReactNode }) {
   return (
-    <Card variant="outlined">
-      <CardContent sx={{ p: { xs: 2, sm: 2.5 } }}>
-        <Stack spacing={1.25}>
-          <Typography variant="h6" sx={{ fontSize: { xs: '1rem', sm: '1.2rem' } }}>
-            {title}
-          </Typography>
-          <Typography color="text.secondary">{description}</Typography>
-          <Box>
-            <Typography variant="subtitle2" sx={{ mb: 0.5, fontWeight: 700 }}>
-              Verarbeitete Daten
-            </Typography>
-            <Stack component="ul" spacing={0.5} sx={{ pl: 2, m: 0 }}>
-              {dataItems.map((item) => (
-                <Typography component="li" key={item} variant="body2" color="text.secondary">
-                  {item}
-                </Typography>
-              ))}
-            </Stack>
-          </Box>
-          <Typography variant="body2">
-            Anbieter:{' '}
-            <Link href={providerUrl} target="_blank" rel="noreferrer">
-              {provider}
-            </Link>
-          </Typography>
-        </Stack>
-      </CardContent>
-    </Card>
+    <Stack component="ul" spacing={0.75} sx={{ pl: 2.5, my: 0 }}>
+      {children}
+    </Stack>
   )
 }
 
-const serviceItems: ServiceItem[] = [
-  {
-    title: 'Firebase Authentication',
-    description:
-      'Wird für die Registrierung und Anmeldung mit E-Mail/Passwort sowie per Google-Login verwendet.',
-    dataItems: [
-      'E-Mail-Adresse',
-      'Passwort-Login-Daten',
-      'Google-Konto-Profildaten bei Google-Anmeldung',
-      'technische Anmelde- und Verbindungsdaten',
-    ],
-    provider: 'Google / Firebase',
-    providerUrl: 'https://firebase.google.com/support/privacy',
-  },
-  {
-    title: 'Cloud Firestore',
-    description: 'Wird zur Speicherung von Nutzerprofilen, Brennstoffzellen und Messwerten genutzt.',
-    dataItems: [
-      'Name',
-      'E-Mail-Adresse',
-      'Rolle',
-      'Brennstoffzellen-Zuordnung',
-      'Brennstoffzellen-Code',
-      'Messwerte und Zeitstempel',
-    ],
-    provider: 'Google / Firebase',
-    providerUrl: 'https://firebase.google.com/support/privacy',
-  },
-  {
-    title: 'Firebase Hosting',
-    description: 'Wird für die Bereitstellung der Web-App verwendet.',
-    dataItems: [
-      'IP-Adresse',
-      'Zeitpunkt des Zugriffs',
-      'aufgerufene Seiten und Dateien',
-      'technische Request- und Logdaten',
-    ],
-    provider: 'Google / Firebase',
-    providerUrl: 'https://firebase.google.com/support/privacy',
-  },
-]
+function Bullet({ children }: { children: ReactNode }) {
+  return (
+    <Typography component="li" variant="body2">
+      {children}
+    </Typography>
+  )
+}
 
 export function DatenschutzPage() {
   return (
@@ -128,93 +64,227 @@ export function DatenschutzPage() {
               Datenschutzerklärung
             </Typography>
             <Typography color="text.secondary">
-              Diese Datenschutzerklärung ist als veröffentlichungsfähige Vorlage mit Platzhaltern angelegt.
-              Ersetze die eckigen Klammern vor der Veröffentlichung durch die tatsächlichen Angaben zur
-              verantwortlichen Stelle.
+              Informationen zur Verarbeitung personenbezogener Daten in der Web-App
+              „{contactDetails.projectName}“.
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Stand: 13. Juni 2026
             </Typography>
           </Stack>
         </CardContent>
       </Card>
 
-      <Section title="1. Verantwortliche Stelle">
+      <Section title="1. Name und Kontaktdaten des Verantwortlichen">
         <Typography variant="body2">
-          [Name der verantwortlichen Person oder Organisation]
-          <br />
-          [Straße und Hausnummer]
-          <br />
-          [PLZ Ort]
-          <br />
-          [Land]
+          Verantwortlich für die Verarbeitung personenbezogener Daten ist:
         </Typography>
+        <ContactDetails showProjectName />
+      </Section>
+
+      <Section title="2. Datenschutzbeauftragter">
         <Typography variant="body2">
-          E-Mail: [E-Mail-Adresse]
-          <br />
-          Telefon: [Telefonnummer]
+          Für dieses Projekt wurde kein Datenschutzbeauftragter benannt. Datenschutzanfragen
+          können direkt an{' '}
+          <Link href={contactEmailHref}>{contactDetails.email}</Link> gerichtet werden.
         </Typography>
       </Section>
 
-      <Section title="2. Datenschutz auf einen Blick">
-        <Subsection title="Welche Daten werden verarbeitet?">
+      <Section title="3. Zwecke, Datenkategorien und Rechtsgrundlagen">
+        <Subsection title="Bereitstellung der Web-App">
           <Typography variant="body2">
-            Im Rahmen der Nutzung der App werden insbesondere Registrierungs-, Login-, Rollen-,
-            Brennstoffzellen- und Messwertdaten verarbeitet. Zusätzlich fallen beim Aufruf der Web-App
-            technische Zugriffsdaten an.
+            Beim Aufruf der App verarbeitet Firebase Hosting technische Zugriffsdaten, insbesondere
+            IP-Adresse, Zeitpunkt, angeforderte Datei, Referrer, Browser- und Geräteinformationen.
+            Dies dient der sicheren und fehlerfreien Bereitstellung der App.
+          </Typography>
+          <Typography variant="body2">
+            Rechtsgrundlage ist Art. 6 Abs. 1 Buchstabe f DSGVO. Das berechtigte Interesse liegt im
+            sicheren, stabilen und wirtschaftlichen Betrieb der Web-App.
           </Typography>
         </Subsection>
 
-        <Subsection title="Wofür werden die Daten genutzt?">
+        <Subsection title="Registrierung und Anmeldung">
           <Typography variant="body2">
-            Die Daten werden genutzt, um Nutzerkonten anzulegen, Anmeldungen zu ermöglichen,
-            Brennstoffzellen Nutzern zuzuordnen, Messwerte zu speichern und das Leaderboard
-            bereitzustellen.
+            Für Registrierung und Anmeldung werden Name, E-Mail-Adresse, verschlüsselte
+            Authentifizierungsdaten, Nutzer-ID und gegebenenfalls Profildaten des Google-Kontos
+            verarbeitet. Bei einer Registrierung wird außerdem der Brennstoffzellen-Code erfasst.
+          </Typography>
+          <Typography variant="body2">
+            Rechtsgrundlage ist Art. 6 Abs. 1 Buchstabe b DSGVO, soweit die Verarbeitung für die
+            Bereitstellung des Nutzerkontos und der angeforderten App-Funktionen erforderlich ist.
           </Typography>
         </Subsection>
 
-        <Subsection title="Wer erhält die Daten?">
+        <Subsection title="Nutzerprofil, Brennstoffzelle und Messwerte">
           <Typography variant="body2">
-            Empfänger sind im aktuellen Stand vor allem die eingesetzten Google-Firebase-Dienste für
-            Authentifizierung, Datenbank und Hosting.
+            In Cloud Firestore werden Nutzer-ID, Name, E-Mail-Adresse, Rolle, Kontostatus,
+            Brennstoffzellen-Zuordnung, Brennstoffzellen-Code, Messwerte, Zeitstempel und bei
+            administrativen Änderungen Bearbeitungsangaben gespeichert. Die Verarbeitung ermöglicht
+            die Kontoverwaltung, Zuordnung der Brennstoffzelle und Darstellung der Messhistorie.
+          </Typography>
+          <Typography variant="body2">
+            Rechtsgrundlage ist Art. 6 Abs. 1 Buchstabe b DSGVO. Sicherheits- und
+            Missbrauchsschutzmaßnahmen beruhen zusätzlich auf Art. 6 Abs. 1 Buchstabe f DSGVO.
+          </Typography>
+        </Subsection>
+
+        <Subsection title="Leaderboard">
+          <Typography variant="body2">
+            Für das öffentliche Leaderboard werden Anzeigename oder Brennstoffzellen-Code,
+            Platzierung, Maximalwert und Zeitpunkt des Maximalwerts bereitgestellt. Die Rangfolge wird
+            automatisiert aus den gespeicherten Messwerten berechnet.
+          </Typography>
+          <Typography variant="body2">
+            Rechtsgrundlage ist Art. 6 Abs. 1 Buchstabe b DSGVO im Rahmen der angebotenen
+            Projektfunktion sowie Art. 6 Abs. 1 Buchstabe f DSGVO. Das berechtigte Interesse liegt in
+            der Durchführung und nachvollziehbaren Darstellung des Wettbewerbs.
+          </Typography>
+        </Subsection>
+
+        <Subsection title="Lokale Speicherung">
+          <Typography variant="body2">
+            Firebase Authentication nutzt technisch notwendige Browser-Speichermechanismen, um den
+            Anmeldestatus zu verwalten. Es werden keine Analyse- oder Marketingdienste eingesetzt.
           </Typography>
         </Subsection>
       </Section>
 
-      <Section title="3. Rechtsgrundlagen">
+      <Section title="4. Quelle der Daten">
         <Typography variant="body2">
-          Soweit die App für Registrierung, Anmeldung, Benutzerverwaltung und die Bereitstellung der
-          Kernfunktionen genutzt wird, erfolgt die Verarbeitung in der Regel zur Durchführung der
-          bereitgestellten Anwendung. Daneben können gesetzliche Verpflichtungen oder berechtigte
-          Interessen als Rechtsgrundlage einschlägig sein. Die konkrete rechtliche Einordnung sollte vor
-          Veröffentlichung abschließend geprüft werden.
+          Registrierungs-, Profil- und Anmeldedaten werden direkt bei den Nutzenden erhoben.
+          Brennstoffzellen-Codes stammen aus den für das Projekt ausgegebenen QR-Codes. Messwerte und
+          administrative Angaben werden durch berechtigte Administratoren der App eingetragen.
+          Technische Zugriffsdaten entstehen automatisch bei der Nutzung der Web-App.
         </Typography>
       </Section>
 
-      <Section title="4. Speicherdauer">
+      <Section title="5. Empfänger oder Kategorien von Empfängern">
         <Typography variant="body2">
-          Personenbezogene Daten werden nur so lange gespeichert, wie sie für den Betrieb der
-          Anwendung, die bereitgestellten Funktionen oder gesetzliche Aufbewahrungspflichten erforderlich
-          sind. Nach Wegfall des jeweiligen Zwecks werden die Daten gelöscht, soweit keine gesetzlichen
-          Pflichten entgegenstehen.
+          Zur technischen Bereitstellung werden Dienste der Google Ireland Limited, Gordon House,
+          Barrow Street, Dublin 4, Irland, eingesetzt. Google verarbeitet Daten für Firebase-Dienste
+          grundsätzlich als Auftragsverarbeiter.
+        </Typography>
+        <BulletList>
+          <Bullet>Firebase Authentication für Registrierung und Anmeldung</Bullet>
+          <Bullet>Cloud Firestore für Profile, Brennstoffzellen und Messwerte</Bullet>
+          <Bullet>Firebase Hosting für die Auslieferung der Web-App</Bullet>
+          <Bullet>Cloud Functions für die eingebettete Leaderboard-Schnittstelle</Bullet>
+        </BulletList>
+        <Typography variant="body2">
+          Innerhalb des Projekts erhalten nur berechtigte Administratoren Zugriff auf
+          Verwaltungsdaten. Öffentlich sichtbar sind ausschließlich die im Abschnitt „Leaderboard“
+          genannten Angaben.
+        </Typography>
+        <Typography variant="body2">
+          Weitere Informationen:{' '}
+          <Link href="https://firebase.google.com/support/privacy" target="_blank" rel="noreferrer">
+            Datenschutz und Sicherheit bei Firebase
+          </Link>
+          .
         </Typography>
       </Section>
 
-      <Section title="5. Ihre Rechte">
+      <Section title="6. Übermittlung in Drittländer">
         <Typography variant="body2">
-          Betroffene Personen haben nach Maßgabe der gesetzlichen Vorschriften insbesondere das Recht auf
-          Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit sowie auf
-          Beschwerde bei einer zuständigen Datenschutzaufsichtsbehörde.
+          Bei der Nutzung von Google- und Firebase-Diensten kann eine Verarbeitung außerhalb des
+          Europäischen Wirtschaftsraums, insbesondere in den USA, nicht ausgeschlossen werden. Eine
+          Übermittlung erfolgt auf Grundlage eines Angemessenheitsbeschlusses, soweit der Empfänger
+          darunter fällt, oder auf Grundlage geeigneter Garantien wie den
+          EU-Standardvertragsklauseln.
+        </Typography>
+        <Typography variant="body2">
+          Google stellt hierzu{' '}
+          <Link
+            href="https://firebase.google.com/terms/data-processing-terms"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Datenverarbeitungs- und Sicherheitsbedingungen
+          </Link>{' '}
+          bereit.
         </Typography>
       </Section>
 
-      <Section title="6. Eingesetzte Dienste">
-        <Typography variant="body2" color="text.secondary">
-          Aufgeführt sind nur Dienste, die im aktuellen Stand der App tatsächlich verwendet werden.
+      <Section title="7. Speicherdauer">
+        <BulletList>
+          <Bullet>
+            Konto- und Profildaten werden grundsätzlich bis zur Löschung des Kontos oder bis zum
+            Wegfall des Projektzwecks gespeichert.
+          </Bullet>
+          <Bullet>
+            Brennstoffzellen- und Messdaten werden für die Dauer des Projekts und der zugehörigen
+            Auswertung gespeichert.
+          </Bullet>
+          <Bullet>
+            Gesperrte oder zur Löschung markierte Datensätze werden nur so lange aufbewahrt, wie dies
+            für Missbrauchsschutz, Wiederherstellung oder rechtliche Pflichten erforderlich ist.
+          </Bullet>
+          <Bullet>
+            Technische Protokolldaten werden nach den für die eingesetzten Firebase-Dienste geltenden
+            Fristen gelöscht oder anonymisiert.
+          </Bullet>
+        </BulletList>
+        <Typography variant="body2">
+          Gesetzliche Aufbewahrungspflichten können im Einzelfall eine längere Speicherung erfordern.
         </Typography>
+      </Section>
 
-        <Stack spacing={2}>
-          {serviceItems.map((item) => (
-            <ServiceCard key={item.title} {...item} />
-          ))}
-        </Stack>
+      <Section title="8. Rechte betroffener Personen">
+        <Typography variant="body2">Nach der DSGVO bestehen insbesondere folgende Rechte:</Typography>
+        <BulletList>
+          <Bullet>Auskunft über verarbeitete personenbezogene Daten nach Art. 15 DSGVO</Bullet>
+          <Bullet>Berichtigung unrichtiger Daten nach Art. 16 DSGVO</Bullet>
+          <Bullet>Löschung nach Art. 17 DSGVO</Bullet>
+          <Bullet>Einschränkung der Verarbeitung nach Art. 18 DSGVO</Bullet>
+          <Bullet>Datenübertragbarkeit nach Art. 20 DSGVO</Bullet>
+          <Bullet>Widerspruch gegen Verarbeitungen nach Art. 21 DSGVO</Bullet>
+        </BulletList>
+        <Typography variant="body2">
+          Anfragen können an <Link href={contactEmailHref}>{contactDetails.email}</Link> gerichtet
+          werden. Außerdem besteht ein Beschwerderecht bei einer zuständigen
+          Datenschutzaufsichtsbehörde. Eine Übersicht der deutschen Aufsichtsbehörden stellt die{' '}
+          <Link
+            href="https://www.bfdi.bund.de/DE/Service/Anschriften/anschriften_table.html"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Bundesbeauftragte für den Datenschutz und die Informationsfreiheit
+          </Link>{' '}
+          bereit.
+        </Typography>
+      </Section>
+
+      <Section title="9. Widerruf von Einwilligungen und Widerspruch">
+        <Typography variant="body2">
+          Soweit eine Verarbeitung auf einer Einwilligung beruht, kann diese jederzeit mit Wirkung
+          für die Zukunft widerrufen werden. Die Rechtmäßigkeit der bis zum Widerruf erfolgten
+          Verarbeitung bleibt unberührt. Gegen Verarbeitungen auf Grundlage berechtigter Interessen
+          kann aus Gründen, die sich aus der besonderen Situation der betroffenen Person ergeben,
+          Widerspruch eingelegt werden.
+        </Typography>
+      </Section>
+
+      <Section title="10. Pflicht zur Bereitstellung">
+        <Typography variant="body2">
+          Die Nutzung der öffentlichen Seiten und des Leaderboards ist ohne Nutzerkonto möglich. Für
+          Registrierung, Anmeldung, Zuordnung einer Brennstoffzelle und persönliche Messhistorie
+          müssen die jeweils als erforderlich gekennzeichneten Daten bereitgestellt werden. Ohne diese
+          Angaben können die entsprechenden Funktionen nicht angeboten werden.
+        </Typography>
+      </Section>
+
+      <Section title="11. Automatisierte Entscheidungen und Profiling">
+        <Typography variant="body2">
+          Es findet keine automatisierte Entscheidungsfindung im Sinne von Art. 22 DSGVO und kein
+          Profiling statt. Die automatische Berechnung der Rangfolge im Leaderboard entfaltet keine
+          rechtliche Wirkung und beeinträchtigt Nutzende nicht in vergleichbar erheblicher Weise.
+        </Typography>
+      </Section>
+
+      <Section title="12. Änderungen dieser Datenschutzerklärung">
+        <Typography variant="body2">
+          Diese Datenschutzerklärung wird angepasst, wenn sich Funktionen, eingesetzte Dienste oder
+          rechtliche Anforderungen ändern. Es gilt die jeweils in der App veröffentlichte Fassung.
+        </Typography>
       </Section>
     </Stack>
   )
