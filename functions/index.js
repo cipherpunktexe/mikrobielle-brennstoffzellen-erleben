@@ -23,7 +23,7 @@ function applyCorsHeaders(res) {
   res.set('Access-Control-Allow-Headers', 'Content-Type')
 }
 
-exports.leaderboard = onRequest({ region: 'europe-west1' }, async (req, res) => {
+exports.leaderboard = onRequest({ region: 'europe-west1', invoker: 'public' }, async (req, res) => {
   applyCorsHeaders(res)
 
   if (req.method === 'OPTIONS') {
