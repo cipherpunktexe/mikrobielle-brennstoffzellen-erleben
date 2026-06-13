@@ -8,6 +8,7 @@ import { UserDashboardPage } from './UserDashboardPage'
 vi.mock('../data/firebaseData', () => ({
   linkCurrentUserToGeneratorByCode: vi.fn(),
   login: vi.fn(),
+  registerUserWithGenerator: vi.fn(),
   signInWithGoogle: vi.fn(),
   subscribeToAuth: (callback: (user: null) => void) => {
     callback(null)

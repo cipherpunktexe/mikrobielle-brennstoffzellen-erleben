@@ -1,4 +1,6 @@
 import GoogleIcon from '@mui/icons-material/Google'
+import LoginOutlinedIcon from '@mui/icons-material/LoginOutlined'
+import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1'
 import {
   Alert,
   Button,
@@ -9,26 +11,34 @@ import {
   Divider,
   Stack,
   TextField,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
 } from '@mui/material'
 import { useCallback, useMemo, useState, type FormEvent, type ReactNode } from 'react'
-import { login, signInWithGoogle } from '../data/firebaseData'
+import { login, registerUserWithGenerator, signInWithGoogle } from '../data/firebaseData'
 import { LoginDialogContext } from './LoginDialogContext'
 
 interface LoginDialogProviderProps {
   children: ReactNode
 }
 
+type AuthDialogMode = 'login' | 'register'
+
 export function LoginDialogProvider({ children }: LoginDialogProviderProps) {
   const [open, setOpen] = useState(false)
+  const [mode, setMode] = useState<AuthDialogMode>('login')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [values, setValues] = useState({
+    name: '',
+    code: '',
     email: '',
     password: '',
   })
 
   const openLoginDialog = useCallback(() => {
+    setMode('login')
     setError('')
     setOpen(true)
   }, [])
@@ -37,6 +47,15 @@ export function LoginDialogProvider({ children }: LoginDialogProviderProps) {
     if (!loading) {
       setOpen(false)
     }
+  }
+
+  function handleModeChange(nextMode: AuthDialogMode | null) {
+    if (!nextMode || loading) {
+      return
+    }
+
+    setMode(nextMode)
+    setError('')
   }
 
   async function handleLogin(event: FormEvent<HTMLFormElement>) {
@@ -49,6 +68,25 @@ export function LoginDialogProvider({ children }: LoginDialogProviderProps) {
       setOpen(false)
     } catch (loginError) {
       setError(loginError instanceof Error ? loginError.message : 'Anmeldung fehlgeschlagen.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleRegistration(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setLoading(true)
+    setError('')
+
+    try {
+      await registerUserWithGenerator(values)
+      setOpen(false)
+    } catch (registrationError) {
+      setError(
+        registrationError instanceof Error
+          ? registrationError.message
+          : 'Registrierung konnte nicht abgeschlossen werden.',
+      )
     } finally {
       setLoading(false)
     }
@@ -76,14 +114,61 @@ export function LoginDialogProvider({ children }: LoginDialogProviderProps) {
     <LoginDialogContext.Provider value={contextValue}>
       {children}
       <Dialog open={open} onClose={closeLoginDialog} fullWidth maxWidth="xs">
-        <DialogTitle>Anmelden</DialogTitle>
-        <Stack component="form" onSubmit={handleLogin}>
+        <DialogTitle>{mode === 'login' ? 'Anmelden' : 'Registrieren'}</DialogTitle>
+        <Stack
+          component="form"
+          onSubmit={mode === 'login' ? handleLogin : handleRegistration}
+        >
           <DialogContent>
             <Stack spacing={2}>
+              <ToggleButtonGroup
+                value={mode}
+                exclusive
+                fullWidth
+                size="small"
+                onChange={(_, nextMode: AuthDialogMode | null) => handleModeChange(nextMode)}
+                aria-label="Anmelden oder registrieren"
+              >
+                <ToggleButton value="login">
+                  <LoginOutlinedIcon fontSize="small" sx={{ mr: 0.75 }} />
+                  Anmelden
+                </ToggleButton>
+                <ToggleButton value="register">
+                  <PersonAddAlt1Icon fontSize="small" sx={{ mr: 0.75 }} />
+                  Registrieren
+                </ToggleButton>
+              </ToggleButtonGroup>
               <Typography color="text.secondary">
-                Melde dich an, um deine Brennstoffzelle und Messwerte zu sehen.
+                {mode === 'login'
+                  ? 'Melde dich an, um deine Brennstoffzelle und Messwerte zu sehen.'
+                  : 'Erstelle mit deinem Brennstoffzellen-Code ein neues Konto.'}
               </Typography>
               {error ? <Alert severity="error">{error}</Alert> : null}
+              {mode === 'register' ? (
+                <>
+                  <TextField
+                    label="Name"
+                    value={values.name}
+                    onChange={(event) =>
+                      setValues((current) => ({ ...current, name: event.target.value }))
+                    }
+                    autoComplete="name"
+                    autoFocus
+                    required
+                    fullWidth
+                  />
+                  <TextField
+                    label="Brennstoffzellen-Code"
+                    value={values.code}
+                    onChange={(event) =>
+                      setValues((current) => ({ ...current, code: event.target.value }))
+                    }
+                    helperText="Den Code findest du auf dem QR-Zettel deiner Brennstoffzelle."
+                    required
+                    fullWidth
+                  />
+                </>
+              ) : null}
               <TextField
                 label="E-Mail"
                 type="email"
@@ -92,7 +177,7 @@ export function LoginDialogProvider({ children }: LoginDialogProviderProps) {
                   setValues((current) => ({ ...current, email: event.target.value }))
                 }
                 autoComplete="email"
-                autoFocus
+                autoFocus={mode === 'login'}
                 required
                 fullWidth
               />
@@ -108,18 +193,26 @@ export function LoginDialogProvider({ children }: LoginDialogProviderProps) {
                 fullWidth
               />
               <Button disabled={loading} type="submit" variant="contained" fullWidth>
-                {loading ? 'Bitte warten...' : 'Anmelden'}
+                {loading
+                  ? 'Bitte warten...'
+                  : mode === 'login'
+                    ? 'Anmelden'
+                    : 'Konto erstellen'}
               </Button>
-              <Divider>oder</Divider>
-              <Button
-                disabled={loading}
-                variant="outlined"
-                startIcon={<GoogleIcon />}
-                onClick={() => void handleGoogleLogin()}
-                fullWidth
-              >
-                Mit Google anmelden
-              </Button>
+              {mode === 'login' ? (
+                <>
+                  <Divider>oder</Divider>
+                  <Button
+                    disabled={loading}
+                    variant="outlined"
+                    startIcon={<GoogleIcon />}
+                    onClick={() => void handleGoogleLogin()}
+                    fullWidth
+                  >
+                    Mit Google anmelden
+                  </Button>
+                </>
+              ) : null}
             </Stack>
           </DialogContent>
           <DialogActions>
