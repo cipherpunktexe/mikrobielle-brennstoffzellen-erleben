@@ -21,12 +21,15 @@ vi.mock('../data/firebaseData', () => ({
 }))
 
 describe('UserDashboardPage', () => {
-  test('shows only a login button for guests and opens the shared dialog', async () => {
+  test('shows a dashboard skeleton with a login button and opens the shared dialog', async () => {
     const user = userEvent.setup()
     renderWithProviders(<UserDashboardPage />)
 
     const loginButton = await screen.findByRole('button', { name: /^anmelden$/i })
 
+    expect(
+      screen.getByRole('region', { name: /vorschau deiner brennstoffzellen-seite/i }),
+    ).toBeInTheDocument()
     expect(screen.queryByRole('textbox', { name: /e-mail/i })).not.toBeInTheDocument()
     expect(screen.queryByText(/brennstoffzellen-code/i)).not.toBeInTheDocument()
 
