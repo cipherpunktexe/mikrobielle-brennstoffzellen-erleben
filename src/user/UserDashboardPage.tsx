@@ -109,6 +109,64 @@ function GuestDashboardSkeleton({ onLogin }: { onLogin: () => void }) {
   )
 }
 
+function AuthenticatedDashboardSkeleton() {
+  return (
+    <Stack
+      spacing={{ xs: 2, md: 2.5 }}
+      role="status"
+      aria-label="Deine Brennstoffzelle wird geladen"
+    >
+      <Stack direction="row" justifyContent="space-between" alignItems="center">
+        <Skeleton variant="text" width="min(58%, 360px)" height={52} />
+        <Skeleton variant="rounded" width={34} height={34} />
+      </Stack>
+
+      <Card>
+        <CardContent sx={{ p: { xs: 2.25, sm: 2.5 } }}>
+          <Grid container spacing={{ xs: 2, sm: 3 }}>
+            {[45, 32, 38].map((width, index) => (
+              <Grid key={width} size={{ xs: 12, sm: index === 0 ? 5 : index === 1 ? 4 : 3 }}>
+                <Stack spacing={0.75}>
+                  <Skeleton variant="text" width={`${width + 25}%`} height={20} />
+                  <Skeleton variant="rounded" width={`${width}%`} height={30} />
+                </Stack>
+              </Grid>
+            ))}
+          </Grid>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent sx={{ p: { xs: 2.25, sm: 2.5 } }}>
+          <Stack spacing={2}>
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              justifyContent="space-between"
+              spacing={1.5}
+            >
+              <Skeleton variant="text" width={190} height={36} />
+              <Skeleton variant="rounded" width={220} height={36} />
+            </Stack>
+            <Grid container spacing={1.5}>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Skeleton variant="rounded" height={76} />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Skeleton variant="rounded" height={76} />
+              </Grid>
+            </Grid>
+            <Stack spacing={1}>
+              <Skeleton variant="rounded" height={42} />
+              <Skeleton variant="rounded" height={42} />
+              <Skeleton variant="rounded" height={42} />
+            </Stack>
+          </Stack>
+        </CardContent>
+      </Card>
+    </Stack>
+  )
+}
+
 export function UserDashboardPage() {
   const { showSnackbar } = useAppSnackbar()
   const { openLoginDialog, openRegistrationDialog } = useLoginDialog()
@@ -119,6 +177,10 @@ export function UserDashboardPage() {
   const [measurements, setMeasurements] = useState<Measurement[]>([])
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
   const [loadingAuth, setLoadingAuth] = useState(true)
+  const [profileLoadedForUid, setProfileLoadedForUid] = useState('')
+  const [generatorLoadedForId, setGeneratorLoadedForId] = useState('')
+  const [measurementsLoadedForId, setMeasurementsLoadedForId] = useState('')
+  const [leaderboardLoaded, setLeaderboardLoaded] = useState(false)
   const [scannerOpen, setScannerOpen] = useState(false)
   const [measurementViewMode, setMeasurementViewMode] = useState<MeasurementViewMode>('list')
   const [profileMenuAnchor, setProfileMenuAnchor] = useState<null | HTMLElement>(null)
@@ -136,21 +198,34 @@ export function UserDashboardPage() {
   useEffect(() => {
     if (!authUserId) {
       setProfile(null)
+      setProfileLoadedForUid('')
       return
     }
 
-    return subscribeToUserProfile(authUserId, setProfile)
+    return subscribeToUserProfile(authUserId, (nextProfile) => {
+      setProfile(nextProfile)
+      setProfileLoadedForUid(authUserId)
+    })
   }, [authUserId])
 
   useEffect(() => {
     if (!profile?.generatorId) {
       setGenerator(null)
       setMeasurements([])
+      setGeneratorLoadedForId('')
+      setMeasurementsLoadedForId('')
       return
     }
 
-    const unsubscribeGenerator = subscribeToGenerator(profile.generatorId, setGenerator)
-    const unsubscribeMeasurements = subscribeToMeasurements(profile.generatorId, setMeasurements)
+    const generatorId = profile.generatorId
+    const unsubscribeGenerator = subscribeToGenerator(generatorId, (nextGenerator) => {
+      setGenerator(nextGenerator)
+      setGeneratorLoadedForId(generatorId)
+    })
+    const unsubscribeMeasurements = subscribeToMeasurements(generatorId, (nextMeasurements) => {
+      setMeasurements(nextMeasurements)
+      setMeasurementsLoadedForId(generatorId)
+    })
 
     return () => {
       unsubscribeGenerator()
@@ -158,7 +233,14 @@ export function UserDashboardPage() {
     }
   }, [profile?.generatorId])
 
-  useEffect(() => subscribeToLeaderboard(setLeaderboard), [])
+  useEffect(
+    () =>
+      subscribeToLeaderboard((nextLeaderboard) => {
+        setLeaderboard(nextLeaderboard)
+        setLeaderboardLoaded(true)
+      }),
+    [],
+  )
 
   useEffect(() => {
     const registrationCode = formatCode(searchParams.get('register') ?? '')
@@ -285,6 +367,21 @@ export function UserDashboardPage() {
 
   if (!authUserId) {
     return <GuestDashboardSkeleton onLogin={openLoginDialog} />
+  }
+
+  const profileLoading = profileLoadedForUid !== authUserId
+  const generatorId = profile?.generatorId
+  const dashboardDataLoading =
+    profileLoading ||
+    Boolean(
+      generatorId &&
+        (generatorLoadedForId !== generatorId ||
+          measurementsLoadedForId !== generatorId ||
+          !leaderboardLoaded),
+    )
+
+  if (dashboardDataLoading) {
+    return <AuthenticatedDashboardSkeleton />
   }
 
   if (profile?.status === 'blocked' || profile?.status === 'deleted') {
