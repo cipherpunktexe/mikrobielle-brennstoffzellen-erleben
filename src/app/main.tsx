@@ -5,13 +5,16 @@ import './index.css'
 import App from './App'
 import { theme } from './theme'
 import { AppSnackbarProvider } from '../common/AppSnackbarProvider'
+import { LoginDialogProvider } from '../common/LoginDialogProvider'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <AppSnackbarProvider>
-        <App />
+        <LoginDialogProvider>
+          <App />
+        </LoginDialogProvider>
       </AppSnackbarProvider>
     </ThemeProvider>
   </StrictMode>,

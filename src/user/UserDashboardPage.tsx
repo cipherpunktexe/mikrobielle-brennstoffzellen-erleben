@@ -16,9 +16,6 @@ import {
   DialogTitle,
   Grid,
   IconButton,
-  List,
-  ListItem,
-  ListItemText,
   Menu,
   MenuItem,
   Stack,
@@ -32,16 +29,14 @@ import { useEffect, useState, type FormEvent, type MouseEvent } from 'react'
 import { Link as RouterLink } from 'react-router-dom'
 import { MeasurementChart } from '../common/MeasurementChart'
 import { MeasurementMetricsCard } from '../common/MeasurementMetricsCard'
-import { AuthCard } from '../common/AuthCard'
 import { useAppSnackbar } from '../common/AppSnackbarContext'
+import { useLoginDialog } from '../common/LoginDialogContext'
 import { UnifiedList, type UnifiedListColumn } from '../common/UnifiedList'
 import { QrScannerDialog } from '../common/qr/QrScannerDialog'
 import { createContextMeasurementFormatter, formatMeasurement, formatTimestamp } from '../common/format'
 import { extractGeneratorCodeFromQrValue } from '../common/qr/qr'
 import {
   linkCurrentUserToGeneratorByCode,
-  login,
-  signInWithGoogle,
   subscribeToAuth,
   subscribeToGenerator,
   subscribeToLeaderboard,
@@ -60,24 +55,19 @@ type MeasurementViewMode = 'chart' | 'list'
 
 export function UserDashboardPage() {
   const { showSnackbar } = useAppSnackbar()
+  const { openLoginDialog } = useLoginDialog()
   const [authUserId, setAuthUserId] = useState('')
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [generator, setGenerator] = useState<Generator | null>(null)
   const [measurements, setMeasurements] = useState<Measurement[]>([])
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
   const [loadingAuth, setLoadingAuth] = useState(true)
-  const [authLoading, setAuthLoading] = useState(false)
-  const [authError, setAuthError] = useState('')
   const [scannerOpen, setScannerOpen] = useState(false)
   const [measurementViewMode, setMeasurementViewMode] = useState<MeasurementViewMode>('list')
   const [profileMenuAnchor, setProfileMenuAnchor] = useState<null | HTMLElement>(null)
   const [nameDialogOpen, setNameDialogOpen] = useState(false)
   const [displayNameInput, setDisplayNameInput] = useState('')
   const [displayNameLoading, setDisplayNameLoading] = useState(false)
-  const [formValues, setFormValues] = useState({
-    email: '',
-    password: '',
-  })
 
   useEffect(() => {
     return subscribeToAuth((user) => {
@@ -112,35 +102,6 @@ export function UserDashboardPage() {
   }, [profile?.generatorId])
 
   useEffect(() => subscribeToLeaderboard(setLeaderboard), [])
-
-  async function handleLogin(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setAuthLoading(true)
-    setAuthError('')
-
-    try {
-      await login(formValues)
-    } catch (loginError) {
-      setAuthError(loginError instanceof Error ? loginError.message : 'Login fehlgeschlagen.')
-    } finally {
-      setAuthLoading(false)
-    }
-  }
-
-  async function handleGoogleLogin() {
-    setAuthLoading(true)
-    setAuthError('')
-
-    try {
-      await signInWithGoogle()
-    } catch (loginError) {
-      setAuthError(
-        loginError instanceof Error ? loginError.message : 'Google-Anmeldung fehlgeschlagen.',
-      )
-    } finally {
-      setAuthLoading(false)
-    }
-  }
 
   async function handleQrDetected(value: string) {
     try {
@@ -259,48 +220,11 @@ export function UserDashboardPage() {
 
   if (!authUserId) {
     return (
-      <Grid container spacing={{ xs: 2, md: 3 }} alignItems="stretch">
-        <Grid size={{ xs: 12, md: 6 }}>
-          <AuthCard
-            title="User-Login"
-            description="Nutzer melden sich an und sehen danach Brennstoffzelle, Platzierung und Messwerthistorie."
-            values={formValues}
-            submitLabel="Einloggen"
-            googleLabel="Mit Google anmelden"
-            loading={authLoading}
-            error={authError}
-            onChange={(field, value) =>
-              setFormValues((current) => ({ ...current, [field]: value }))
-            }
-            onSubmit={handleLogin}
-            onGoogleSignIn={handleGoogleLogin}
-          />
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Card sx={{ height: '100%' }}>
-            <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
-              <Stack spacing={1.5}>
-                <Typography variant="h5">Deine Brennstoffzelle</Typography>
-                <Typography color="text.secondary">
-                  Nach dem Login siehst du deinen Brennstoffzellen-Code, deine aktuelle Platzierung
-                  und die letzten Messwerte.
-                </Typography>
-                <List dense disablePadding>
-                  <ListItem disableGutters>
-                    <ListItemText primary="Brennstoffzellen-Code" secondary="Automatisch mit dem Konto verknüpft." />
-                  </ListItem>
-                  <ListItem disableGutters>
-                    <ListItemText primary="Platzierung" secondary="Live aus dem Leaderboard berechnet." />
-                  </ListItem>
-                  <ListItem disableGutters>
-                    <ListItemText primary="Messwerthistorie" secondary="Alle Einträge in chronologischer Reihenfolge." />
-                  </ListItem>
-                </List>
-              </Stack>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+      <Box sx={{ minHeight: 320, display: 'grid', placeItems: 'center' }}>
+        <Button variant="contained" size="large" onClick={openLoginDialog}>
+          Anmelden
+        </Button>
+      </Box>
     )
   }
 

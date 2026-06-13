@@ -26,6 +26,7 @@ import { useEffect, useState, type MouseEvent } from 'react'
 import { Link as RouterLink, Outlet, useLocation } from 'react-router-dom'
 import { getUserProfile, logout, subscribeToAuth } from '../data/firebaseData'
 import type { UserProfile } from '../data/domain'
+import { useLoginDialog } from '../common/LoginDialogContext'
 
 const navigationItems = [
   { label: 'Projekt', to: '/', icon: <BiotechOutlinedIcon fontSize="small" /> },
@@ -36,6 +37,7 @@ const navigationItems = [
 export function AppShell() {
   const location = useLocation()
   const theme = useTheme()
+  const { openLoginDialog } = useLoginDialog()
   const isMobileViewport = useMediaQuery(theme.breakpoints.down('sm'))
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null)
   const [authResolved, setAuthResolved] = useState(false)
@@ -176,10 +178,9 @@ export function AppShell() {
                   <MenuIcon />
                 </IconButton>
                 <Button
-                  component={RouterLink}
-                  to="/user"
                   variant="contained"
                   startIcon={<LoginOutlinedIcon />}
+                  onClick={openLoginDialog}
                   sx={{
                     ml: { xs: 0, md: 1 },
                     px: { xs: 1.5, sm: 2.25 },

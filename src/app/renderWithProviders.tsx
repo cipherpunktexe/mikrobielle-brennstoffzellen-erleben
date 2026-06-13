@@ -5,6 +5,7 @@ import { MemoryRouter } from 'react-router-dom'
 import type { ReactElement, ReactNode } from 'react'
 import { theme } from './theme'
 import { AppSnackbarProvider } from '../common/AppSnackbarProvider'
+import { LoginDialogProvider } from '../common/LoginDialogProvider'
 
 interface WrapperProps {
   children: ReactNode
@@ -15,7 +16,9 @@ function Providers({ children }: WrapperProps) {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <AppSnackbarProvider>
-        <MemoryRouter>{children}</MemoryRouter>
+        <LoginDialogProvider>
+          <MemoryRouter>{children}</MemoryRouter>
+        </LoginDialogProvider>
       </AppSnackbarProvider>
     </ThemeProvider>
   )
