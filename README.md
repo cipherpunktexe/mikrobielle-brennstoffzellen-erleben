@@ -85,6 +85,8 @@ Antwort:
 - Generierte QR-Werte sind URL-basiert und zeigen auf `/user?register=<code>`.
 - Die Basis-URL kommt aus `VITE_PUBLIC_APP_URL` (falls gesetzt), sonst aus
   `https://mikrobielle-brennstoffzellen-erleben.web.app`.
+- Die bisherige Site `https://mikrobielle-brennstoffzellen.web.app` wird beim Hosting-Deploy
+  ebenfalls aktualisiert, damit bereits gedruckte QR-Codes weiter funktionieren.
 - Parser-Unterstuetzung:
   - Links zur Registrierung (`.../user?register=<code>`)
   - bisherige Register-Links (`.../register/<code>`)
