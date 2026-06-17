@@ -93,8 +93,6 @@ angezeigt.
 - Authentifizierung: Bearer-Token oder Header `X-Experiment-Import-Token`
 - Einheit: `valueMv` wird in Millivolt gesendet
 - Idempotenz: gleicher `deviceId` + gleicher `measuredAt` schreibt dasselbe Dokument
-- Qualitätsmarkierung: Werte ausserhalb von `-5000` bis `5000` mV werden als
-  `quality: "outlier"` gespeichert
 
 ### Authentifizierung
 
@@ -130,7 +128,7 @@ X-Experiment-Import-Token: <EXPERIMENT_IMPORT_TOKEN>
 
 Felder:
 
-- `valueMv` ist erforderlich. Erlaubt sind Zahlen von `-1000000` bis `1000000`.
+- `valueMv` ist erforderlich und muss eine endliche Zahl sein.
 - `measuredAt` ist erforderlich.
 - `deviceId` ist optional. Wenn der Wert fehlt, verwendet die API `hauptversuch`.
 - `measurementId` ist optional. Die API akzeptiert fast alle stabilen Strings.
@@ -152,7 +150,6 @@ Request.
   "valueMv": 742,
   "measuredAt": "2026-06-17T12:30:00.000Z",
   "deviceId": "hauptversuch",
-  "quality": "normal",
   "status": "created"
 }
 ```
@@ -290,7 +287,6 @@ print(response.json())
   "valueMv": 742,
   "deviceId": "hauptversuch",
   "source": "arduino",
-  "quality": "normal",
   "measuredAt": "timestamp",
   "createdAt": "timestamp"
 }

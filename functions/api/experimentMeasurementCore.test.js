@@ -3,7 +3,6 @@ import {
   buildExperimentMeasurementResponse,
   createExperimentDocumentId,
   getExperimentImportToken,
-  getMeasurementQuality,
   normalizeExperimentDocumentId,
   parseExperimentMeasurementRequest,
   tokensMatch,
@@ -91,7 +90,7 @@ describe('experiment measurement import core', () => {
     expect(
       validateExperimentMeasurementInput(
         parseExperimentMeasurementRequest({
-          valueMv: 1_000_001,
+          valueMv: 'kein-wert',
           measuredAt,
         }),
       ),
@@ -121,19 +120,23 @@ describe('experiment measurement import core', () => {
     expect(result.input).toMatchObject({
       valueMv: 742,
       deviceId: 'hauptversuch',
-      quality: 'normal',
     })
     expect(result.input?.measuredAtDate.toISOString()).toBe(measuredAt)
     expect(result.input?.measurementId).toMatch(/^measurement-[a-f0-9]{32}$/)
   })
 
-  test('marks high magnitude values as outliers', () => {
-    expect(getMeasurementQuality(5_000)).toBe('normal')
-    expect(getMeasurementQuality(5_001)).toBe('outlier')
-    expect(getMeasurementQuality(-5_001)).toBe('outlier')
+  test('accepts finite values without a configured range', () => {
+    expect(
+      validateExperimentMeasurementInput(
+        parseExperimentMeasurementRequest({
+          valueMv: 1_000_001,
+          measuredAt,
+        }),
+      ).input,
+    ).toMatchObject({ valueMv: 1_000_001 })
   })
 
-  test('builds api responses with fallback quality', () => {
+  test('builds api responses', () => {
     const response = buildExperimentMeasurementResponse({
       measurementId: 'measurement-123',
       data: {
@@ -151,7 +154,6 @@ describe('experiment measurement import core', () => {
       valueMv: 5_001,
       measuredAt,
       deviceId: 'hauptversuch',
-      quality: 'outlier',
       status: 'created',
     })
   })

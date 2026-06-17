@@ -1,9 +1,5 @@
 const crypto = require('node:crypto')
 
-const minExperimentValueMv = -1_000_000
-const maxExperimentValueMv = 1_000_000
-const maxNormalExperimentValueMv = 5_000
-
 function getExperimentImportToken(req) {
   const authHeader = String(req.get('Authorization') || '')
 
@@ -61,10 +57,6 @@ function createExperimentDocumentId(deviceId, measuredAtDate) {
   return createHashedExperimentDocumentId('measurement', `${deviceId}|${measuredAtDate.toISOString()}`)
 }
 
-function getMeasurementQuality(valueMv) {
-  return Math.abs(valueMv) <= maxNormalExperimentValueMv ? 'normal' : 'outlier'
-}
-
 function parseExperimentMeasurementRequest(body = {}) {
   return {
     valueMv: Number(body.valueMv),
@@ -75,14 +67,10 @@ function parseExperimentMeasurementRequest(body = {}) {
 }
 
 function validateExperimentMeasurementInput(input) {
-  if (
-    !Number.isFinite(input.valueMv) ||
-    input.valueMv < minExperimentValueMv ||
-    input.valueMv > maxExperimentValueMv
-  ) {
+  if (!Number.isFinite(input.valueMv)) {
     return {
       code: 'invalid_value',
-      error: `valueMv must be a number between ${minExperimentValueMv} and ${maxExperimentValueMv}.`,
+      error: 'valueMv must be a finite number.',
     }
   }
 
@@ -129,7 +117,6 @@ function validateExperimentMeasurementInput(input) {
       measuredAtDate,
       deviceId: input.deviceId,
       measurementId,
-      quality: getMeasurementQuality(input.valueMv),
     },
   }
 }
@@ -139,7 +126,6 @@ function buildExperimentMeasurementData(input, admin) {
     valueMv: input.valueMv,
     deviceId: input.deviceId,
     source: 'arduino',
-    quality: input.quality,
     measuredAt: admin.firestore.Timestamp.fromDate(input.measuredAtDate),
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
   }
@@ -151,7 +137,6 @@ function buildExperimentMeasurementResponse({ measurementId, data, fallbackMeasu
     valueMv: data.valueMv,
     measuredAt: timestampToIso(data.measuredAt) ?? fallbackMeasuredAtDate.toISOString(),
     deviceId: data.deviceId,
-    quality: data.quality ?? getMeasurementQuality(data.valueMv),
     status,
   }
 }
@@ -161,7 +146,6 @@ module.exports = {
   buildExperimentMeasurementResponse,
   createExperimentDocumentId,
   getExperimentImportToken,
-  getMeasurementQuality,
   normalizeExperimentDocumentId,
   parseExperimentMeasurementRequest,
   tokensMatch,

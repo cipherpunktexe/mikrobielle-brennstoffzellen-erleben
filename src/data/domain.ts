@@ -40,7 +40,6 @@ export interface ExperimentMeasurement {
   valueMv: number
   deviceId: string
   source: 'arduino'
-  quality?: 'normal' | 'outlier'
   measuredAt?: Timestamp | null
   createdAt?: Timestamp | null
 }
