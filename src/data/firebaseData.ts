@@ -1,4 +1,5 @@
 export * from './firebaseData.auth'
+export * from './firebaseData.experiment'
 export * from './firebaseData.generators'
 export * from './firebaseData.measurements'
 export * from './firebaseData.profiles'

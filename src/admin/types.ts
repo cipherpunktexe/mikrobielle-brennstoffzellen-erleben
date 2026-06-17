@@ -1,6 +1,6 @@
 import type { Generator, UserProfile, UserRole, EntityLifecycleStatus } from '../data/domain'
 
-export type AdminTabValue = 'qr' | 'scan' | 'moderation'
+export type AdminTabValue = 'qr' | 'scan' | 'moderation' | 'experiment'
 export type MeasurementUnit = 'uV' | 'mV' | 'V' | 'kV'
 export type QrExportStepKey = 'count' | 'layout' | 'number' | 'export'
 

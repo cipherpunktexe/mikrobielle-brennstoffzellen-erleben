@@ -23,6 +23,7 @@ import { AdminNavigation } from './AdminNavigation'
 import { AdminQrSection } from './createQr/AdminQrSection'
 import { AdminScanSection } from './scan/AdminScanSection'
 import { AdminModerationSection } from './moderate/AdminModerationSection'
+import { AdminExperimentSection } from './experiment/AdminExperimentSection'
 import { ModerationMenus } from './moderate/ModerationMenus'
 import { EditUserDialog } from './createQr/EditUserDialog'
 import { BlockedDialog } from './moderate/BlockedDialog'
@@ -43,6 +44,8 @@ import {
 import type { QrPdfPageSize } from '../common/qr/qr'
 import {
   addMeasurementByCode,
+  countExperimentMeasurementsForAdmin,
+  deleteExperimentMeasurementsForAdmin,
   getGeneratorByCode,
   getMeasurementsForAdmin,
   getNextGeneratorCodePreview,
@@ -59,7 +62,7 @@ import {
   updateMeasurementAsAdmin,
   updateUserProfileAsAdmin,
 } from '../data/firebaseData'
-import type { AdminRecentMeasurementItem } from '../data/firebaseData'
+import type { AdminRecentMeasurementItem, ExperimentMeasurementDeleteRange } from '../data/firebaseData'
 import type {
   EntityLifecycleStatus,
   Generator,
@@ -127,7 +130,7 @@ function getModerationEntryStatus(
 }
 
 function isAdminTabValue(value: string | undefined): value is AdminTabValue {
-  return value === 'qr' || value === 'scan' || value === 'moderation'
+  return value === 'qr' || value === 'scan' || value === 'moderation' || value === 'experiment'
 }
 
 const SCAN_RESULT_SUPPRESSION_MS = 5000
@@ -220,6 +223,14 @@ export function AdminPage() {
   const [userLifecycleActionLoading, setUserLifecycleActionLoading] = useState<
     '' | EntityLifecycleStatus
   >('')
+  const [experimentDeleteRange, setExperimentDeleteRange] =
+    useState<ExperimentMeasurementDeleteRange>('24h')
+  const [experimentAffectedCount, setExperimentAffectedCount] = useState<number | null>(null)
+  const [experimentCountLoading, setExperimentCountLoading] = useState(false)
+  const [experimentDeleting, setExperimentDeleting] = useState(false)
+  const [experimentConfirmOpen, setExperimentConfirmOpen] = useState(false)
+  const [experimentStatus, setExperimentStatus] = useState('')
+  const [experimentError, setExperimentError] = useState('')
 
   const [formValues, setFormValues] = useState({
     email: '',
@@ -277,6 +288,22 @@ export function AdminPage() {
 
     showSnackbar({ message: moderationError, severity: 'error' })
   }, [moderationError, showSnackbar])
+
+  useEffect(() => {
+    if (!experimentStatus.trim()) {
+      return
+    }
+
+    showSnackbar({ message: experimentStatus, severity: 'success' })
+  }, [experimentStatus, showSnackbar])
+
+  useEffect(() => {
+    if (!experimentError.trim()) {
+      return
+    }
+
+    showSnackbar({ message: experimentError, severity: 'error' })
+  }, [experimentError, showSnackbar])
 
   useEffect(() => {
     return subscribeToAuth((user) => {
@@ -344,6 +371,14 @@ export function AdminPage() {
 
     void loadModerationEntries()
   }, [activeTab, profile?.role])
+
+  useEffect(() => {
+    if (activeTab !== 'experiment' || profile?.role !== 'admin') {
+      return
+    }
+
+    void loadExperimentAffectedCount()
+  }, [activeTab, experimentDeleteRange, profile?.role])
 
   useEffect(() => {
     setMobileAdminNavOpen(false)
@@ -550,6 +585,71 @@ export function AdminPage() {
       setRecentMeasurements(items)
     } catch {
       setRecentMeasurements([])
+    }
+  }
+
+  async function loadExperimentAffectedCount() {
+    setExperimentCountLoading(true)
+    setExperimentError('')
+
+    try {
+      const count = await countExperimentMeasurementsForAdmin(experimentDeleteRange)
+      setExperimentAffectedCount(count)
+    } catch (countIssue) {
+      setExperimentAffectedCount(null)
+      setExperimentError(
+        countIssue instanceof Error
+          ? countIssue.message
+          : 'Die Live-Messwerte konnten nicht gezählt werden.',
+      )
+    } finally {
+      setExperimentCountLoading(false)
+    }
+  }
+
+  function handleExperimentDeleteRangeChange(range: ExperimentMeasurementDeleteRange) {
+    setExperimentDeleteRange(range)
+    setExperimentAffectedCount(null)
+    setExperimentError('')
+  }
+
+  function handleOpenExperimentDeleteConfirm() {
+    if (!experimentAffectedCount) {
+      return
+    }
+
+    setExperimentConfirmOpen(true)
+  }
+
+  function handleCloseExperimentDeleteConfirm() {
+    if (experimentDeleting) {
+      return
+    }
+
+    setExperimentConfirmOpen(false)
+  }
+
+  async function handleConfirmExperimentDelete() {
+    setExperimentDeleting(true)
+    setExperimentStatus('')
+    setExperimentError('')
+
+    try {
+      const deletedCount = await deleteExperimentMeasurementsForAdmin(experimentDeleteRange)
+      setExperimentConfirmOpen(false)
+      setExperimentAffectedCount(0)
+      setExperimentStatus(
+        `${deletedCount} Live-Messwert${deletedCount === 1 ? '' : 'e'} wurde${deletedCount === 1 ? '' : 'n'} gelöscht.`,
+      )
+      await loadExperimentAffectedCount()
+    } catch (deleteIssue) {
+      setExperimentError(
+        deleteIssue instanceof Error
+          ? deleteIssue.message
+          : 'Die Live-Messwerte konnten nicht gelöscht werden.',
+      )
+    } finally {
+      setExperimentDeleting(false)
     }
   }
 
@@ -1173,6 +1273,26 @@ export function AdminPage() {
           onOpenActions={handleModerationMenuOpen}
           onOpenMeasurements={(generator) => {
             void handleOpenGeneratorMeasurements(generator)
+          }}
+        />
+      ) : null}
+
+      {activeTab === 'experiment' ? (
+        <AdminExperimentSection
+          selectedDeleteRange={experimentDeleteRange}
+          affectedCount={experimentAffectedCount}
+          loadingCount={experimentCountLoading}
+          deleting={experimentDeleting}
+          confirmOpen={experimentConfirmOpen}
+          error={experimentError}
+          onSetSelectedDeleteRange={handleExperimentDeleteRangeChange}
+          onRefreshCount={() => {
+            void loadExperimentAffectedCount()
+          }}
+          onOpenConfirm={handleOpenExperimentDeleteConfirm}
+          onCloseConfirm={handleCloseExperimentDeleteConfirm}
+          onConfirmDelete={() => {
+            void handleConfirmExperimentDelete()
           }}
         />
       ) : null}
