@@ -52,20 +52,43 @@ Beispiel:
   "valueMv": 742,
   "measuredAt": "2026-06-17T12:30:00.000Z",
   "deviceId": "hauptversuch",
-  "measurementId": "hauptversuch-2026-06-17T12:30:00.000Z",
   "dryRun": false
 }
 ```
 
 ### Felder
 
-| Feld | Pflicht | Typ | Bedingung | Bedeutung |
-| --- | --- | --- | --- | --- |
-| `valueMv` | Ja | Zahl | Muss eine endliche Zahl sein. Es gibt keinen fachlichen Minimal- oder Maximalwert. | Spannung in Millivolt. |
-| `measuredAt` | Ja | String | Muss von JavaScript als gültiger Zeitstempel gelesen werden können. Empfohlen ist ISO 8601, zum Beispiel `2026-06-17T12:30:00.000Z`. | Messzeitpunkt. |
-| `deviceId` | Nein | String | Standard ist `hauptversuch`. Nach dem Trimmen darf der Wert nicht leer sein und maximal 80 Zeichen lang sein. | Kennung des Messaufbaus oder Messgeräts. |
-| `measurementId` | Nein | String | Darf nach dem Trimmen nicht leer sein, nicht `.` und nicht `..`. IDs mit `/`, mehr als 240 Zeichen oder Firestore-reservierte IDs wie `__name__` werden deterministisch in eine sichere ID umgewandelt. | Optionale stabile Dokument-ID. |
-| `dryRun` | Nein | Boolean | Nur der JSON-Wert `true` aktiviert den Testmodus. Strings wie `"true"` gelten nicht als `true`. | Prüft Authentifizierung und Payload, schreibt aber nicht in Firestore. |
+`valueMv` ist Pflicht. Der Wert ist die gemessene Spannung in Millivolt. Er
+muss eine endliche Zahl sein, zum Beispiel `742` oder `742.5`. Die API hat
+keinen fachlichen Minimal- oder Maximalwert. Nicht gültig sind zum Beispiel
+leere Werte, Texte, `NaN` oder `Infinity`.
+
+`measuredAt` ist Pflicht. Der Wert beschreibt, wann gemessen wurde. Empfohlen
+ist ein ISO-Zeitstempel in UTC:
+
+```json
+"2026-06-17T12:30:00.000Z"
+```
+
+Das Script sollte den Zeitstempel direkt nach der Messung einmal erzeugen. Wenn
+derselbe Messwert wegen eines Timeouts erneut gesendet wird, sollte derselbe
+Zeitstempel wiederverwendet werden.
+
+`deviceId` ist optional. Der Standardwert ist `hauptversuch`. Das Feld ist nur
+nötig, wenn mehrere Messgeräte oder mehrere getrennte Aufbauten Werte an diese
+API senden. Der Wert wird getrimmt, darf danach nicht leer sein und darf maximal
+80 Zeichen lang sein.
+
+`measurementId` ist optional und im Normalfall nicht nötig. Wenn das Feld fehlt,
+erzeugt die API automatisch eine stabile ID aus `deviceId` und `measuredAt`.
+Eine eigene ID ist nur sinnvoll, wenn ein Import-Script bereits eine dauerhaft
+stabile ID für den Messwert besitzt. Die ID darf nach dem Trimmen nicht leer
+sein, nicht `.` und nicht `..`. Firestore-ungeeignete IDs, zum Beispiel IDs mit
+`/`, werden automatisch deterministisch in eine sichere Dokument-ID umgewandelt.
+
+`dryRun` ist optional. Mit dem JSON-Wert `true` prüft die API Authentifizierung
+und Payload, schreibt aber keinen Messwert in Firestore. Strings wie `"true"`
+aktivieren den Testmodus nicht.
 
 ## Normalisierung und Speicherung
 
@@ -290,9 +313,9 @@ Optionale Umgebungsvariablen:
 
 ## Python-Beispiel
 
-Das Beispiel sendet einen Messwert an die API. Es erzeugt den Zeitstempel einmal
-und wiederholt bei temporären Fehlern denselben Payload. Dadurch bleibt der
-Import idempotent.
+Das Beispiel sendet einen Messwert an die API. Es lässt `measurementId` weg,
+weil die API aus `deviceId` und `measuredAt` automatisch eine stabile Dokument-ID
+erzeugt.
 
 Voraussetzung:
 
@@ -305,7 +328,6 @@ Script:
 ```python
 import os
 import sys
-import time
 from datetime import datetime, timezone
 
 import requests
@@ -320,62 +342,33 @@ DEVICE_ID = os.getenv("EXPERIMENT_DEVICE_ID", "hauptversuch")
 DRY_RUN = os.getenv("EXPERIMENT_DRY_RUN", "true").lower() != "false"
 
 
-def now_iso_utc():
-    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+def post_measurement(value_mv):
+    if not TOKEN:
+        raise SystemExit("Bitte EXPERIMENT_IMPORT_TOKEN setzen.")
 
-
-def build_payload(value_mv):
-    return {
+    measured_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    payload = {
         "valueMv": value_mv,
-        "measuredAt": now_iso_utc(),
+        "measuredAt": measured_at,
         "deviceId": DEVICE_ID,
         "dryRun": DRY_RUN,
     }
 
-
-def send_measurement(payload, attempts=3):
-    headers = {
-        "Authorization": f"Bearer {TOKEN}",
-        "Content-Type": "application/json",
-    }
-
-    last_error = None
-
-    for attempt in range(1, attempts + 1):
-        try:
-            response = requests.post(
-                API_URL,
-                json=payload,
-                headers=headers,
-                timeout=10,
-            )
-
-            if response.status_code < 500:
-                response.raise_for_status()
-                return response.json()
-
-            last_error = RuntimeError(f"Serverfehler {response.status_code}: {response.text}")
-        except requests.RequestException as error:
-            last_error = error
-
-        if attempt < attempts:
-            time.sleep(2)
-
-    raise last_error
+    response = requests.post(
+        API_URL,
+        json=payload,
+        headers={"Authorization": f"Bearer {TOKEN}"},
+        timeout=10,
+    )
+    response.raise_for_status()
+    return response.json()
 
 
 def main():
-    if not TOKEN:
-        raise SystemExit("Bitte EXPERIMENT_IMPORT_TOKEN setzen.")
-
     if len(sys.argv) < 2:
         raise SystemExit("Aufruf: python import_experiment_measurement.py <valueMv>")
 
-    value_mv = float(sys.argv[1])
-    payload = build_payload(value_mv)
-    result = send_measurement(payload)
-
-    print(result)
+    print(post_measurement(float(sys.argv[1])))
 
 
 if __name__ == "__main__":
@@ -398,6 +391,8 @@ python import_experiment_measurement.py 742
 ```
 
 Für einen Arduino-Aufbau sollte das Script den gemessenen Spannungswert in
-Millivolt an `build_payload(...)` übergeben. Wichtig ist: Bei einem Retry nicht
-neu messen und keinen neuen Zeitstempel erzeugen, sondern denselben Payload
-erneut senden.
+Millivolt an `post_measurement(...)` übergeben.
+
+Wenn ein Script automatische Wiederholungen einbaut, sollte es bei einem Retry
+nicht neu messen und keinen neuen Zeitstempel erzeugen, sondern denselben Payload
+erneut senden. Dadurch bleibt der Import idempotent.

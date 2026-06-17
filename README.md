@@ -125,21 +125,26 @@ X-Experiment-Import-Token: <EXPERIMENT_IMPORT_TOKEN>
   "valueMv": 742,
   "measuredAt": "2026-06-17T12:30:00.000Z",
   "deviceId": "hauptversuch",
-  "measurementId": "hauptversuch-2026-06-17T12:30:00.000Z",
   "dryRun": false
 }
 ```
 
 Felder:
 
-- `valueMv` ist erforderlich und muss eine endliche Zahl sein.
-- `measuredAt` ist erforderlich.
-- `deviceId` ist optional. Wenn der Wert fehlt, verwendet die API `hauptversuch`.
-- `measurementId` ist optional. Die API akzeptiert fast alle stabilen Strings.
-  Firestore-ungeeignete IDs werden intern deterministisch in eine sichere Dokument-ID
-  umgewandelt. Ungueltig sind nur leere IDs sowie `.` und `..`.
-- `dryRun` ist optional. Mit `true` prueft die API Authentifizierung und Payload,
-  schreibt aber keinen Messwert.
+`valueMv` ist erforderlich und enthält die Spannung in Millivolt. Der Wert muss
+eine endliche Zahl sein.
+
+`measuredAt` ist erforderlich und sollte als ISO-Zeitstempel in UTC gesendet
+werden, zum Beispiel `2026-06-17T12:30:00.000Z`.
+
+`deviceId` ist optional. Wenn der Wert fehlt, verwendet die API `hauptversuch`.
+
+`measurementId` ist optional und normalerweise nicht nötig. Ohne eigene ID
+erzeugt die API automatisch eine stabile Dokument-ID aus `deviceId` und
+`measuredAt`.
+
+`dryRun` ist optional. Mit `true` prueft die API Authentifizierung und Payload,
+schreibt aber keinen Messwert.
 
 Wenn keine `measurementId` gesendet wird, erzeugt die API eine stabile Dokument-ID
 aus `deviceId` und `measuredAt`. Wiederholt ein Script denselben Request nach
@@ -203,7 +208,6 @@ curl -X POST "https://mikrobielle-brennstoffzellen.web.app/api/experiment-measur
     "valueMv": 742,
     "measuredAt": "2026-06-17T12:30:00.000Z",
     "deviceId": "hauptversuch",
-    "measurementId": "hauptversuch-2026-06-17T12:30:00.000Z",
     "dryRun": true
   }'
 ```
@@ -233,28 +237,35 @@ Optionale Variablen:
 ### Python-Beispiel
 
 ```python
+import os
+import sys
 from datetime import datetime, timezone
 
 import requests
 
-url = "https://mikrobielle-brennstoffzellen.web.app/api/experiment-measurement"
-token = "<EXPERIMENT_IMPORT_TOKEN>"
+API_URL = "https://mikrobielle-brennstoffzellen.web.app/api/experiment-measurement"
+TOKEN = os.environ["EXPERIMENT_IMPORT_TOKEN"]
 
-payload = {
-    "valueMv": 742,
-    "deviceId": "hauptversuch",
-}
-payload["measuredAt"] = datetime.now(timezone.utc).isoformat()
-payload["measurementId"] = f'{payload["deviceId"]}-{payload["measuredAt"]}'
 
-response = requests.post(
-    url,
-    json=payload,
-    headers={"Authorization": f"Bearer {token}"},
-    timeout=10,
-)
-response.raise_for_status()
-print(response.json())
+def post_measurement(value_mv):
+    payload = {
+        "valueMv": value_mv,
+        "measuredAt": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "deviceId": "hauptversuch",
+        "dryRun": True,
+    }
+
+    response = requests.post(
+        API_URL,
+        json=payload,
+        headers={"Authorization": f"Bearer {TOKEN}"},
+        timeout=10,
+    )
+    response.raise_for_status()
+    return response.json()
+
+
+print(post_measurement(float(sys.argv[1])))
 ```
 
 ## QR- und Code-Flow
