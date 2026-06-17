@@ -288,6 +288,12 @@ Voraussetzung:
 pip install requests
 ```
 
+Vor der Nutzung muss der Import-Token als Umgebungsvariable gesetzt werden:
+
+```bash
+export EXPERIMENT_IMPORT_TOKEN="<EXPERIMENT_IMPORT_TOKEN>"
+```
+
 Die zentrale Funktion im Script ist:
 
 ```python

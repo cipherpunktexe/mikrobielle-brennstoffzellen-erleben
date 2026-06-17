@@ -3,6 +3,9 @@
 Voraussetzung:
     pip install requests
 
+Vor der Nutzung muss der Import-Token als Umgebungsvariable gesetzt werden:
+    export EXPERIMENT_IMPORT_TOKEN="dein-token"
+
 Diese Datei ist als Modul gedacht. Ein anderes Script kann zum Beispiel
 post_measurement(value_mv=742, measured_at=current_time_utc()) aufrufen.
 """
