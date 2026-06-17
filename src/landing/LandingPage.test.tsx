@@ -19,9 +19,7 @@ describe('LandingPage', () => {
       screen.getByRole('heading', { name: /mikrobielle brennstoffzellen erleben/i }),
     ).toBeInTheDocument()
     expect(screen.getByText('IdeenExpo-Projekt')).toBeInTheDocument()
-    expect(
-      screen.getByRole('heading', { name: /spannung am großen versuchsaufbau/i }),
-    ).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /live-spannung/i })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: /projektpräsentation/i })).toBeInTheDocument()
     expect(
       screen.getByTitle(/projektpräsentation mikrobielle brennstoffzellen erleben/i),

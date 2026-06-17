@@ -81,10 +81,7 @@ export function ExperimentLiveChart() {
             <Box>
               <Typography variant="overline">Live-Versuch</Typography>
               <Typography variant="h2" gutterBottom sx={{ fontSize: { xs: '1.85rem', sm: undefined } }}>
-                Spannung am großen Versuchsaufbau
-              </Typography>
-              <Typography color="text.secondary" sx={{ maxWidth: 720 }}>
-                Die Messwerte kommen direkt vom Arduino-Aufbau und zeigen die Spannung über die Zeit.
+                Live-Spannung
               </Typography>
             </Box>
 
@@ -104,7 +101,7 @@ export function ExperimentLiveChart() {
               <SensorsIcon color="primary" aria-hidden="true" />
               <Box>
                 <Typography variant="caption" color="text.secondary">
-                  Aktuell
+                  Jetzt
                 </Typography>
                 <Typography variant="h5" sx={{ lineHeight: 1.05 }}>
                   {formatVoltage(latestMeasurement?.valueMv)}
@@ -116,7 +113,7 @@ export function ExperimentLiveChart() {
           {!loaded ? (
             <Stack alignItems="center" spacing={1.5} sx={{ py: 5 }}>
               <CircularProgress aria-label="Live-Messwerte werden geladen" />
-              <Typography color="text.secondary">Live-Messwerte werden geladen.</Typography>
+              <Typography color="text.secondary">Lädt.</Typography>
             </Stack>
           ) : measurements.length === 0 ? (
             <Box
@@ -129,10 +126,7 @@ export function ExperimentLiveChart() {
                 bgcolor: (theme) => alpha(theme.palette.common.white, 0.34),
               }}
             >
-              <Typography variant="h6">Noch keine Live-Messwerte vorhanden</Typography>
-              <Typography color="text.secondary">
-                Sobald der Versuchsaufbau sendet, erscheint hier der Spannungsverlauf.
-              </Typography>
+              <Typography variant="h6">Noch keine Messwerte</Typography>
             </Box>
           ) : (
             <Stack spacing={1.5}>
@@ -149,8 +143,7 @@ export function ExperimentLiveChart() {
                 valueFormatter={formatVoltage}
               />
               <Typography variant="body2" color="text.secondary">
-                Letzter Messzeitpunkt: {formatExperimentTimestamp(latestMeasurement)} · Höchstwert:{' '}
-                {formatVoltage(maxValue)}
+                Zuletzt: {formatExperimentTimestamp(latestMeasurement)} · Max: {formatVoltage(maxValue)}
               </Typography>
             </Stack>
           )}
