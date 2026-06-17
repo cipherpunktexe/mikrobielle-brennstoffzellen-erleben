@@ -295,12 +295,8 @@ def post_measurement(
     value_mv,
     measured_at,
     dry_run=True,
-    token=None,
-    api_url=None,
 ):
-    token = token or os.getenv("EXPERIMENT_IMPORT_TOKEN")
-
-    if not token:
+    if not TOKEN:
         raise RuntimeError("Bitte EXPERIMENT_IMPORT_TOKEN setzen.")
 
     payload = {
@@ -310,9 +306,9 @@ def post_measurement(
     }
 
     response = requests.post(
-        api_url or os.getenv("EXPERIMENT_API_URL", DEFAULT_API_URL),
+        API_URL,
         json=payload,
-        headers={"Authorization": f"Bearer {token}"},
+        headers={"Authorization": f"Bearer {TOKEN}"},
         timeout=10,
     )
     response.raise_for_status()

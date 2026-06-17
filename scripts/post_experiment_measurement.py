@@ -13,7 +13,11 @@ from datetime import datetime, timezone
 import requests
 
 
-DEFAULT_API_URL = "https://mikrobielle-brennstoffzellen.web.app/api/experiment-measurement"
+API_URL = os.getenv(
+    "EXPERIMENT_API_URL",
+    "https://mikrobielle-brennstoffzellen.web.app/api/experiment-measurement",
+)
+TOKEN = os.getenv("EXPERIMENT_IMPORT_TOKEN")
 
 
 def current_time_utc():
@@ -25,8 +29,6 @@ def post_measurement(
     value_mv,
     measured_at,
     dry_run=True,
-    token=None,
-    api_url=None,
 ):
     """Sendet einen Messwert an die Import API.
 
@@ -35,16 +37,11 @@ def post_measurement(
         measured_at: Messzeitpunkt als ISO-Zeitstempel, zum Beispiel
             "2026-06-17T12:30:00+00:00".
         dry_run: True prüft nur den Request. False speichert den Messwert.
-        token: Optionaler Import-Token. Standard ist EXPERIMENT_IMPORT_TOKEN.
-        api_url: Optionale API-URL. Standard ist EXPERIMENT_API_URL oder die
-            Produktiv-URL.
 
     Returns:
         Die JSON-Antwort der API als Python-Dict.
     """
-    token = token or os.getenv("EXPERIMENT_IMPORT_TOKEN")
-
-    if not token:
+    if not TOKEN:
         raise RuntimeError("Bitte EXPERIMENT_IMPORT_TOKEN setzen.")
 
     payload = {
@@ -54,9 +51,9 @@ def post_measurement(
     }
 
     response = requests.post(
-        api_url or os.getenv("EXPERIMENT_API_URL", DEFAULT_API_URL),
+        API_URL,
         json=payload,
-        headers={"Authorization": f"Bearer {token}"},
+        headers={"Authorization": f"Bearer {TOKEN}"},
         timeout=10,
     )
     response.raise_for_status()
