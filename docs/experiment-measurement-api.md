@@ -68,7 +68,7 @@ Der Wert beschreibt, wann gemessen wurde. Empfohlen ist ein ISO-Zeitstempel in
 UTC:
 
 ```json
-"2026-06-17T12:30:00.000Z"
+"2026-06-17T12:30:00+00:00"
 ```
 
 `deviceId` (optional)
@@ -342,7 +342,7 @@ Aufruf mit eigenem Messzeitpunkt:
 
 ```bash
 EXPERIMENT_IMPORT_TOKEN="<EXPERIMENT_IMPORT_TOKEN>" \
-python scripts/post_experiment_measurement.py 742 "2026-06-17T12:30:00.000Z"
+python scripts/post_experiment_measurement.py 742 "2026-06-17T12:30:00+00:00"
 ```
 
 Für einen Arduino-Aufbau sollte das Script den gemessenen Spannungswert in

@@ -23,7 +23,7 @@ DEVICE_ID = os.getenv("EXPERIMENT_DEVICE_ID", "hauptversuch")
 
 def current_time_utc():
     """Gibt die aktuelle Zeit als ISO-Zeitstempel in UTC zurück."""
-    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    return datetime.now(timezone.utc).isoformat()
 
 
 def post_measurement(value_mv, measured_at, dry_run=True):
@@ -32,7 +32,7 @@ def post_measurement(value_mv, measured_at, dry_run=True):
     Args:
         value_mv: Gemessene Spannung in Millivolt, zum Beispiel 742.
         measured_at: Messzeitpunkt als ISO-Zeitstempel, zum Beispiel
-            "2026-06-17T12:30:00.000Z".
+            "2026-06-17T12:30:00+00:00".
         dry_run: True prüft nur den Request. False speichert den Messwert.
 
     Returns:

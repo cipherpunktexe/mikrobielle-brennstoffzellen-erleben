@@ -246,7 +246,7 @@ TOKEN = os.environ["EXPERIMENT_IMPORT_TOKEN"]
 def post_measurement(value_mv):
     payload = {
         "valueMv": value_mv,
-        "measuredAt": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "measuredAt": datetime.now(timezone.utc).isoformat(),
         "deviceId": "hauptversuch",
         "dryRun": True,
     }
