@@ -310,15 +310,19 @@ export function ExperimentLiveChart() {
               justifyContent="flex-end"
             >
               <LiveChartMetric label="Letzter" value={formatVoltage(latestMeasurement?.valueMv)} icon />
-              <LiveChartMetric label="Maximalwert" value={formatVoltage(maxValue)} />
             </Stack>
-            <LineChart
-              data={chartData}
-              ariaLabel="Live-Diagramm der Spannung am großen Versuchsaufbau im Vollbild"
-              detailLabelTitle="Messzeitpunkt"
-              valueLabelTitle="Spannung"
-              valueFormatter={formatVoltage}
-            />
+            <Stack spacing={1.5}>
+              <LineChart
+                data={chartData}
+                ariaLabel="Live-Diagramm der Spannung am großen Versuchsaufbau im Vollbild"
+                detailLabelTitle="Messzeitpunkt"
+                valueLabelTitle="Spannung"
+                valueFormatter={formatVoltage}
+              />
+              <Typography variant="body2" color="text.secondary">
+                Zuletzt: {formatExperimentTimestamp(latestMeasurement)} · Max: {formatVoltage(maxValue)}
+              </Typography>
+            </Stack>
           </Stack>
         </DialogContent>
         <DialogActions sx={{ px: { xs: 2, sm: 3 }, py: { xs: 1.25, sm: 1.5 } }}>
