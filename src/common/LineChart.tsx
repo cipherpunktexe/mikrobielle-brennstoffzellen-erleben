@@ -139,9 +139,6 @@ export function LineChart({
   })
 
   const activePoint = activeIndex === null ? null : points[activeIndex] ?? null
-  const visiblePointIndexes = new Set(
-    getSampledChartIndexes(data.length, isMobileViewport ? 8 : 14),
-  )
   const linePoints = points.map((point) => `${point.x},${point.y}`).join(' ')
   const areaPoints = [
     `${padding.left},${padding.top + plotHeight}`,
@@ -149,6 +146,7 @@ export function LineChart({
     `${padding.left + plotWidth},${padding.top + plotHeight}`,
   ].join(' ')
   const labelIndexes = getSampledChartIndexes(data.length, isMobileViewport ? 2 : 4)
+  const visiblePointIndexes = new Set(labelIndexes)
 
   function getNearestIndex(clientX: number) {
     const svg = svgRef.current
