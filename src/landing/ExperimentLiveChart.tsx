@@ -155,7 +155,7 @@ export function ExperimentLiveChart() {
                   justifyContent: 'space-between',
                 }}
               >
-                <LiveChartMetric label="Jetzt" value={formatVoltage(latestMeasurement?.valueMv)} icon />
+                <LiveChartMetric label="Letzter" value={formatVoltage(latestMeasurement?.valueMv)} icon />
 
                 <Tooltip title="Diagramm im Vollbild öffnen">
                   <span>
@@ -266,7 +266,7 @@ export function ExperimentLiveChart() {
               alignItems="stretch"
               justifyContent="flex-end"
             >
-              <LiveChartMetric label="Jetzt" value={formatVoltage(latestMeasurement?.valueMv)} icon />
+              <LiveChartMetric label="Letzter" value={formatVoltage(latestMeasurement?.valueMv)} icon />
               <LiveChartMetric label="Maximalwert" value={formatVoltage(maxValue)} />
             </Stack>
             <LineChart
