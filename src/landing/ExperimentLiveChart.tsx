@@ -53,7 +53,7 @@ function formatShortExperimentTimestamp(measurement: ExperimentMeasurement) {
 }
 
 type ExperimentVoltageUnit = 'µV' | 'mV' | 'V'
-type ExperimentTimeRange = '5m' | '15m' | '30m' | '1h' | '3h' | '6h' | '12h' | '24h'
+type ExperimentTimeRange = '5m' | '15m' | '30m' | '1h' | '3h' | '6h' | '12h' | '24h' | 'all'
 
 const experimentTimeRangeOptions: { value: ExperimentTimeRange; label: string }[] = [
   { value: '5m', label: '5 min' },
@@ -64,6 +64,7 @@ const experimentTimeRangeOptions: { value: ExperimentTimeRange; label: string }[
   { value: '6h', label: '6 h' },
   { value: '12h', label: '12 h' },
   { value: '24h', label: '24 h' },
+  { value: 'all', label: 'Alle' },
 ]
 
 function getExperimentTimeRangeStartMs(range: ExperimentTimeRange, nowMs: number) {
@@ -84,6 +85,8 @@ function getExperimentTimeRangeStartMs(range: ExperimentTimeRange, nowMs: number
       return nowMs - 12 * 60 * 60 * 1000
     case '24h':
       return nowMs - 24 * 60 * 60 * 1000
+    case 'all':
+      return Number.NEGATIVE_INFINITY
   }
 }
 

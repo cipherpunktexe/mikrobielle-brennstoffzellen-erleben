@@ -59,6 +59,16 @@ describe('experiment live chart time range filter', () => {
     ])
   })
 
+  test('keeps every measurement for the all range', () => {
+    const nowMs = Date.parse('2026-06-17T12:00:00.000Z')
+    const measurements = [
+      measurement('old', nowMs - 48 * 60 * 60 * 1000),
+      measurement('recent', nowMs - 3 * 60 * 1000),
+    ]
+
+    expect(filterExperimentMeasurementsByTimeRange(measurements, 'all', nowMs)).toEqual(measurements)
+  })
+
   test('filters measurements by hour windows up to 24 hours', () => {
     const nowMs = Date.parse('2026-06-17T12:00:00.000Z')
     const measurements = [
