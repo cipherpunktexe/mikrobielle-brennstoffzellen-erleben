@@ -60,6 +60,41 @@ function formatVoltage(valueMv?: number | null) {
   }).format(valueMv) + ' mV'
 }
 
+interface LiveChartMetricProps {
+  label: string
+  value: string
+  icon?: boolean
+}
+
+function LiveChartMetric({ label, value, icon = false }: LiveChartMetricProps) {
+  return (
+    <Stack
+      direction="row"
+      spacing={1.5}
+      alignItems="center"
+      sx={{
+        minWidth: 0,
+        flexGrow: { xs: 1, sm: 0 },
+        border: (theme) => `1px solid ${alpha(theme.palette.primary.dark, 0.16)}`,
+        borderRadius: '18px',
+        px: 1.75,
+        py: 1.5,
+        bgcolor: (theme) => alpha(theme.palette.common.white, 0.48),
+      }}
+    >
+      {icon ? <SensorsIcon color="primary" aria-hidden="true" /> : null}
+      <Box sx={{ minWidth: 0 }}>
+        <Typography variant="caption" color="text.secondary">
+          {label}
+        </Typography>
+        <Typography variant="h5" sx={{ lineHeight: 1.05, overflowWrap: 'anywhere' }}>
+          {value}
+        </Typography>
+      </Box>
+    </Stack>
+  )
+}
+
 export function ExperimentLiveChart() {
   const [measurements, setMeasurements] = useState<ExperimentMeasurement[]>([])
   const [loaded, setLoaded] = useState(false)
@@ -120,30 +155,7 @@ export function ExperimentLiveChart() {
                   justifyContent: 'space-between',
                 }}
               >
-                <Stack
-                  direction="row"
-                  spacing={1.5}
-                  alignItems="center"
-                  sx={{
-                    minWidth: 0,
-                    flexGrow: { xs: 1, sm: 0 },
-                    border: (theme) => `1px solid ${alpha(theme.palette.primary.dark, 0.16)}`,
-                    borderRadius: '18px',
-                    px: 1.75,
-                    py: 1.5,
-                    bgcolor: (theme) => alpha(theme.palette.common.white, 0.48),
-                  }}
-                >
-                  <SensorsIcon color="primary" aria-hidden="true" />
-                  <Box sx={{ minWidth: 0 }}>
-                    <Typography variant="caption" color="text.secondary">
-                      Jetzt
-                    </Typography>
-                    <Typography variant="h5" sx={{ lineHeight: 1.05, overflowWrap: 'anywhere' }}>
-                      {formatVoltage(latestMeasurement?.valueMv)}
-                    </Typography>
-                  </Box>
-                </Stack>
+                <LiveChartMetric label="Jetzt" value={formatVoltage(latestMeasurement?.valueMv)} icon />
 
                 <Tooltip title="Diagramm im Vollbild öffnen">
                   <span>
@@ -247,7 +259,16 @@ export function ExperimentLiveChart() {
             py: { xs: 1.5, sm: 3 },
           }}
         >
-          <Box sx={{ width: '100%', maxWidth: 1200, mx: 'auto' }}>
+          <Stack spacing={{ xs: 2, sm: 3 }} sx={{ width: '100%', maxWidth: 1200, mx: 'auto' }}>
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              spacing={1.5}
+              alignItems="stretch"
+              justifyContent="flex-end"
+            >
+              <LiveChartMetric label="Jetzt" value={formatVoltage(latestMeasurement?.valueMv)} icon />
+              <LiveChartMetric label="Maximalwert" value={formatVoltage(maxValue)} />
+            </Stack>
             <LineChart
               data={chartData}
               ariaLabel="Live-Diagramm der Spannung am großen Versuchsaufbau im Vollbild"
@@ -255,7 +276,7 @@ export function ExperimentLiveChart() {
               valueLabelTitle="Spannung"
               valueFormatter={formatVoltage}
             />
-          </Box>
+          </Stack>
         </DialogContent>
         <DialogActions sx={{ px: { xs: 2, sm: 3 }, py: { xs: 1.25, sm: 1.5 } }}>
           <Button onClick={() => setChartDialogOpen(false)}>Schließen</Button>
