@@ -1,6 +1,4 @@
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
-import ChevronRightIcon from '@mui/icons-material/ChevronRight'
-import { Box, IconButton, Stack, Typography, useMediaQuery, useTheme } from '@mui/material'
+import { Box, Stack, Typography, useMediaQuery, useTheme } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 
@@ -18,7 +16,6 @@ interface LineChartProps {
   detailLabelTitle?: string
   valueLabelTitle?: string
   showActiveSummary?: boolean
-  showMobileNavigation?: boolean
 }
 
 export function LineChart({
@@ -28,7 +25,6 @@ export function LineChart({
   detailLabelTitle = 'Punkt',
   valueLabelTitle = 'Wert',
   showActiveSummary = false,
-  showMobileNavigation = true,
 }: LineChartProps) {
   const theme = useTheme()
   const chartColor = theme.palette.grey[600]
@@ -36,9 +32,7 @@ export function LineChart({
   const isMobileViewport = useMediaQuery(theme.breakpoints.down('sm'))
   const interactiveAreaRef = useRef<HTMLDivElement | null>(null)
   const svgRef = useRef<SVGSVGElement | null>(null)
-  const [activeIndex, setActiveIndex] = useState<number | null>(
-    isMobileViewport && showMobileNavigation && data.length ? Math.max(0, data.length - 1) : null,
-  )
+  const [activeIndex, setActiveIndex] = useState<number | null>(null)
 
   useEffect(() => {
     setActiveIndex((current) => {
@@ -46,17 +40,13 @@ export function LineChart({
         return null
       }
 
-      if (isMobileViewport) {
-        if (current === null) {
-          return showMobileNavigation ? Math.max(0, data.length - 1) : null
-        }
-
+      if (current !== null) {
         return Math.min(Math.max(0, current), Math.max(0, data.length - 1))
       }
 
       return null
     })
-  }, [data.length, isMobileViewport, showMobileNavigation])
+  }, [data.length])
 
   useEffect(() => {
     if (activeIndex === null) {
@@ -410,47 +400,6 @@ export function LineChart({
           ) : null}
         </Box>
       </Box>
-
-      {isMobileViewport && showMobileNavigation && data.length > 1 ? (
-        <Stack
-          direction="row"
-          justifyContent="space-between"
-          alignItems="center"
-          sx={{
-            border: `1px solid ${alpha(theme.palette.primary.dark, 0.16)}`,
-            borderRadius: '999px',
-            px: 0.75,
-            py: 0.4,
-            bgcolor: alpha(theme.palette.common.white, 0.5),
-          }}
-        >
-          <IconButton
-            size="small"
-            aria-label="Vorherigen Messpunkt anzeigen"
-            onClick={() =>
-              setActiveIndex((current) => Math.max(0, (current ?? Math.max(0, data.length - 1)) - 1))
-            }
-            disabled={(activeIndex ?? 0) === 0}
-          >
-            <ChevronLeftIcon />
-          </IconButton>
-          <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700 }}>
-            {(activeIndex ?? 0) + 1} / {data.length}
-          </Typography>
-          <IconButton
-            size="small"
-            aria-label="Nächsten Messpunkt anzeigen"
-            onClick={() =>
-              setActiveIndex((current) =>
-                Math.min(data.length - 1, (current ?? Math.max(0, data.length - 1)) + 1),
-              )
-            }
-            disabled={(activeIndex ?? 0) === data.length - 1}
-          >
-            <ChevronRightIcon />
-          </IconButton>
-        </Stack>
-      ) : null}
     </Stack>
   )
 }

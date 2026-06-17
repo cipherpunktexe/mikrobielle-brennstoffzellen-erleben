@@ -57,7 +57,6 @@ export function MeasurementChart({ measurements, showMetricsCard = true }: Measu
         valueLabelTitle="Wert"
         valueFormatter={(value) => formatMeasurementInContext(value)}
         showActiveSummary={false}
-        showMobileNavigation={false}
       />
     </Stack>
   )
