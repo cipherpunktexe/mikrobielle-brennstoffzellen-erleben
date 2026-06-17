@@ -46,6 +46,7 @@
 - `/impressum` -> Impressum
 - `/datenschutz` -> Datenschutz
 - `/api/leaderboard` -> oeffentliche JSON-API fuer eingebettete Leaderboards
+- `/api/experiment-measurement` -> geschuetzte Import-API fuer den Live-Versuch
 
 ## Externe Leaderboard API
 
@@ -77,6 +78,123 @@ Antwort:
     }
   ]
 }
+```
+
+## Live-Versuch API
+
+Die Live-Versuch API ist fuer Messgeraete oder Import-Skripte gedacht, die
+Spannungswerte des grossen Versuchsaufbaus an die App senden. Die Werte werden
+in `experimentMeasurements` gespeichert und auf der Startseite im Live-Diagramm
+angezeigt.
+
+- Endpoint: `POST /api/experiment-measurement`
+- Produktiv-URL: `https://mikrobielle-brennstoffzellen.web.app/api/experiment-measurement`
+- Content-Type: `application/json`
+- Authentifizierung: Bearer-Token oder Header `X-Experiment-Import-Token`
+- Einheit: `valueMv` wird in Millivolt gesendet
+
+### Authentifizierung
+
+Der Token muss dem Firebase Secret `EXPERIMENT_IMPORT_TOKEN` entsprechen. Fuer
+neue Installationen wird das Secret vor dem Deploy gesetzt:
+
+```bash
+firebase functions:secrets:set EXPERIMENT_IMPORT_TOKEN
+```
+
+Empfohlen ist der Standard-Header:
+
+```text
+Authorization: Bearer <EXPERIMENT_IMPORT_TOKEN>
+```
+
+Alternativ akzeptiert die API:
+
+```text
+X-Experiment-Import-Token: <EXPERIMENT_IMPORT_TOKEN>
+```
+
+### Request
+
+```json
+{
+  "valueMv": 742,
+  "measuredAt": "2026-06-17T12:30:00.000Z",
+  "deviceId": "hauptversuch"
+}
+```
+
+Felder:
+
+- `valueMv` ist erforderlich. Erlaubt sind Zahlen von `-1000` bis `5000`.
+- `measuredAt` ist optional. Wenn der Wert fehlt, verwendet die API den aktuellen Serverzeitpunkt.
+- `deviceId` ist optional. Wenn der Wert fehlt, verwendet die API `hauptversuch`.
+
+### Erfolgreiche Antwort
+
+Status: `201 Created`
+
+```json
+{
+  "id": "abc123",
+  "valueMv": 742,
+  "measuredAt": "2026-06-17T12:30:00.000Z",
+  "deviceId": "hauptversuch"
+}
+```
+
+### Fehlerantworten
+
+```json
+{
+  "error": "Unauthorized."
+}
+```
+
+Typische Statuscodes:
+
+- `400`: ungueltiger Messwert, ungueltiger Zeitstempel oder ungueltige `deviceId`
+- `401`: fehlender oder falscher Token
+- `405`: falsche HTTP-Methode
+- `500`: Messwert konnte nicht gespeichert werden
+
+### cURL-Beispiel
+
+```bash
+curl -X POST "https://mikrobielle-brennstoffzellen.web.app/api/experiment-measurement" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $EXPERIMENT_IMPORT_TOKEN" \
+  -d '{
+    "valueMv": 742,
+    "measuredAt": "2026-06-17T12:30:00.000Z",
+    "deviceId": "hauptversuch"
+  }'
+```
+
+### Python-Beispiel
+
+```python
+from datetime import datetime, timezone
+
+import requests
+
+url = "https://mikrobielle-brennstoffzellen.web.app/api/experiment-measurement"
+token = "<EXPERIMENT_IMPORT_TOKEN>"
+
+payload = {
+    "valueMv": 742,
+    "measuredAt": datetime.now(timezone.utc).isoformat(),
+    "deviceId": "hauptversuch",
+}
+
+response = requests.post(
+    url,
+    json=payload,
+    headers={"Authorization": f"Bearer {token}"},
+    timeout=10,
+)
+response.raise_for_status()
+print(response.json())
 ```
 
 ## QR- und Code-Flow
