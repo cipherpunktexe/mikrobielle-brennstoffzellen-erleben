@@ -114,10 +114,11 @@ exports.experimentMeasurement = onRequest({
         res,
         409,
         'measurement_conflict',
-        'A measurement with this id already exists with different valueMv, deviceId or measuredAt.',
+        'A measurement for this deviceId and measuredAt already exists with different data.',
         {
-          field: 'measurementId',
+          field: 'measuredAt',
           details: {
+            idSource: ['deviceId', 'measuredAt'],
             conflictingFields: ['valueMv', 'deviceId', 'measuredAt'],
           },
         },

@@ -139,16 +139,12 @@ werden, zum Beispiel `2026-06-17T12:30:00.000Z`.
 
 `deviceId` ist optional. Wenn der Wert fehlt, verwendet die API `hauptversuch`.
 
-`measurementId` ist optional und normalerweise nicht nötig. Ohne eigene ID
-erzeugt die API automatisch eine stabile Dokument-ID aus `deviceId` und
-`measuredAt`.
-
 `dryRun` ist optional. Mit `true` prueft die API Authentifizierung und Payload,
 schreibt aber keinen Messwert.
 
-Wenn keine `measurementId` gesendet wird, erzeugt die API eine stabile Dokument-ID
-aus `deviceId` und `measuredAt`. Wiederholt ein Script denselben Request nach
-einem Timeout, entsteht dadurch kein doppelter Messwert.
+Die Dokument-ID erzeugt die API automatisch aus `deviceId` und `measuredAt`.
+Wiederholt ein Script denselben Request nach einem Timeout, entsteht dadurch
+kein doppelter Messwert. `measurementId` wird nicht als Request-Feld akzeptiert.
 
 ### Erfolgreiche Antwort
 
@@ -180,7 +176,7 @@ Bei `dryRun: true` ist der Status `dry_run`.
 Typische Statuscodes:
 
 - `400`: ungueltiger Messwert, ungueltiger Zeitstempel, ungueltige `deviceId`
-  oder ungueltige `measurementId`
+  oder nicht unterstuetztes Feld
 - `401`: fehlender oder falscher Token
 - `409`: Dokument-ID existiert bereits mit anderen Messdaten
 - `405`: falsche HTTP-Methode
@@ -191,8 +187,8 @@ Stabile Fehlercodes:
 - `invalid_value`
 - `invalid_timestamp`
 - `invalid_device_id`
-- `invalid_measurement_id`
 - `missing_measured_at`
+- `unsupported_field`
 - `unauthorized`
 - `measurement_conflict`
 - `method_not_allowed`

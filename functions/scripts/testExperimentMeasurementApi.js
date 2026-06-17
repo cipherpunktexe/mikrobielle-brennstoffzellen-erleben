@@ -19,7 +19,6 @@ if (!token) {
     valueMv,
     measuredAt,
     deviceId,
-    measurementId: `${deviceId}-${measuredAt}`,
     dryRun,
   }
 

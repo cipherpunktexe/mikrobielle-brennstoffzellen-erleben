@@ -58,52 +58,36 @@ Beispiel:
 
 ### Felder
 
-`valueMv` ist Pflicht. Der Wert ist die gemessene Spannung in Millivolt. Er
-muss eine endliche Zahl sein, zum Beispiel `742` oder `742.5`. Die API hat
-keinen fachlichen Minimal- oder Maximalwert. Nicht gültig sind zum Beispiel
-leere Werte, Texte, `NaN` oder `Infinity`.
+`valueMv`
+Der Wert ist die gemessene Spannung in Millivolt. Er muss eine endliche Zahl
+sein, zum Beispiel `742` oder `742.5`. Nicht gültig sind zum Beispiel leere
+Werte, Texte, `NaN` oder `Infinity`.
 
-`measuredAt` ist Pflicht. Der Wert beschreibt, wann gemessen wurde. Empfohlen
-ist ein ISO-Zeitstempel in UTC:
+`measuredAt`
+Der Wert beschreibt, wann gemessen wurde. Empfohlen ist ein ISO-Zeitstempel in
+UTC:
 
 ```json
 "2026-06-17T12:30:00.000Z"
 ```
 
-Das Script sollte den Zeitstempel direkt nach der Messung einmal erzeugen. Wenn
-derselbe Messwert wegen eines Timeouts erneut gesendet wird, sollte derselbe
-Zeitstempel wiederverwendet werden.
-
-`deviceId` ist optional. Der Standardwert ist `hauptversuch`. Das Feld ist nur
+`deviceId` (optional)
+Der Standardwert ist `hauptversuch`. Das Feld ist nur
 nötig, wenn mehrere Messgeräte oder mehrere getrennte Aufbauten Werte an diese
 API senden. Der Wert wird getrimmt, darf danach nicht leer sein und darf maximal
 80 Zeichen lang sein.
 
-`measurementId` ist optional und im Normalfall nicht nötig. Wenn das Feld fehlt,
-erzeugt die API automatisch eine stabile ID aus `deviceId` und `measuredAt`.
-Eine eigene ID ist nur sinnvoll, wenn ein Import-Script bereits eine dauerhaft
-stabile ID für den Messwert besitzt. Die ID darf nach dem Trimmen nicht leer
-sein, nicht `.` und nicht `..`. Firestore-ungeeignete IDs, zum Beispiel IDs mit
-`/`, werden automatisch deterministisch in eine sichere Dokument-ID umgewandelt.
-
-`dryRun` ist optional. Mit dem JSON-Wert `true` prüft die API Authentifizierung
+`dryRun` (optional)
+Mit dem JSON-Wert `true` prüft die API Authentifizierung
 und Payload, schreibt aber keinen Messwert in Firestore. Strings wie `"true"`
 aktivieren den Testmodus nicht.
 
-## Normalisierung und Speicherung
+`measurementId` wird nicht akzeptiert. Die API erzeugt die Dokument-ID selbst
+aus `deviceId` und `measuredAt`. Dadurch bleibt die Schnittstelle einfacher und
+Idempotenz funktioniert ohne zusätzliches Feld.
 
-`valueMv` wird mit `Number(...)` in eine Zahl umgewandelt. Werte wie `"742"`
-sind dadurch gültig, solange das Ergebnis eine endliche Zahl ist. `NaN`,
-`Infinity`, leere Werte und nicht numerische Texte werden abgelehnt.
 
-`measuredAt` wird als Firestore Timestamp gespeichert. In Antworten gibt die API
-den Wert als ISO-Zeitstempel zurück.
-
-`deviceId` wird getrimmt. Wenn das Feld fehlt, `null` ist oder ein leerer String
-ist, nutzt die API `hauptversuch`. Ein String, der nur aus Leerzeichen besteht,
-wird nach dem Trimmen leer und deshalb abgelehnt.
-
-Wenn `measurementId` fehlt, erzeugt die API automatisch eine stabile ID aus:
+Die API erzeugt automatisch eine stabile ID aus:
 
 ```text
 deviceId + "|" + measuredAt.toISOString()
@@ -115,17 +99,10 @@ Die erzeugte ID hat das Format:
 measurement-<32-zeichen-sha256-hash>
 ```
 
-Wenn eine eigene `measurementId` gesendet wird und Firestore sie nicht direkt als
-Dokument-ID nutzen sollte, erzeugt die API daraus deterministisch:
-
-```text
-custom-<32-zeichen-sha256-hash>
-```
-
 ## Idempotenz
 
-Die API ist idempotent, solange derselbe Messwert mit derselben ID erneut
-gesendet wird.
+Die API ist idempotent, solange derselbe Messwert mit derselben `deviceId` und
+demselben `measuredAt` erneut gesendet wird.
 
 Empfohlener Standardfall:
 
@@ -135,15 +112,15 @@ Empfohlener Standardfall:
 4. Falls ein Timeout oder Netzwerkfehler passiert, wiederholt das Script exakt
    denselben Payload.
 
-Ohne eigene `measurementId` entsteht bei gleicher `deviceId` und gleichem
-`measuredAt` dieselbe Dokument-ID. Dadurch erzeugen Wiederholungen keine
-doppelten Messwerte.
+Bei gleicher `deviceId` und gleichem `measuredAt` entsteht dieselbe Dokument-ID.
+Dadurch erzeugen Wiederholungen keine doppelten Messwerte.
 
 Wenn eine ID bereits existiert und die gespeicherten Daten identisch sind,
 antwortet die API mit `200` und `status: "existing"`.
 
-Wenn eine ID bereits existiert, aber `valueMv`, `deviceId` oder `measuredAt`
-abweichen, antwortet die API mit `409 measurement_conflict`.
+Wenn ein Messwert für dieselbe `deviceId` und dasselbe `measuredAt` bereits
+existiert, aber die gespeicherten Daten abweichen, antwortet die API mit
+`409 measurement_conflict`.
 
 ## Erfolgreiche Antworten
 
@@ -220,10 +197,10 @@ wenn sie für Schnittstellen-Nutzer hilfreich sind.
 | `400` | `missing_measured_at` | `field: "measuredAt"` | `measuredAt` fehlt. |
 | `400` | `invalid_timestamp` | `field: "measuredAt"` | `measuredAt` kann nicht als Zeitstempel gelesen werden. |
 | `400` | `invalid_device_id` | `field: "deviceId"` | `deviceId` ist nach dem Trimmen leer oder länger als 80 Zeichen. |
-| `400` | `invalid_measurement_id` | `field: "measurementId"` | `measurementId` ist leer, `.` oder `..`. |
+| `400` | `unsupported_field` | `field: "measurementId"` | `measurementId` wurde gesendet, wird aber nicht akzeptiert. |
 | `401` | `unauthorized` | `field: "Authorization"` | Token fehlt oder ist falsch. |
 | `405` | `method_not_allowed` | `field: "method"` | Es wurde nicht `POST` verwendet. |
-| `409` | `measurement_conflict` | `field: "measurementId"` | Dieselbe Dokument-ID existiert bereits mit anderem `valueMv`, `deviceId` oder `measuredAt`. |
+| `409` | `measurement_conflict` | `field: "measuredAt"` | Für diese `deviceId` und diesen Messzeitpunkt existiert bereits ein anderer Messwert. |
 | `500` | `server_error` | kein Feld | Der Messwert konnte serverseitig nicht gespeichert werden. |
 
 Beispiel für einen Fehler bei der Validierung:
@@ -245,9 +222,10 @@ Beispiel für einen ID-Konflikt:
 ```json
 {
   "code": "measurement_conflict",
-  "error": "A measurement with this id already exists with different valueMv, deviceId or measuredAt.",
-  "field": "measurementId",
+  "error": "A measurement for this deviceId and measuredAt already exists with different data.",
+  "field": "measuredAt",
   "details": {
+    "idSource": ["deviceId", "measuredAt"],
     "conflictingFields": ["valueMv", "deviceId", "measuredAt"]
   }
 }
@@ -313,9 +291,8 @@ Optionale Umgebungsvariablen:
 
 ## Python-Beispiel
 
-Das Beispiel sendet einen Messwert an die API. Es lässt `measurementId` weg,
-weil die API aus `deviceId` und `measuredAt` automatisch eine stabile Dokument-ID
-erzeugt.
+Das Beispiel sendet einen Messwert an die API. Die stabile Dokument-ID erzeugt
+die API automatisch aus `deviceId` und `measuredAt`.
 
 Voraussetzung:
 

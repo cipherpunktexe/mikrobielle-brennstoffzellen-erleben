@@ -35,24 +35,6 @@ function createHashedExperimentDocumentId(prefix, value) {
   return `${prefix}-${hash}`
 }
 
-function normalizeExperimentDocumentId(value) {
-  const normalizedValue = String(value || '').trim()
-
-  if (!normalizedValue) {
-    return null
-  }
-
-  if (normalizedValue === '.' || normalizedValue === '..') {
-    return null
-  }
-
-  if (/^[^/]{1,240}$/.test(normalizedValue) && !/^__.*__$/.test(normalizedValue)) {
-    return normalizedValue
-  }
-
-  return createHashedExperimentDocumentId('custom', normalizedValue)
-}
-
 function createExperimentDocumentId(deviceId, measuredAtDate) {
   return createHashedExperimentDocumentId('measurement', `${deviceId}|${measuredAtDate.toISOString()}`)
 }
@@ -62,12 +44,23 @@ function parseExperimentMeasurementRequest(body = {}) {
     valueMv: Number(body.valueMv),
     measuredAtInput: body.measuredAt,
     deviceId: String(body.deviceId || 'hauptversuch').trim(),
-    requestedMeasurementId: body.measurementId,
+    hasMeasurementId: Object.prototype.hasOwnProperty.call(body, 'measurementId'),
     dryRun: body.dryRun === true,
   }
 }
 
 function validateExperimentMeasurementInput(input) {
+  if (input.hasMeasurementId) {
+    return {
+      code: 'unsupported_field',
+      error: 'measurementId is no longer accepted. The API creates stable ids from deviceId and measuredAt.',
+      field: 'measurementId',
+      details: {
+        idSource: ['deviceId', 'measuredAt'],
+      },
+    }
+  }
+
   if (!Number.isFinite(input.valueMv)) {
     return {
       code: 'invalid_value',
@@ -116,23 +109,7 @@ function validateExperimentMeasurementInput(input) {
     }
   }
 
-  const providedMeasurementId = input.requestedMeasurementId
-    ? normalizeExperimentDocumentId(input.requestedMeasurementId)
-    : null
-
-  if (input.requestedMeasurementId && !providedMeasurementId) {
-    return {
-      code: 'invalid_measurement_id',
-      error: 'measurementId must not be empty, "." or "..".',
-      field: 'measurementId',
-      details: {
-        disallowedValues: ['', '.', '..'],
-      },
-    }
-  }
-
-  const measurementId =
-    providedMeasurementId ?? createExperimentDocumentId(input.deviceId, measuredAtDate)
+  const measurementId = createExperimentDocumentId(input.deviceId, measuredAtDate)
 
   return {
     input: {
@@ -170,7 +147,6 @@ module.exports = {
   buildExperimentMeasurementResponse,
   createExperimentDocumentId,
   getExperimentImportToken,
-  normalizeExperimentDocumentId,
   parseExperimentMeasurementRequest,
   tokensMatch,
   validateExperimentMeasurementInput,
