@@ -93,6 +93,8 @@ angezeigt.
 - Authentifizierung: Bearer-Token oder Header `X-Experiment-Import-Token`
 - Einheit: `valueMv` wird in Millivolt gesendet
 - Idempotenz: gleicher `deviceId` + gleicher `measuredAt` schreibt dasselbe Dokument
+- Qualitätsmarkierung: Werte ausserhalb von `-5000` bis `5000` mV werden als
+  `quality: "outlier"` gespeichert
 
 ### Authentifizierung
 
@@ -129,10 +131,11 @@ X-Experiment-Import-Token: <EXPERIMENT_IMPORT_TOKEN>
 Felder:
 
 - `valueMv` ist erforderlich. Erlaubt sind Zahlen von `-1000000` bis `1000000`.
-- `measuredAt` ist erforderlich, wenn keine `measurementId` gesendet wird.
+- `measuredAt` ist erforderlich.
 - `deviceId` ist optional. Wenn der Wert fehlt, verwendet die API `hauptversuch`.
-- `measurementId` ist optional. Erlaubt sind Buchstaben, Zahlen, Punkte,
-  Unterstriche, Doppelpunkte und Bindestriche mit maximal 120 Zeichen.
+- `measurementId` ist optional. Die API akzeptiert fast alle stabilen Strings.
+  Firestore-ungeeignete IDs werden intern deterministisch in eine sichere Dokument-ID
+  umgewandelt. Ungueltig sind nur leere IDs sowie `.` und `..`.
 
 Wenn keine `measurementId` gesendet wird, erzeugt die API eine stabile Dokument-ID
 aus `deviceId` und `measuredAt`. Wiederholt ein Script denselben Request nach
@@ -149,6 +152,7 @@ Request.
   "valueMv": 742,
   "measuredAt": "2026-06-17T12:30:00.000Z",
   "deviceId": "hauptversuch",
+  "quality": "normal",
   "status": "created"
 }
 ```
@@ -177,7 +181,7 @@ Stabile Fehlercodes:
 - `invalid_timestamp`
 - `invalid_device_id`
 - `invalid_measurement_id`
-- `missing_idempotency_key`
+- `missing_measured_at`
 - `unauthorized`
 - `measurement_conflict`
 - `method_not_allowed`
@@ -286,6 +290,7 @@ print(response.json())
   "valueMv": 742,
   "deviceId": "hauptversuch",
   "source": "arduino",
+  "quality": "normal",
   "measuredAt": "timestamp",
   "createdAt": "timestamp"
 }

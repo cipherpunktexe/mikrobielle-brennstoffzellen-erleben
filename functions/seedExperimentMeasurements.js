@@ -39,6 +39,7 @@ async function seedExperimentMeasurements() {
       valueMv: getSeedValue(index),
       deviceId,
       source: 'arduino',
+      quality: 'normal',
       seed: true,
       measuredAt: Timestamp.fromDate(measuredAt),
       createdAt: FieldValue.serverTimestamp(),

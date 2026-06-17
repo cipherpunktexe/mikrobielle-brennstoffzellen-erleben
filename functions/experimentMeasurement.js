@@ -8,6 +8,7 @@ const { timestampToIso } = require('./time')
 const experimentImportToken = defineSecret('EXPERIMENT_IMPORT_TOKEN')
 const minExperimentValueMv = -1_000_000
 const maxExperimentValueMv = 1_000_000
+const maxNormalExperimentValueMv = 5_000
 
 function getExperimentImportToken(req) {
   const authHeader = String(req.get('Authorization') || '')
@@ -19,6 +20,21 @@ function getExperimentImportToken(req) {
   return String(req.get('X-Experiment-Import-Token') || '').trim()
 }
 
+function tokensMatch(actualToken, expectedToken) {
+  if (!actualToken || !expectedToken) {
+    return false
+  }
+
+  const actualBuffer = Buffer.from(actualToken)
+  const expectedBuffer = Buffer.from(expectedToken)
+
+  if (actualBuffer.length !== expectedBuffer.length) {
+    return false
+  }
+
+  return crypto.timingSafeEqual(actualBuffer, expectedBuffer)
+}
+
 function normalizeExperimentDocumentId(value) {
   const normalizedValue = String(value || '').trim()
 
@@ -26,21 +42,33 @@ function normalizeExperimentDocumentId(value) {
     return null
   }
 
-  if (!/^[a-zA-Z0-9._:-]{1,120}$/.test(normalizedValue)) {
+  if (normalizedValue === '.' || normalizedValue === '..') {
     return null
   }
 
-  return normalizedValue
+  if (/^[^/]{1,240}$/.test(normalizedValue) && !/^__.*__$/.test(normalizedValue)) {
+    return normalizedValue
+  }
+
+  return createHashedExperimentDocumentId('custom', normalizedValue)
 }
 
-function createExperimentDocumentId(deviceId, measuredAtDate) {
+function createHashedExperimentDocumentId(prefix, value) {
   const hash = crypto
     .createHash('sha256')
-    .update(`${deviceId}|${measuredAtDate.toISOString()}`)
+    .update(value)
     .digest('hex')
     .slice(0, 32)
 
-  return `measurement-${hash}`
+  return `${prefix}-${hash}`
+}
+
+function createExperimentDocumentId(deviceId, measuredAtDate) {
+  return createHashedExperimentDocumentId('measurement', `${deviceId}|${measuredAtDate.toISOString()}`)
+}
+
+function getMeasurementQuality(valueMv) {
+  return Math.abs(valueMv) <= maxNormalExperimentValueMv ? 'normal' : 'outlier'
 }
 
 exports.experimentMeasurement = onRequest({
@@ -62,7 +90,7 @@ exports.experimentMeasurement = onRequest({
 
   const expectedToken = experimentImportToken.value().trim()
 
-  if (!expectedToken || getExperimentImportToken(req) !== expectedToken) {
+  if (!tokensMatch(getExperimentImportToken(req), expectedToken)) {
     sendApiError(res, 401, 'unauthorized', 'Unauthorized.')
     return
   }
@@ -92,17 +120,12 @@ exports.experimentMeasurement = onRequest({
     return
   }
 
-  if (!measuredAtInput && !requestedMeasurementId) {
-    sendApiError(
-      res,
-      400,
-      'missing_idempotency_key',
-      'measuredAt or measurementId is required for idempotent imports.',
-    )
+  if (!measuredAtInput) {
+    sendApiError(res, 400, 'missing_measured_at', 'measuredAt is required.')
     return
   }
 
-  const measuredAtDate = measuredAtInput ? new Date(measuredAtInput) : new Date()
+  const measuredAtDate = new Date(measuredAtInput)
 
   if (Number.isNaN(measuredAtDate.getTime())) {
     sendApiError(res, 400, 'invalid_timestamp', 'measuredAt must be a valid ISO timestamp.')
@@ -118,13 +141,14 @@ exports.experimentMeasurement = onRequest({
       res,
       400,
       'invalid_measurement_id',
-      'measurementId must contain only letters, numbers, dots, underscores, colons or hyphens and be at most 120 characters.',
+      'measurementId must not be empty, "." or "..".',
     )
     return
   }
 
   const measurementId = providedMeasurementId ?? createExperimentDocumentId(deviceId, measuredAtDate)
   const measurementRef = db.collection('experimentMeasurements').doc(measurementId)
+  const quality = getMeasurementQuality(valueMv)
 
   try {
     const result = await db.runTransaction(async (transaction) => {
@@ -138,7 +162,7 @@ exports.experimentMeasurement = onRequest({
         if (
           existingData.valueMv !== valueMv ||
           existingData.deviceId !== deviceId ||
-          (measuredAtInput && existingMeasuredAt !== nextMeasuredAt)
+          existingMeasuredAt !== nextMeasuredAt
         ) {
           return { status: 'conflict', data: existingData }
         }
@@ -150,6 +174,7 @@ exports.experimentMeasurement = onRequest({
         valueMv,
         deviceId,
         source: 'arduino',
+        quality,
         measuredAt: admin.firestore.Timestamp.fromDate(measuredAtDate),
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
       }
@@ -176,6 +201,7 @@ exports.experimentMeasurement = onRequest({
       valueMv: result.data.valueMv,
       measuredAt: timestampToIso(result.data.measuredAt) ?? measuredAtDate.toISOString(),
       deviceId: result.data.deviceId,
+      quality: result.data.quality ?? getMeasurementQuality(result.data.valueMv),
       status: result.status,
     })
   } catch (error) {
