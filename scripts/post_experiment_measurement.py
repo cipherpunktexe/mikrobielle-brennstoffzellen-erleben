@@ -25,7 +25,6 @@ def post_measurement(
     value_mv,
     measured_at,
     dry_run=True,
-    device_id=None,
     token=None,
     api_url=None,
 ):
@@ -36,8 +35,6 @@ def post_measurement(
         measured_at: Messzeitpunkt als ISO-Zeitstempel, zum Beispiel
             "2026-06-17T12:30:00+00:00".
         dry_run: True prüft nur den Request. False speichert den Messwert.
-        device_id: Optionale Gerätekennung. Standard ist EXPERIMENT_DEVICE_ID
-            oder "hauptversuch".
         token: Optionaler Import-Token. Standard ist EXPERIMENT_IMPORT_TOKEN.
         api_url: Optionale API-URL. Standard ist EXPERIMENT_API_URL oder die
             Produktiv-URL.
@@ -53,7 +50,6 @@ def post_measurement(
     payload = {
         "valueMv": value_mv,
         "measuredAt": measured_at,
-        "deviceId": device_id or os.getenv("EXPERIMENT_DEVICE_ID", "hauptversuch"),
         "dryRun": dry_run,
     }
 

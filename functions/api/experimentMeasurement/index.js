@@ -70,7 +70,6 @@ exports.experimentMeasurement = onRequest({
         data: {
           valueMv: input.valueMv,
           measuredAt: null,
-          deviceId: input.deviceId,
         },
         fallbackMeasuredAtDate: input.measuredAtDate,
         status: 'dry_run',
@@ -93,7 +92,6 @@ exports.experimentMeasurement = onRequest({
 
         if (
           existingData.valueMv !== input.valueMv ||
-          existingData.deviceId !== input.deviceId ||
           existingMeasuredAt !== nextMeasuredAt
         ) {
           return { status: 'conflict', data: existingData }
@@ -114,12 +112,12 @@ exports.experimentMeasurement = onRequest({
         res,
         409,
         'measurement_conflict',
-        'A measurement for this deviceId and measuredAt already exists with different data.',
+        'A measurement for this measuredAt already exists with different data.',
         {
           field: 'measuredAt',
           details: {
-            idSource: ['deviceId', 'measuredAt'],
-            conflictingFields: ['valueMv', 'deviceId', 'measuredAt'],
+            idSource: ['measuredAt'],
+            conflictingFields: ['valueMv', 'measuredAt'],
           },
         },
       )

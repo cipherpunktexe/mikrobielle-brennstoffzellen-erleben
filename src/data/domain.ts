@@ -38,7 +38,6 @@ export interface Measurement {
 export interface ExperimentMeasurement {
   id: string
   valueMv: number
-  deviceId: string
   source: 'arduino'
   measuredAt?: Timestamp | null
   createdAt?: Timestamp | null

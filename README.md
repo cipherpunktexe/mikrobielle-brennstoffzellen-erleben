@@ -95,7 +95,7 @@ Fehlercodes und Python-Beispiel: [docs/experiment-measurement-api.md](docs/exper
 - Content-Type: `application/json`
 - Authentifizierung: Bearer-Token oder Header `X-Experiment-Import-Token`
 - Einheit: `valueMv` wird in Millivolt gesendet
-- Idempotenz: gleicher `deviceId` + gleicher `measuredAt` schreibt dasselbe Dokument
+- Idempotenz: gleicher `measuredAt` schreibt dasselbe Dokument
 
 ### Authentifizierung
 
@@ -124,7 +124,6 @@ X-Experiment-Import-Token: <EXPERIMENT_IMPORT_TOKEN>
 {
   "valueMv": 742,
   "measuredAt": "2026-06-17T12:30:00.000Z",
-  "deviceId": "hauptversuch",
   "dryRun": false
 }
 ```
@@ -137,14 +136,13 @@ eine endliche Zahl sein.
 `measuredAt` ist erforderlich und sollte als ISO-Zeitstempel in UTC gesendet
 werden, zum Beispiel `2026-06-17T12:30:00.000Z`.
 
-`deviceId` ist optional. Wenn der Wert fehlt, verwendet die API `hauptversuch`.
-
 `dryRun` ist optional. Mit `true` prueft die API Authentifizierung und Payload,
 schreibt aber keinen Messwert.
 
-Die Dokument-ID erzeugt die API automatisch aus `deviceId` und `measuredAt`.
-Wiederholt ein Script denselben Request nach einem Timeout, entsteht dadurch
-kein doppelter Messwert. `measurementId` wird nicht als Request-Feld akzeptiert.
+Die Dokument-ID erzeugt die API automatisch aus `measuredAt`. Wiederholt ein
+Script denselben Request nach einem Timeout, entsteht dadurch kein doppelter
+Messwert. `deviceId` und `measurementId` werden nicht als Request-Felder
+akzeptiert.
 
 ### Erfolgreiche Antwort
 
@@ -156,7 +154,6 @@ Request.
   "id": "measurement-abc123",
   "valueMv": 742,
   "measuredAt": "2026-06-17T12:30:00.000Z",
-  "deviceId": "hauptversuch",
   "status": "created"
 }
 ```
@@ -175,8 +172,7 @@ Bei `dryRun: true` ist der Status `dry_run`.
 
 Typische Statuscodes:
 
-- `400`: ungueltiger Messwert, ungueltiger Zeitstempel, ungueltige `deviceId`
-  oder nicht unterstuetztes Feld
+- `400`: ungueltiger Messwert, ungueltiger Zeitstempel oder nicht unterstuetztes Feld
 - `401`: fehlender oder falscher Token
 - `409`: Dokument-ID existiert bereits mit anderen Messdaten
 - `405`: falsche HTTP-Methode
@@ -186,7 +182,6 @@ Stabile Fehlercodes:
 
 - `invalid_value`
 - `invalid_timestamp`
-- `invalid_device_id`
 - `missing_measured_at`
 - `unsupported_field`
 - `unauthorized`
@@ -203,7 +198,6 @@ curl -X POST "https://mikrobielle-brennstoffzellen.web.app/api/experiment-measur
   -d '{
     "valueMv": 742,
     "measuredAt": "2026-06-17T12:30:00.000Z",
-    "deviceId": "hauptversuch",
     "dryRun": true
   }'
 ```
@@ -302,7 +296,6 @@ print(post_measurement(value_mv, measured_at, dry_run=True))
 ```json
 {
   "valueMv": 742,
-  "deviceId": "hauptversuch",
   "source": "arduino",
   "measuredAt": "timestamp",
   "createdAt": "timestamp"
@@ -453,8 +446,8 @@ Beispielwerte fuer den Live-Versuch koennen mit dem Seed-Skript geschrieben werd
 npm run seed:experiment
 ```
 
-Das Skript schreibt deterministische Dokumente fuer `deviceId: "seed-hauptversuch"`
-in `experimentMeasurements`. Fuer die echte Firestore-Instanz muss
+Das Skript schreibt deterministische Dokumente fuer den Live-Versuch in
+`experimentMeasurements`. Fuer die echte Firestore-Instanz muss
 `GOOGLE_APPLICATION_CREDENTIALS` auf eine Firebase-Service-Account-JSON-Datei zeigen.
 Mit gesetztem `FIRESTORE_EMULATOR_HOST` schreibt das Skript stattdessen in den Emulator.
 

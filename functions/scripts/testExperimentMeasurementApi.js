@@ -4,7 +4,6 @@ const defaultApiUrl =
 const apiUrl = process.env.EXPERIMENT_API_URL || defaultApiUrl
 const token = process.env.EXPERIMENT_IMPORT_TOKEN
 const measuredAt = process.env.EXPERIMENT_TEST_MEASURED_AT || new Date().toISOString()
-const deviceId = process.env.EXPERIMENT_TEST_DEVICE_ID || 'hauptversuch'
 const valueMv = Number(process.env.EXPERIMENT_TEST_VALUE_MV || '742')
 const dryRun = process.env.EXPERIMENT_TEST_DRY_RUN !== 'false'
 
@@ -18,7 +17,6 @@ if (!token) {
   const payload = {
     valueMv,
     measuredAt,
-    deviceId,
     dryRun,
   }
 

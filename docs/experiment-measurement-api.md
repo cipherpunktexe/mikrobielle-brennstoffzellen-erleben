@@ -51,7 +51,6 @@ Beispiel:
 {
   "valueMv": 742,
   "measuredAt": "2026-06-17T12:30:00.000Z",
-  "deviceId": "hauptversuch",
   "dryRun": false
 }
 ```
@@ -71,26 +70,21 @@ UTC:
 "2026-06-17T12:30:00+00:00"
 ```
 
-`deviceId` (optional)
-Der Standardwert ist `hauptversuch`. Das Feld ist nur
-nötig, wenn mehrere Messgeräte oder mehrere getrennte Aufbauten Werte an diese
-API senden. Der Wert wird getrimmt, darf danach nicht leer sein und darf maximal
-80 Zeichen lang sein.
-
 `dryRun` (optional)
 Mit dem JSON-Wert `true` prüft die API Authentifizierung
 und Payload, schreibt aber keinen Messwert in Firestore. Strings wie `"true"`
 aktivieren den Testmodus nicht.
 
-`measurementId` wird nicht akzeptiert. Die API erzeugt die Dokument-ID selbst
-aus `deviceId` und `measuredAt`. Dadurch bleibt die Schnittstelle einfacher und
-Idempotenz funktioniert ohne zusätzliches Feld.
+`deviceId` und `measurementId` werden nicht akzeptiert. Die API ist für genau
+einen Versuchsaufbau gedacht und erzeugt die Dokument-ID selbst aus `measuredAt`.
+Dadurch bleibt die Schnittstelle einfacher und Idempotenz funktioniert ohne
+zusätzliches Feld.
 
 
 Die API erzeugt automatisch eine stabile ID aus:
 
 ```text
-deviceId + "|" + measuredAt.toISOString()
+measuredAt.toISOString()
 ```
 
 Die erzeugte ID hat das Format:
@@ -101,26 +95,25 @@ measurement-<32-zeichen-sha256-hash>
 
 ## Idempotenz
 
-Die API ist idempotent, solange derselbe Messwert mit derselben `deviceId` und
-demselben `measuredAt` erneut gesendet wird.
+Die API ist idempotent, solange derselbe Messwert mit demselben `measuredAt`
+erneut gesendet wird.
 
 Empfohlener Standardfall:
 
 1. Das Script misst einen Wert.
 2. Das Script erzeugt einmalig `measuredAt`.
-3. Das Script sendet `valueMv`, `measuredAt` und optional `deviceId`.
+3. Das Script sendet `valueMv` und `measuredAt`.
 4. Falls ein Timeout oder Netzwerkfehler passiert, wiederholt das Script exakt
    denselben Payload.
 
-Bei gleicher `deviceId` und gleichem `measuredAt` entsteht dieselbe Dokument-ID.
-Dadurch erzeugen Wiederholungen keine doppelten Messwerte.
+Bei gleichem `measuredAt` entsteht dieselbe Dokument-ID. Dadurch erzeugen
+Wiederholungen keine doppelten Messwerte.
 
 Wenn eine ID bereits existiert und die gespeicherten Daten identisch sind,
 antwortet die API mit `200` und `status: "existing"`.
 
-Wenn ein Messwert für dieselbe `deviceId` und dasselbe `measuredAt` bereits
-existiert, aber die gespeicherten Daten abweichen, antwortet die API mit
-`409 measurement_conflict`.
+Wenn ein Messwert für dasselbe `measuredAt` bereits existiert, aber die
+gespeicherten Daten abweichen, antwortet die API mit `409 measurement_conflict`.
 
 ## Erfolgreiche Antworten
 
@@ -135,7 +128,6 @@ Neuer Messwert:
   "id": "measurement-abc123",
   "valueMv": 742,
   "measuredAt": "2026-06-17T12:30:00.000Z",
-  "deviceId": "hauptversuch",
   "status": "created"
 }
 ```
@@ -151,7 +143,6 @@ Bereits vorhandener identischer Messwert:
   "id": "measurement-abc123",
   "valueMv": 742,
   "measuredAt": "2026-06-17T12:30:00.000Z",
-  "deviceId": "hauptversuch",
   "status": "existing"
 }
 ```
@@ -167,7 +158,6 @@ Testaufruf ohne Speicherung:
   "id": "measurement-abc123",
   "valueMv": 742,
   "measuredAt": "2026-06-17T12:30:00.000Z",
-  "deviceId": "hauptversuch",
   "status": "dry_run"
 }
 ```
@@ -196,11 +186,10 @@ wenn sie für Schnittstellen-Nutzer hilfreich sind.
 | `400` | `invalid_value` | `field: "valueMv"` | `valueMv` fehlt oder ist keine endliche Zahl in Millivolt. |
 | `400` | `missing_measured_at` | `field: "measuredAt"` | `measuredAt` fehlt. |
 | `400` | `invalid_timestamp` | `field: "measuredAt"` | `measuredAt` kann nicht als Zeitstempel gelesen werden. |
-| `400` | `invalid_device_id` | `field: "deviceId"` | `deviceId` ist nach dem Trimmen leer oder länger als 80 Zeichen. |
-| `400` | `unsupported_field` | `field: "measurementId"` | `measurementId` wurde gesendet, wird aber nicht akzeptiert. |
+| `400` | `unsupported_field` | `field: "deviceId"` oder `field: "measurementId"` | `deviceId` oder `measurementId` wurde gesendet, wird aber nicht akzeptiert. |
 | `401` | `unauthorized` | `field: "Authorization"` | Token fehlt oder ist falsch. |
 | `405` | `method_not_allowed` | `field: "method"` | Es wurde nicht `POST` verwendet. |
-| `409` | `measurement_conflict` | `field: "measuredAt"` | Für diese `deviceId` und diesen Messzeitpunkt existiert bereits ein anderer Messwert. |
+| `409` | `measurement_conflict` | `field: "measuredAt"` | Für diesen Messzeitpunkt existiert bereits ein anderer Messwert. |
 | `500` | `server_error` | kein Feld | Der Messwert konnte serverseitig nicht gespeichert werden. |
 
 Beispiel für einen Fehler bei der Validierung:
@@ -222,11 +211,11 @@ Beispiel für einen ID-Konflikt:
 ```json
 {
   "code": "measurement_conflict",
-  "error": "A measurement for this deviceId and measuredAt already exists with different data.",
+  "error": "A measurement for this measuredAt already exists with different data.",
   "field": "measuredAt",
   "details": {
-    "idSource": ["deviceId", "measuredAt"],
-    "conflictingFields": ["valueMv", "deviceId", "measuredAt"]
+    "idSource": ["measuredAt"],
+    "conflictingFields": ["valueMv", "measuredAt"]
   }
 }
 ```
@@ -242,7 +231,6 @@ curl -X POST "https://mikrobielle-brennstoffzellen.web.app/api/experiment-measur
   -d '{
     "valueMv": 742,
     "measuredAt": "2026-06-17T12:30:00.000Z",
-    "deviceId": "hauptversuch",
     "dryRun": true
   }'
 ```
@@ -255,8 +243,7 @@ curl -X POST "https://mikrobielle-brennstoffzellen.web.app/api/experiment-measur
   -H "Authorization: Bearer $EXPERIMENT_IMPORT_TOKEN" \
   -d '{
     "valueMv": 742,
-    "measuredAt": "2026-06-17T12:30:00.000Z",
-    "deviceId": "hauptversuch"
+    "measuredAt": "2026-06-17T12:30:00.000Z"
   }'
 ```
 
@@ -285,7 +272,6 @@ Optionale Umgebungsvariablen:
 | --- | --- | --- |
 | `EXPERIMENT_API_URL` | Produktiv-URL | Ziel-URL der API. |
 | `EXPERIMENT_TEST_VALUE_MV` | `742` | Testwert in Millivolt. |
-| `EXPERIMENT_TEST_DEVICE_ID` | `hauptversuch` | `deviceId` für den Test. |
 | `EXPERIMENT_TEST_MEASURED_AT` | aktuelle Zeit | Messzeitpunkt für den Test. |
 | `EXPERIMENT_TEST_DRY_RUN` | `true` | Mit `false` wird wirklich gespeichert. |
 
@@ -294,8 +280,7 @@ Optionale Umgebungsvariablen:
 Ein einfacher Python-Client liegt unter
 [`scripts/post_experiment_measurement.py`](../scripts/post_experiment_measurement.py).
 Die Datei ist als Modul gedacht und wird von einem anderen Script importiert.
-Die stabile Dokument-ID erzeugt die API automatisch aus `deviceId` und
-`measuredAt`.
+Die stabile Dokument-ID erzeugt die API automatisch aus `measuredAt`.
 
 Voraussetzung:
 
@@ -310,7 +295,6 @@ def post_measurement(
     value_mv,
     measured_at,
     dry_run=True,
-    device_id=None,
     token=None,
     api_url=None,
 ):
@@ -322,7 +306,6 @@ def post_measurement(
     payload = {
         "valueMv": value_mv,
         "measuredAt": measured_at,
-        "deviceId": device_id or os.getenv("EXPERIMENT_DEVICE_ID", "hauptversuch"),
         "dryRun": dry_run,
     }
 

@@ -35,28 +35,36 @@ function createHashedExperimentDocumentId(prefix, value) {
   return `${prefix}-${hash}`
 }
 
-function createExperimentDocumentId(deviceId, measuredAtDate) {
-  return createHashedExperimentDocumentId('measurement', `${deviceId}|${measuredAtDate.toISOString()}`)
+function createExperimentDocumentId(measuredAtDate) {
+  return createHashedExperimentDocumentId('measurement', measuredAtDate.toISOString())
 }
 
 function parseExperimentMeasurementRequest(body = {}) {
   return {
     valueMv: Number(body.valueMv),
     measuredAtInput: body.measuredAt,
-    deviceId: String(body.deviceId || 'hauptversuch').trim(),
+    hasDeviceId: Object.prototype.hasOwnProperty.call(body, 'deviceId'),
     hasMeasurementId: Object.prototype.hasOwnProperty.call(body, 'measurementId'),
     dryRun: body.dryRun === true,
   }
 }
 
 function validateExperimentMeasurementInput(input) {
+  if (input.hasDeviceId) {
+    return {
+      code: 'unsupported_field',
+      error: 'deviceId is not accepted. The import API is configured for one fixed experiment device.',
+      field: 'deviceId',
+    }
+  }
+
   if (input.hasMeasurementId) {
     return {
       code: 'unsupported_field',
-      error: 'measurementId is no longer accepted. The API creates stable ids from deviceId and measuredAt.',
+      error: 'measurementId is not accepted. The API creates stable ids from measuredAt.',
       field: 'measurementId',
       details: {
-        idSource: ['deviceId', 'measuredAt'],
+        idSource: ['measuredAt'],
       },
     }
   }
@@ -69,17 +77,6 @@ function validateExperimentMeasurementInput(input) {
       details: {
         unit: 'mV',
         rule: 'finite_number',
-      },
-    }
-  }
-
-  if (!input.deviceId || input.deviceId.length > 80) {
-    return {
-      code: 'invalid_device_id',
-      error: 'deviceId must be a non-empty string with at most 80 characters.',
-      field: 'deviceId',
-      details: {
-        maxLength: 80,
       },
     }
   }
@@ -109,13 +106,12 @@ function validateExperimentMeasurementInput(input) {
     }
   }
 
-  const measurementId = createExperimentDocumentId(input.deviceId, measuredAtDate)
+  const measurementId = createExperimentDocumentId(measuredAtDate)
 
   return {
     input: {
       valueMv: input.valueMv,
       measuredAtDate,
-      deviceId: input.deviceId,
       measurementId,
       dryRun: input.dryRun,
     },
@@ -125,7 +121,6 @@ function validateExperimentMeasurementInput(input) {
 function buildExperimentMeasurementData(input, admin) {
   return {
     valueMv: input.valueMv,
-    deviceId: input.deviceId,
     source: 'arduino',
     measuredAt: admin.firestore.Timestamp.fromDate(input.measuredAtDate),
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -137,7 +132,6 @@ function buildExperimentMeasurementResponse({ measurementId, data, fallbackMeasu
     id: measurementId,
     valueMv: data.valueMv,
     measuredAt: timestampToIso(data.measuredAt) ?? fallbackMeasuredAtDate.toISOString(),
-    deviceId: data.deviceId,
     status,
   }
 }

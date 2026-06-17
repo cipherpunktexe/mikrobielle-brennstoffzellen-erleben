@@ -33,22 +33,38 @@ describe('experiment measurement import core', () => {
     expect(tokensMatch('secret-token', '')).toBe(false)
   })
 
-  test('creates stable ids from device and timestamp', () => {
+  test('creates stable ids from timestamps', () => {
     const measuredAtDate = new Date(measuredAt)
 
-    expect(createExperimentDocumentId('hauptversuch', measuredAtDate)).toBe(
-      createExperimentDocumentId('hauptversuch', measuredAtDate),
+    expect(createExperimentDocumentId(measuredAtDate)).toBe(
+      createExperimentDocumentId(measuredAtDate),
     )
-    expect(createExperimentDocumentId('hauptversuch', measuredAtDate)).toMatch(/^measurement-[a-f0-9]{32}$/)
+    expect(createExperimentDocumentId(measuredAtDate)).toMatch(/^measurement-[a-f0-9]{32}$/)
   })
 
   test('parses request bodies with defaults', () => {
     expect(parseExperimentMeasurementRequest({ valueMv: '742', measuredAt })).toEqual({
       valueMv: 742,
       measuredAtInput: measuredAt,
-      deviceId: 'hauptversuch',
+      hasDeviceId: false,
       hasMeasurementId: false,
       dryRun: false,
+    })
+  })
+
+  test('rejects deviceId because the import api has one fixed device', () => {
+    const result = validateExperimentMeasurementInput(
+      parseExperimentMeasurementRequest({
+        valueMv: 742,
+        measuredAt,
+        deviceId: 'hauptversuch',
+      }),
+    )
+
+    expect(result).toMatchObject({
+      code: 'unsupported_field',
+      error: 'deviceId is not accepted. The import API is configured for one fixed experiment device.',
+      field: 'deviceId',
     })
   })
 
@@ -63,15 +79,15 @@ describe('experiment measurement import core', () => {
 
     expect(result).toMatchObject({
       code: 'unsupported_field',
-      error: 'measurementId is no longer accepted. The API creates stable ids from deviceId and measuredAt.',
+      error: 'measurementId is not accepted. The API creates stable ids from measuredAt.',
       field: 'measurementId',
       details: {
-        idSource: ['deviceId', 'measuredAt'],
+        idSource: ['measuredAt'],
       },
     })
   })
 
-  test('validates values and device ids', () => {
+  test('validates values', () => {
     expect(
       validateExperimentMeasurementInput(
         parseExperimentMeasurementRequest({
@@ -87,22 +103,6 @@ describe('experiment measurement import core', () => {
         rule: 'finite_number',
       },
     })
-
-    expect(
-      validateExperimentMeasurementInput(
-        parseExperimentMeasurementRequest({
-          valueMv: 742,
-          measuredAt,
-          deviceId: ' '.repeat(2),
-        }),
-      ),
-    ).toMatchObject({
-      code: 'invalid_device_id',
-      field: 'deviceId',
-      details: {
-        maxLength: 80,
-      },
-    })
   })
 
   test('returns normalized input for valid requests', () => {
@@ -110,14 +110,12 @@ describe('experiment measurement import core', () => {
       parseExperimentMeasurementRequest({
         valueMv: 742,
         measuredAt,
-        deviceId: 'hauptversuch',
       }),
     )
 
     expect(result.code).toBeUndefined()
     expect(result.input).toMatchObject({
       valueMv: 742,
-      deviceId: 'hauptversuch',
       dryRun: false,
     })
     expect(result.input?.measuredAtDate.toISOString()).toBe(measuredAt)
@@ -152,7 +150,6 @@ describe('experiment measurement import core', () => {
       measurementId: 'measurement-123',
       data: {
         valueMv: 5_001,
-        deviceId: 'hauptversuch',
         measuredAt: null,
       },
       fallbackMeasuredAtDate: new Date(measuredAt),
@@ -164,7 +161,6 @@ describe('experiment measurement import core', () => {
       id: 'measurement-123',
       valueMv: 5_001,
       measuredAt,
-      deviceId: 'hauptversuch',
       status: 'created',
     })
   })

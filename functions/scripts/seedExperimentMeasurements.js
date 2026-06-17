@@ -13,7 +13,6 @@ const appOptions = process.env.FIRESTORE_EMULATOR_HOST
 initializeApp(appOptions)
 
 const db = getFirestore()
-const deviceId = process.env.EXPERIMENT_SEED_DEVICE_ID || 'seed-hauptversuch'
 const pointCount = Number.parseInt(process.env.EXPERIMENT_SEED_POINTS || '48', 10)
 const intervalMinutes = Number.parseInt(process.env.EXPERIMENT_SEED_INTERVAL_MINUTES || '10', 10)
 
@@ -33,11 +32,10 @@ async function seedExperimentMeasurements() {
   for (let index = 0; index < pointCount; index += 1) {
     const minutesAgo = (pointCount - index - 1) * intervalMinutes
     const measuredAt = new Date(now.getTime() - minutesAgo * 60_000)
-    const documentId = `${deviceId}-${String(index).padStart(3, '0')}`
+    const documentId = `seed-${String(index).padStart(3, '0')}`
 
     batch.set(collection.doc(documentId), {
       valueMv: getSeedValue(index),
-      deviceId,
       source: 'arduino',
       seed: true,
       measuredAt: Timestamp.fromDate(measuredAt),
@@ -48,7 +46,7 @@ async function seedExperimentMeasurements() {
   await batch.commit()
 
   console.log(
-    `Seeded ${pointCount} experiment measurements for ${deviceId} in project ${projectId}.`,
+    `Seeded ${pointCount} experiment measurements in project ${projectId}.`,
   )
 }
 
