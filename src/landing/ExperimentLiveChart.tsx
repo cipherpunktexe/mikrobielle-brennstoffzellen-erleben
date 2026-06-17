@@ -3,7 +3,7 @@ import {
   Box,
   Card,
   CardContent,
-  CircularProgress,
+  Skeleton,
   Stack,
   Typography,
 } from '@mui/material'
@@ -111,10 +111,26 @@ export function ExperimentLiveChart() {
           </Stack>
 
           {!loaded ? (
-            <Stack alignItems="center" spacing={1.5} sx={{ py: 5 }}>
-              <CircularProgress aria-label="Live-Messwerte werden geladen" />
-              <Typography color="text.secondary">Lädt.</Typography>
-            </Stack>
+            <Box
+              role="status"
+              aria-label="Live-Messwerte werden geladen"
+              sx={{
+                border: (theme) => `1px solid ${alpha(theme.palette.primary.dark, 0.16)}`,
+                borderRadius: '22px',
+                bgcolor: (theme) => alpha(theme.palette.common.white, 0.34),
+                p: { xs: 1.25, sm: 1.75 },
+              }}
+            >
+              <Stack spacing={1.25}>
+                <Skeleton variant="rounded" height={34} sx={{ maxWidth: 180 }} />
+                <Skeleton variant="rounded" height={220} />
+                <Stack direction="row" justifyContent="space-between" spacing={1.5}>
+                  <Skeleton variant="text" width={72} />
+                  <Skeleton variant="text" width={72} />
+                  <Skeleton variant="text" width={72} />
+                </Stack>
+              </Stack>
+            </Box>
           ) : measurements.length === 0 ? (
             <Box
               sx={{
