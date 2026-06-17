@@ -7,7 +7,7 @@ import {
   parseExperimentMeasurementRequest,
   tokensMatch,
   validateExperimentMeasurementInput,
-} from './experimentMeasurementCore.js'
+} from './core.js'
 
 const measuredAt = '2026-06-17T12:30:00.000Z'
 

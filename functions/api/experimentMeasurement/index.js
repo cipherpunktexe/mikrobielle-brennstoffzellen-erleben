@@ -1,8 +1,8 @@
 const { onRequest } = require('firebase-functions/v2/https')
 const { defineSecret } = require('firebase-functions/params')
-const { admin, db } = require('../shared/firebase')
-const { applyCorsHeaders, sendApiError } = require('../shared/http')
-const { timestampToIso } = require('../shared/time')
+const { admin, db } = require('../../shared/firebase')
+const { applyCorsHeaders, sendApiError } = require('../../shared/http')
+const { timestampToIso } = require('../../shared/time')
 const {
   buildExperimentMeasurementData,
   buildExperimentMeasurementResponse,
@@ -10,7 +10,7 @@ const {
   parseExperimentMeasurementRequest,
   tokensMatch,
   validateExperimentMeasurementInput,
-} = require('./experimentMeasurementCore')
+} = require('./core')
 
 const experimentImportToken = defineSecret('EXPERIMENT_IMPORT_TOKEN')
 

@@ -1,7 +1,7 @@
 const { onRequest } = require('firebase-functions/v2/https')
-const { db } = require('../shared/firebase')
-const { applyCorsHeaders } = require('../shared/http')
-const { timestampToIso, toMillis } = require('../shared/time')
+const { db } = require('../../shared/firebase')
+const { applyCorsHeaders } = require('../../shared/http')
+const { timestampToIso, toMillis } = require('../../shared/time')
 
 function isActiveEntity(status) {
   return status !== 'blocked' && status !== 'deleted'
