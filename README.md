@@ -5,7 +5,7 @@
 
 - SPA mit React 19, Vite 8, TypeScript und MUI 7.
 - Authentifizierung über Firebase Authentication (E-Mail/Passwort und Google).
-- Datenhaltung in Cloud Firestore (`users`, `generators`, `measurements`, `adminState`).
+- Datenhaltung in Cloud Firestore (`users`, `generators`, `measurements`, `experimentMeasurements`, `adminState`).
 
 ## Hauptfunktionen
 
@@ -134,6 +134,18 @@ Antwort:
 }
 ```
 
+### `experimentMeasurements/{id}`
+
+```json
+{
+  "valueMv": 742,
+  "deviceId": "hauptversuch",
+  "source": "arduino",
+  "measuredAt": "timestamp",
+  "createdAt": "timestamp"
+}
+```
+
 ### `adminState/qr-export-counter`
 
 ```json
@@ -236,6 +248,7 @@ npm run dev:network
 - `npm run deploy` -> Build und vollständiger Firebase-Deploy
 - `npm run deploy:hosting` -> Build und Deploy nur des Hostings
 - `npm run deploy:functions` -> Deploy nur der Cloud Functions
+- `npm run seed:experiment` -> Beispielwerte fuer den Live-Versuch in Firestore schreiben
 - `npm run preview` -> lokale Vorschau auf den Build
 - `npm run lint` -> ESLint
 - `npm run spellcheck` -> cspell
@@ -267,6 +280,19 @@ Alternativ steht unter Linux ein ausführbares Skript bereit:
 Die Firebase CLI wird lokal über die Projektabhängigkeiten ausgeführt. Eine globale
 Installation ist nicht erforderlich. Vor dem ersten Deploy ist gegebenenfalls
 `npx firebase login` nötig.
+
+## Seed-Daten
+
+Beispielwerte fuer den Live-Versuch koennen mit dem Seed-Skript geschrieben werden:
+
+```bash
+npm run seed:experiment
+```
+
+Das Skript schreibt deterministische Dokumente fuer `deviceId: "seed-hauptversuch"`
+in `experimentMeasurements`. Fuer die echte Firestore-Instanz muss
+`GOOGLE_APPLICATION_CREDENTIALS` auf eine Firebase-Service-Account-JSON-Datei zeigen.
+Mit gesetztem `FIRESTORE_EMULATOR_HOST` schreibt das Skript stattdessen in den Emulator.
 
 ## QA-Checkliste
 

@@ -6,6 +6,7 @@
     "node": "22"
   },
   "scripts": {
+    "seed:experiment": "node seedExperimentMeasurements.js",
     "start": "firebase emulators:start --only functions",
     "deploy": "firebase deploy --only functions"
   },
