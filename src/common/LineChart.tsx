@@ -140,7 +140,7 @@ export function LineChart({
 
   const activePoint = activeIndex === null ? null : points[activeIndex] ?? null
   const visiblePointIndexes = new Set(
-    getSampledChartIndexes(data.length, isMobileViewport ? 24 : 48),
+    getSampledChartIndexes(data.length, isMobileViewport ? 8 : 14),
   )
   const linePoints = points.map((point) => `${point.x},${point.y}`).join(' ')
   const areaPoints = [
@@ -385,10 +385,10 @@ export function LineChart({
                 <circle
                   cx={point.x}
                   cy={point.y}
-                  r={isActive ? 6.5 : 4.75}
+                  r={isActive ? 6.5 : 3.5}
                   fill={isActive ? chartColor : theme.palette.common.white}
                   stroke={chartColorDark}
-                  strokeWidth={isActive ? '2.5' : '2'}
+                  strokeWidth={isActive ? '2.5' : '1.75'}
                 />
               </g>
             )
