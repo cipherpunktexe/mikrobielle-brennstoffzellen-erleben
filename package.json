@@ -11,6 +11,7 @@
     "deploy:functions": "firebase deploy --only functions --force",
     "deploy:hosting": "npm run build && firebase deploy --only hosting --force",
     "lint": "eslint .",
+    "test:api:experiment": "npm --prefix functions run test:api:experiment",
     "seed:experiment": "npm --prefix functions run seed:experiment",
     "spellcheck": "cspell lint --no-progress .",
     "preview": "vite preview",

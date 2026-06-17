@@ -49,6 +49,24 @@ exports.experimentMeasurement = onRequest({
 
   const input = validationResult.input
   const measurementId = input.measurementId
+
+  if (input.dryRun) {
+    res.status(200).json(
+      buildExperimentMeasurementResponse({
+        measurementId,
+        data: {
+          valueMv: input.valueMv,
+          measuredAt: null,
+          deviceId: input.deviceId,
+        },
+        fallbackMeasuredAtDate: input.measuredAtDate,
+        status: 'dry_run',
+        timestampToIso,
+      }),
+    )
+    return
+  }
+
   const measurementRef = db.collection('experimentMeasurements').doc(measurementId)
 
   try {

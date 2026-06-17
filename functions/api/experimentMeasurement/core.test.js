@@ -69,6 +69,7 @@ describe('experiment measurement import core', () => {
       measuredAtInput: measuredAt,
       deviceId: 'hauptversuch',
       requestedMeasurementId: undefined,
+      dryRun: false,
     })
   })
 
@@ -120,6 +121,7 @@ describe('experiment measurement import core', () => {
     expect(result.input).toMatchObject({
       valueMv: 742,
       deviceId: 'hauptversuch',
+      dryRun: false,
     })
     expect(result.input?.measuredAtDate.toISOString()).toBe(measuredAt)
     expect(result.input?.measurementId).toMatch(/^measurement-[a-f0-9]{32}$/)
@@ -134,6 +136,18 @@ describe('experiment measurement import core', () => {
         }),
       ).input,
     ).toMatchObject({ valueMv: 1_000_001 })
+  })
+
+  test('preserves dry run requests in normalized input', () => {
+    const result = validateExperimentMeasurementInput(
+      parseExperimentMeasurementRequest({
+        valueMv: 742,
+        measuredAt,
+        dryRun: true,
+      }),
+    )
+
+    expect(result.input).toMatchObject({ dryRun: true })
   })
 
   test('builds api responses', () => {

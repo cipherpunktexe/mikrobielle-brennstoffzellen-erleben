@@ -122,7 +122,8 @@ X-Experiment-Import-Token: <EXPERIMENT_IMPORT_TOKEN>
   "valueMv": 742,
   "measuredAt": "2026-06-17T12:30:00.000Z",
   "deviceId": "hauptversuch",
-  "measurementId": "hauptversuch-2026-06-17T12:30:00.000Z"
+  "measurementId": "hauptversuch-2026-06-17T12:30:00.000Z",
+  "dryRun": false
 }
 ```
 
@@ -134,6 +135,8 @@ Felder:
 - `measurementId` ist optional. Die API akzeptiert fast alle stabilen Strings.
   Firestore-ungeeignete IDs werden intern deterministisch in eine sichere Dokument-ID
   umgewandelt. Ungueltig sind nur leere IDs sowie `.` und `..`.
+- `dryRun` ist optional. Mit `true` prueft die API Authentifizierung und Payload,
+  schreibt aber keinen Messwert.
 
 Wenn keine `measurementId` gesendet wird, erzeugt die API eine stabile Dokument-ID
 aus `deviceId` und `measuredAt`. Wiederholt ein Script denselben Request nach
@@ -153,6 +156,8 @@ Request.
   "status": "created"
 }
 ```
+
+Bei `dryRun: true` ist der Status `dry_run`.
 
 ### Fehlerantworten
 
@@ -194,9 +199,32 @@ curl -X POST "https://mikrobielle-brennstoffzellen.web.app/api/experiment-measur
     "valueMv": 742,
     "measuredAt": "2026-06-17T12:30:00.000Z",
     "deviceId": "hauptversuch",
-    "measurementId": "hauptversuch-2026-06-17T12:30:00.000Z"
+    "measurementId": "hauptversuch-2026-06-17T12:30:00.000Z",
+    "dryRun": true
   }'
 ```
+
+### Testaufruf per npm
+
+```bash
+EXPERIMENT_IMPORT_TOKEN="<EXPERIMENT_IMPORT_TOKEN>" npm run test:api:experiment
+```
+
+Standardmaessig sendet das Skript `dryRun: true` an die Produktiv-URL und schreibt
+nichts in Firestore. Fuer einen echten Schreibtest:
+
+```bash
+EXPERIMENT_IMPORT_TOKEN="<EXPERIMENT_IMPORT_TOKEN>" \
+EXPERIMENT_TEST_DRY_RUN=false \
+npm run test:api:experiment
+```
+
+Optionale Variablen:
+
+- `EXPERIMENT_API_URL`
+- `EXPERIMENT_TEST_VALUE_MV`
+- `EXPERIMENT_TEST_DEVICE_ID`
+- `EXPERIMENT_TEST_MEASURED_AT`
 
 ### Python-Beispiel
 
@@ -395,6 +423,7 @@ npm run dev:network
 - `npm run deploy:hosting` -> Build und Deploy nur des Hostings
 - `npm run deploy:functions` -> Deploy nur der Cloud Functions
 - `npm run seed:experiment` -> Beispielwerte fuer den Live-Versuch in Firestore schreiben
+- `npm run test:api:experiment` -> Import-API mit `dryRun` testweise aufrufen
 - `npm run preview` -> lokale Vorschau auf den Build
 - `npm run lint` -> ESLint
 - `npm run spellcheck` -> cspell

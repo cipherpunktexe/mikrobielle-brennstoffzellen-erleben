@@ -63,6 +63,7 @@ function parseExperimentMeasurementRequest(body = {}) {
     measuredAtInput: body.measuredAt,
     deviceId: String(body.deviceId || 'hauptversuch').trim(),
     requestedMeasurementId: body.measurementId,
+    dryRun: body.dryRun === true,
   }
 }
 
@@ -117,6 +118,7 @@ function validateExperimentMeasurementInput(input) {
       measuredAtDate,
       deviceId: input.deviceId,
       measurementId,
+      dryRun: input.dryRun,
     },
   }
 }
