@@ -1,4 +1,3 @@
-import SensorsIcon from '@mui/icons-material/Sensors'
 import {
   Box,
   Card,
@@ -77,38 +76,12 @@ export function ExperimentLiveChart() {
     <Card>
       <CardContent sx={{ p: { xs: 2.5, sm: 3, md: 4 } }}>
         <Stack spacing={2.5}>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="space-between">
-            <Box>
-              <Typography variant="overline">Live-Versuch</Typography>
-              <Typography variant="h2" gutterBottom sx={{ fontSize: { xs: '1.85rem', sm: undefined } }}>
-                Live-Spannung
-              </Typography>
-            </Box>
-
-            <Stack
-              direction="row"
-              spacing={1.5}
-              alignItems="center"
-              sx={{
-                alignSelf: { xs: 'stretch', sm: 'flex-start' },
-                border: (theme) => `1px solid ${alpha(theme.palette.primary.dark, 0.16)}`,
-                borderRadius: '18px',
-                px: 1.75,
-                py: 1.5,
-                bgcolor: (theme) => alpha(theme.palette.common.white, 0.48),
-              }}
-            >
-              <SensorsIcon color="primary" aria-hidden="true" />
-              <Box>
-                <Typography variant="caption" color="text.secondary">
-                  Jetzt
-                </Typography>
-                <Typography variant="h5" sx={{ lineHeight: 1.05 }}>
-                  {formatVoltage(latestMeasurement?.valueMv)}
-                </Typography>
-              </Box>
-            </Stack>
-          </Stack>
+          <Box>
+            <Typography variant="overline">Live-Versuch</Typography>
+            <Typography variant="h2" gutterBottom sx={{ fontSize: { xs: '1.85rem', sm: undefined } }}>
+              Live-Spannung
+            </Typography>
+          </Box>
 
           {!loaded ? (
             <Box
