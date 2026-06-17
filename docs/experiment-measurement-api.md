@@ -340,6 +340,12 @@ Für einen echten Import wird `dry_run=False` gesetzt:
 result = post_measurement(value_mv, measured_at, dry_run=False)
 ```
 
+Der Python-Client kann mit einem Dry-Run getestet werden:
+
+```bash
+python3 scripts/test_post_experiment_measurement.py
+```
+
 Für einen Arduino-Aufbau sollte das Script den gemessenen Spannungswert in
 Millivolt und den Messzeitpunkt an `post_measurement(...)` übergeben.
 
