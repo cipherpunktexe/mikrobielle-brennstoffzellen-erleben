@@ -53,28 +53,37 @@ function formatShortExperimentTimestamp(measurement: ExperimentMeasurement) {
 }
 
 type ExperimentVoltageUnit = 'µV' | 'mV' | 'V'
-type ExperimentTimeRange = '1h' | '6h' | '24h' | '7d' | 'all'
+type ExperimentTimeRange = '5m' | '15m' | '30m' | '1h' | '3h' | '6h' | '12h' | '24h'
 
 const experimentTimeRangeOptions: { value: ExperimentTimeRange; label: string }[] = [
+  { value: '5m', label: '5 min' },
+  { value: '15m', label: '15 min' },
+  { value: '30m', label: '30 min' },
   { value: '1h', label: '1 h' },
+  { value: '3h', label: '3 h' },
   { value: '6h', label: '6 h' },
+  { value: '12h', label: '12 h' },
   { value: '24h', label: '24 h' },
-  { value: '7d', label: '7 Tage' },
-  { value: 'all', label: 'Alle' },
 ]
 
 function getExperimentTimeRangeStartMs(range: ExperimentTimeRange, nowMs: number) {
   switch (range) {
+    case '5m':
+      return nowMs - 5 * 60 * 1000
+    case '15m':
+      return nowMs - 15 * 60 * 1000
+    case '30m':
+      return nowMs - 30 * 60 * 1000
     case '1h':
       return nowMs - 60 * 60 * 1000
+    case '3h':
+      return nowMs - 3 * 60 * 60 * 1000
     case '6h':
       return nowMs - 6 * 60 * 60 * 1000
+    case '12h':
+      return nowMs - 12 * 60 * 60 * 1000
     case '24h':
       return nowMs - 24 * 60 * 60 * 1000
-    case '7d':
-      return nowMs - 7 * 24 * 60 * 60 * 1000
-    case 'all':
-      return Number.NEGATIVE_INFINITY
   }
 }
 
@@ -83,10 +92,6 @@ export function filterExperimentMeasurementsByTimeRange<T extends { measuredAt?:
   range: ExperimentTimeRange,
   nowMs: number,
 ) {
-  if (range === 'all') {
-    return measurements
-  }
-
   const startMs = getExperimentTimeRangeStartMs(range, nowMs)
 
   return measurements.filter((measurement) => {

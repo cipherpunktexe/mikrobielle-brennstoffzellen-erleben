@@ -43,27 +43,38 @@ describe('experiment live chart time range filter', () => {
     }
   }
 
-  test('keeps all measurements for the all range', () => {
+  test('filters measurements by short minute windows', () => {
     const nowMs = Date.parse('2026-06-17T12:00:00.000Z')
     const measurements = [
-      measurement('old', nowMs - 48 * 60 * 60 * 1000),
-      measurement('new', nowMs),
+      measurement('old', nowMs - 8 * 60 * 1000),
+      measurement('recent', nowMs - 3 * 60 * 1000),
     ]
 
-    expect(filterExperimentMeasurementsByTimeRange(measurements, 'all', nowMs)).toEqual(measurements)
+    expect(filterExperimentMeasurementsByTimeRange(measurements, '5m', nowMs).map(({ id }) => id)).toEqual([
+      'recent',
+    ])
+    expect(filterExperimentMeasurementsByTimeRange(measurements, '15m', nowMs).map(({ id }) => id)).toEqual([
+      'old',
+      'recent',
+    ])
   })
 
-  test('filters measurements by the selected past time window', () => {
+  test('filters measurements by hour windows up to 24 hours', () => {
     const nowMs = Date.parse('2026-06-17T12:00:00.000Z')
     const measurements = [
+      measurement('outside', nowMs - 25 * 60 * 60 * 1000),
       measurement('old', nowMs - 2 * 60 * 60 * 1000),
-      measurement('recent', nowMs - 30 * 60 * 1000),
+      measurement('recent', nowMs - 20 * 60 * 1000),
     ]
 
     expect(filterExperimentMeasurementsByTimeRange(measurements, '1h', nowMs).map(({ id }) => id)).toEqual([
       'recent',
     ])
     expect(filterExperimentMeasurementsByTimeRange(measurements, '6h', nowMs).map(({ id }) => id)).toEqual([
+      'old',
+      'recent',
+    ])
+    expect(filterExperimentMeasurementsByTimeRange(measurements, '24h', nowMs).map(({ id }) => id)).toEqual([
       'old',
       'recent',
     ])

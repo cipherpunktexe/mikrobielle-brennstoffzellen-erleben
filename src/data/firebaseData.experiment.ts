@@ -14,29 +14,31 @@ import { db, experimentMeasurementsCollection } from './firebaseData.shared'
 const defaultExperimentMeasurementLimit = 500
 const firestoreBatchLimit = 500
 
-export type ExperimentMeasurementDeleteRange = '1h' | '6h' | '24h' | '7d' | 'all'
+export type ExperimentMeasurementDeleteRange = '5m' | '15m' | '30m' | '1h' | '3h' | '6h' | '12h' | '24h'
 
 function getExperimentMeasurementRangeStart(range: ExperimentMeasurementDeleteRange, now = new Date()) {
   switch (range) {
+    case '5m':
+      return new Date(now.getTime() - 5 * 60 * 1000)
+    case '15m':
+      return new Date(now.getTime() - 15 * 60 * 1000)
+    case '30m':
+      return new Date(now.getTime() - 30 * 60 * 1000)
     case '1h':
       return new Date(now.getTime() - 60 * 60 * 1000)
+    case '3h':
+      return new Date(now.getTime() - 3 * 60 * 60 * 1000)
     case '6h':
       return new Date(now.getTime() - 6 * 60 * 60 * 1000)
+    case '12h':
+      return new Date(now.getTime() - 12 * 60 * 60 * 1000)
     case '24h':
       return new Date(now.getTime() - 24 * 60 * 60 * 1000)
-    case '7d':
-      return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-    case 'all':
-      return null
   }
 }
 
 function buildExperimentMeasurementRangeQuery(range: ExperimentMeasurementDeleteRange) {
   const rangeStart = getExperimentMeasurementRangeStart(range)
-
-  if (!rangeStart) {
-    return experimentMeasurementsCollection
-  }
 
   return query(
     experimentMeasurementsCollection,

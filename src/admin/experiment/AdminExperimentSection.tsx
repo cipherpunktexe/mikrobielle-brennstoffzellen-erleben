@@ -19,11 +19,14 @@ import {
 import type { ExperimentMeasurementDeleteRange } from '../../data/firebaseData'
 
 const deleteRangeOptions: { value: ExperimentMeasurementDeleteRange; label: string }[] = [
+  { value: '5m', label: 'Letzte 5 min' },
+  { value: '15m', label: 'Letzte 15 min' },
+  { value: '30m', label: 'Letzte 30 min' },
   { value: '1h', label: 'Letzte 1 h' },
+  { value: '3h', label: 'Letzte 3 h' },
   { value: '6h', label: 'Letzte 6 h' },
+  { value: '12h', label: 'Letzte 12 h' },
   { value: '24h', label: 'Letzte 24 h' },
-  { value: '7d', label: 'Letzte 7 Tage' },
-  { value: 'all', label: 'Alle Messwerte' },
 ]
 
 interface AdminExperimentSectionProps {
