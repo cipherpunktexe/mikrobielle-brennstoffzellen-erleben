@@ -23,8 +23,7 @@ export function AboutPage() {
                 </Typography>
                 <Typography color="text.secondary">
                   „{contactDetails.projectName}“ ist eine Lern- und Projekt-App rund um mikrobielle
-                  Brennstoffzellen. Sie verbindet Nutzerkonten mit realen Brennstoffzellen, macht
-                  Messwerte nachvollziehbar und stellt Ergebnisse in einem Leaderboard gegenüber.
+                  Brennstoffzellen.
                 </Typography>
                 <Typography color="text.secondary">
                   Entwickelt und verantwortet wird die Web-App von {contactDetails.responsiblePerson}.
