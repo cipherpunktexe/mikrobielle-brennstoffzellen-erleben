@@ -27,7 +27,7 @@ export function LineChart({
   valueFormatter = (value) => String(value),
   detailLabelTitle = 'Punkt',
   valueLabelTitle = 'Wert',
-  showActiveSummary = true,
+  showActiveSummary = false,
   showMobileNavigation = true,
 }: LineChartProps) {
   const theme = useTheme()

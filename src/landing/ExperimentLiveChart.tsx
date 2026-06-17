@@ -1,5 +1,6 @@
 import CloseIcon from '@mui/icons-material/Close'
 import OpenInFullIcon from '@mui/icons-material/OpenInFull'
+import SensorsIcon from '@mui/icons-material/Sensors'
 import {
   Box,
   Button,
@@ -97,7 +98,12 @@ export function ExperimentLiveChart() {
       <Card>
         <CardContent sx={{ p: { xs: 2.5, sm: 3, md: 4 } }}>
           <Stack spacing={2.5}>
-            <Stack direction="row" spacing={2} alignItems="flex-start" justifyContent="space-between">
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              spacing={2}
+              alignItems={{ xs: 'stretch', sm: 'flex-start' }}
+              justifyContent="space-between"
+            >
               <Box>
                 <Typography variant="overline">Live-Versuch</Typography>
                 <Typography variant="h2" gutterBottom sx={{ fontSize: { xs: '1.85rem', sm: undefined } }}>
@@ -105,18 +111,52 @@ export function ExperimentLiveChart() {
                 </Typography>
               </Box>
 
-              <Tooltip title="Diagramm im Vollbild öffnen">
-                <span>
-                  <IconButton
-                    aria-label="Diagramm im Vollbild öffnen"
-                    onClick={() => setChartDialogOpen(true)}
-                    disabled={!loaded || measurements.length === 0}
-                    sx={{ mt: 0.25 }}
-                  >
-                    <OpenInFullIcon />
-                  </IconButton>
-                </span>
-              </Tooltip>
+              <Stack
+                direction="row"
+                spacing={1}
+                alignItems="center"
+                sx={{
+                  alignSelf: { xs: 'stretch', sm: 'flex-start' },
+                  justifyContent: 'space-between',
+                }}
+              >
+                <Stack
+                  direction="row"
+                  spacing={1.5}
+                  alignItems="center"
+                  sx={{
+                    minWidth: 0,
+                    flexGrow: { xs: 1, sm: 0 },
+                    border: (theme) => `1px solid ${alpha(theme.palette.primary.dark, 0.16)}`,
+                    borderRadius: '18px',
+                    px: 1.75,
+                    py: 1.5,
+                    bgcolor: (theme) => alpha(theme.palette.common.white, 0.48),
+                  }}
+                >
+                  <SensorsIcon color="primary" aria-hidden="true" />
+                  <Box sx={{ minWidth: 0 }}>
+                    <Typography variant="caption" color="text.secondary">
+                      Jetzt
+                    </Typography>
+                    <Typography variant="h5" sx={{ lineHeight: 1.05, overflowWrap: 'anywhere' }}>
+                      {formatVoltage(latestMeasurement?.valueMv)}
+                    </Typography>
+                  </Box>
+                </Stack>
+
+                <Tooltip title="Diagramm im Vollbild öffnen">
+                  <span>
+                    <IconButton
+                      aria-label="Diagramm im Vollbild öffnen"
+                      onClick={() => setChartDialogOpen(true)}
+                      disabled={!loaded || measurements.length === 0}
+                    >
+                      <OpenInFullIcon />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+              </Stack>
             </Stack>
 
             {!loaded ? (
@@ -161,7 +201,6 @@ export function ExperimentLiveChart() {
                   detailLabelTitle="Messzeitpunkt"
                   valueLabelTitle="Spannung"
                   valueFormatter={formatVoltage}
-                  showActiveSummary={false}
                 />
                 <Typography variant="body2" color="text.secondary">
                   Zuletzt: {formatExperimentTimestamp(latestMeasurement)} · Max: {formatVoltage(maxValue)}
