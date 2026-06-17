@@ -49,15 +49,50 @@ function formatShortExperimentTimestamp(measurement: ExperimentMeasurement) {
   }).format(date)
 }
 
-function formatVoltage(valueMv?: number | null) {
+type ExperimentVoltageUnit = 'µV' | 'mV' | 'V'
+
+function getExperimentVoltageUnit(valuesMv: number[]): ExperimentVoltageUnit {
+  const maxAbsValueMv = Math.max(
+    0,
+    ...valuesMv
+      .filter((valueMv) => Number.isFinite(valueMv))
+      .map((valueMv) => Math.abs(valueMv)),
+  )
+
+  if (maxAbsValueMv >= 1000) {
+    return 'V'
+  }
+
+  if (maxAbsValueMv > 0 && maxAbsValueMv < 1) {
+    return 'µV'
+  }
+
+  return 'mV'
+}
+
+function formatExperimentVoltage(valueMv: number | undefined | null, unit: ExperimentVoltageUnit) {
   if (valueMv === undefined || valueMv === null) {
     return 'Noch kein Messwert'
   }
 
+  const scaledValue =
+    unit === 'V'
+      ? valueMv / 1000
+      : unit === 'µV'
+        ? valueMv * 1000
+        : valueMv
+  const maximumFractionDigits = unit === 'V' ? 3 : unit === 'mV' ? 2 : 0
+
   return new Intl.NumberFormat('de-DE', {
     minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(valueMv) + ' mV'
+    maximumFractionDigits,
+  }).format(scaledValue) + ` ${unit}`
+}
+
+export function createExperimentVoltageFormatter(valuesMv: number[]) {
+  const unit = getExperimentVoltageUnit(valuesMv)
+
+  return (valueMv?: number | null) => formatExperimentVoltage(valueMv, unit)
 }
 
 interface LiveChartMetricProps {
@@ -110,6 +145,14 @@ export function ExperimentLiveChart() {
   }, [])
 
   const latestMeasurement = measurements.at(-1)
+  const valuesMv = useMemo(
+    () => measurements.map((measurement) => measurement.valueMv),
+    [measurements],
+  )
+  const formatVoltage = useMemo(
+    () => createExperimentVoltageFormatter(valuesMv),
+    [valuesMv],
+  )
   const chartData = useMemo(
     () =>
       measurements.map((measurement) => ({
@@ -122,10 +165,10 @@ export function ExperimentLiveChart() {
   )
   const maxValue = useMemo(
     () =>
-      measurements.length > 0
-        ? Math.max(...measurements.map((measurement) => measurement.valueMv))
+      valuesMv.length > 0
+        ? Math.max(...valuesMv)
         : undefined,
-    [measurements],
+    [valuesMv],
   )
 
   return (
