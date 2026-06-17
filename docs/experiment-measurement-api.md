@@ -291,8 +291,10 @@ Optionale Umgebungsvariablen:
 
 ## Python-Beispiel
 
-Das Beispiel sendet einen Messwert an die API. Die stabile Dokument-ID erzeugt
-die API automatisch aus `deviceId` und `measuredAt`.
+Ein einfaches Beispielscript liegt unter
+[`scripts/post_experiment_measurement.py`](../scripts/post_experiment_measurement.py).
+Die stabile Dokument-ID erzeugt die API automatisch aus `deviceId` und
+`measuredAt`.
 
 Voraussetzung:
 
@@ -300,35 +302,15 @@ Voraussetzung:
 pip install requests
 ```
 
-Script:
+Die zentrale Funktion im Script ist:
 
 ```python
-import os
-import sys
-from datetime import datetime, timezone
-
-import requests
-
-
-API_URL = os.getenv(
-    "EXPERIMENT_API_URL",
-    "https://mikrobielle-brennstoffzellen.web.app/api/experiment-measurement",
-)
-TOKEN = os.getenv("EXPERIMENT_IMPORT_TOKEN")
-DEVICE_ID = os.getenv("EXPERIMENT_DEVICE_ID", "hauptversuch")
-DRY_RUN = os.getenv("EXPERIMENT_DRY_RUN", "true").lower() != "false"
-
-
-def post_measurement(value_mv):
-    if not TOKEN:
-        raise SystemExit("Bitte EXPERIMENT_IMPORT_TOKEN setzen.")
-
-    measured_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+def post_measurement(value_mv, measured_at, dry_run=True):
     payload = {
         "valueMv": value_mv,
         "measuredAt": measured_at,
         "deviceId": DEVICE_ID,
-        "dryRun": DRY_RUN,
+        "dryRun": dry_run,
     }
 
     response = requests.post(
@@ -339,24 +321,13 @@ def post_measurement(value_mv):
     )
     response.raise_for_status()
     return response.json()
-
-
-def main():
-    if len(sys.argv) < 2:
-        raise SystemExit("Aufruf: python import_experiment_measurement.py <valueMv>")
-
-    print(post_measurement(float(sys.argv[1])))
-
-
-if __name__ == "__main__":
-    main()
 ```
 
 Aufruf im Testmodus:
 
 ```bash
 EXPERIMENT_IMPORT_TOKEN="<EXPERIMENT_IMPORT_TOKEN>" \
-python import_experiment_measurement.py 742
+python scripts/post_experiment_measurement.py 742
 ```
 
 Echter Import:
@@ -364,11 +335,18 @@ Echter Import:
 ```bash
 EXPERIMENT_IMPORT_TOKEN="<EXPERIMENT_IMPORT_TOKEN>" \
 EXPERIMENT_DRY_RUN=false \
-python import_experiment_measurement.py 742
+python scripts/post_experiment_measurement.py 742
+```
+
+Aufruf mit eigenem Messzeitpunkt:
+
+```bash
+EXPERIMENT_IMPORT_TOKEN="<EXPERIMENT_IMPORT_TOKEN>" \
+python scripts/post_experiment_measurement.py 742 "2026-06-17T12:30:00.000Z"
 ```
 
 Für einen Arduino-Aufbau sollte das Script den gemessenen Spannungswert in
-Millivolt an `post_measurement(...)` übergeben.
+Millivolt und den Messzeitpunkt an `post_measurement(...)` übergeben.
 
 Wenn ein Script automatische Wiederholungen einbaut, sollte es bei einem Retry
 nicht neu messen und keinen neuen Zeitstempel erzeugen, sondern denselben Payload
