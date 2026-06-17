@@ -289,10 +289,11 @@ Optionale Umgebungsvariablen:
 | `EXPERIMENT_TEST_MEASURED_AT` | aktuelle Zeit | Messzeitpunkt für den Test. |
 | `EXPERIMENT_TEST_DRY_RUN` | `true` | Mit `false` wird wirklich gespeichert. |
 
-## Python-Beispiel
+## Python-Client
 
-Ein einfaches Beispielscript liegt unter
+Ein einfacher Python-Client liegt unter
 [`scripts/post_experiment_measurement.py`](../scripts/post_experiment_measurement.py).
+Die Datei ist als Modul gedacht und wird von einem anderen Script importiert.
 Die stabile Dokument-ID erzeugt die API automatisch aus `deviceId` und
 `measuredAt`.
 
@@ -305,44 +306,53 @@ pip install requests
 Die zentrale Funktion im Script ist:
 
 ```python
-def post_measurement(value_mv, measured_at, dry_run=True):
+def post_measurement(
+    value_mv,
+    measured_at,
+    dry_run=True,
+    device_id=None,
+    token=None,
+    api_url=None,
+):
+    token = token or os.getenv("EXPERIMENT_IMPORT_TOKEN")
+
+    if not token:
+        raise RuntimeError("Bitte EXPERIMENT_IMPORT_TOKEN setzen.")
+
     payload = {
         "valueMv": value_mv,
         "measuredAt": measured_at,
-        "deviceId": DEVICE_ID,
+        "deviceId": device_id or os.getenv("EXPERIMENT_DEVICE_ID", "hauptversuch"),
         "dryRun": dry_run,
     }
 
     response = requests.post(
-        API_URL,
+        api_url or os.getenv("EXPERIMENT_API_URL", DEFAULT_API_URL),
         json=payload,
-        headers={"Authorization": f"Bearer {TOKEN}"},
+        headers={"Authorization": f"Bearer {token}"},
         timeout=10,
     )
     response.raise_for_status()
     return response.json()
 ```
 
-Aufruf im Testmodus:
+Beispiel für ein Script, das den Client nutzt:
 
-```bash
-EXPERIMENT_IMPORT_TOKEN="<EXPERIMENT_IMPORT_TOKEN>" \
-python scripts/post_experiment_measurement.py 742
+```python
+from scripts.post_experiment_measurement import current_time_utc, post_measurement
+
+
+value_mv = 742
+measured_at = current_time_utc()
+
+result = post_measurement(value_mv, measured_at, dry_run=True)
+print(result)
 ```
 
-Echter Import:
+Für einen echten Import wird `dry_run=False` gesetzt:
 
-```bash
-EXPERIMENT_IMPORT_TOKEN="<EXPERIMENT_IMPORT_TOKEN>" \
-EXPERIMENT_DRY_RUN=false \
-python scripts/post_experiment_measurement.py 742
-```
-
-Aufruf mit eigenem Messzeitpunkt:
-
-```bash
-EXPERIMENT_IMPORT_TOKEN="<EXPERIMENT_IMPORT_TOKEN>" \
-python scripts/post_experiment_measurement.py 742 "2026-06-17T12:30:00+00:00"
+```python
+result = post_measurement(value_mv, measured_at, dry_run=False)
 ```
 
 Für einen Arduino-Aufbau sollte das Script den gemessenen Spannungswert in

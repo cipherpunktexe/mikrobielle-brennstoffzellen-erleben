@@ -233,35 +233,13 @@ Optionale Variablen:
 ### Python-Beispiel
 
 ```python
-import os
-import sys
-from datetime import datetime, timezone
-
-import requests
-
-API_URL = "https://mikrobielle-brennstoffzellen.web.app/api/experiment-measurement"
-TOKEN = os.environ["EXPERIMENT_IMPORT_TOKEN"]
+from scripts.post_experiment_measurement import current_time_utc, post_measurement
 
 
-def post_measurement(value_mv):
-    payload = {
-        "valueMv": value_mv,
-        "measuredAt": datetime.now(timezone.utc).isoformat(),
-        "deviceId": "hauptversuch",
-        "dryRun": True,
-    }
+value_mv = 742
+measured_at = current_time_utc()
 
-    response = requests.post(
-        API_URL,
-        json=payload,
-        headers={"Authorization": f"Bearer {TOKEN}"},
-        timeout=10,
-    )
-    response.raise_for_status()
-    return response.json()
-
-
-print(post_measurement(float(sys.argv[1])))
+print(post_measurement(value_mv, measured_at, dry_run=True))
 ```
 
 ## QR- und Code-Flow
