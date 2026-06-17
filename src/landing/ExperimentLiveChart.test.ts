@@ -1,5 +1,8 @@
 import { describe, expect, test } from 'vitest'
-import { createExperimentVoltageFormatter } from './ExperimentLiveChart'
+import {
+  createExperimentVoltageFormatter,
+  filterExperimentMeasurementsByTimeRange,
+} from './ExperimentLiveChart'
 
 describe('experiment live chart voltage formatter', () => {
   test('keeps millivolts for regular experiment values', () => {
@@ -27,5 +30,42 @@ describe('experiment live chart voltage formatter', () => {
     const formatVoltage = createExperimentVoltageFormatter([])
 
     expect(formatVoltage()).toBe('Noch kein Messwert')
+  })
+})
+
+describe('experiment live chart time range filter', () => {
+  function measurement(id: string, measuredAtMs: number) {
+    return {
+      id,
+      measuredAt: {
+        toMillis: () => measuredAtMs,
+      },
+    }
+  }
+
+  test('keeps all measurements for the all range', () => {
+    const nowMs = Date.parse('2026-06-17T12:00:00.000Z')
+    const measurements = [
+      measurement('old', nowMs - 48 * 60 * 60 * 1000),
+      measurement('new', nowMs),
+    ]
+
+    expect(filterExperimentMeasurementsByTimeRange(measurements, 'all', nowMs)).toEqual(measurements)
+  })
+
+  test('filters measurements by the selected past time window', () => {
+    const nowMs = Date.parse('2026-06-17T12:00:00.000Z')
+    const measurements = [
+      measurement('old', nowMs - 2 * 60 * 60 * 1000),
+      measurement('recent', nowMs - 30 * 60 * 1000),
+    ]
+
+    expect(filterExperimentMeasurementsByTimeRange(measurements, '1h', nowMs).map(({ id }) => id)).toEqual([
+      'recent',
+    ])
+    expect(filterExperimentMeasurementsByTimeRange(measurements, '6h', nowMs).map(({ id }) => id)).toEqual([
+      'old',
+      'recent',
+    ])
   })
 })

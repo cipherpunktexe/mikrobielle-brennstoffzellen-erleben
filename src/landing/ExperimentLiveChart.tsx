@@ -10,7 +10,10 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControl,
   IconButton,
+  MenuItem,
+  Select,
   Skeleton,
   Stack,
   Tooltip,
@@ -50,6 +53,48 @@ function formatShortExperimentTimestamp(measurement: ExperimentMeasurement) {
 }
 
 type ExperimentVoltageUnit = 'µV' | 'mV' | 'V'
+type ExperimentTimeRange = '1h' | '6h' | '24h' | '7d' | 'all'
+
+const experimentTimeRangeOptions: { value: ExperimentTimeRange; label: string }[] = [
+  { value: '1h', label: '1 h' },
+  { value: '6h', label: '6 h' },
+  { value: '24h', label: '24 h' },
+  { value: '7d', label: '7 Tage' },
+  { value: 'all', label: 'Alle' },
+]
+
+function getExperimentTimeRangeStartMs(range: ExperimentTimeRange, nowMs: number) {
+  switch (range) {
+    case '1h':
+      return nowMs - 60 * 60 * 1000
+    case '6h':
+      return nowMs - 6 * 60 * 60 * 1000
+    case '24h':
+      return nowMs - 24 * 60 * 60 * 1000
+    case '7d':
+      return nowMs - 7 * 24 * 60 * 60 * 1000
+    case 'all':
+      return Number.NEGATIVE_INFINITY
+  }
+}
+
+export function filterExperimentMeasurementsByTimeRange<T extends { measuredAt?: { toMillis: () => number } | null }>(
+  measurements: T[],
+  range: ExperimentTimeRange,
+  nowMs: number,
+) {
+  if (range === 'all') {
+    return measurements
+  }
+
+  const startMs = getExperimentTimeRangeStartMs(range, nowMs)
+
+  return measurements.filter((measurement) => {
+    const measuredAtMs = measurement.measuredAt?.toMillis()
+
+    return measuredAtMs !== undefined && measuredAtMs >= startMs
+  })
+}
 
 function getExperimentVoltageUnit(valuesMv: number[]): ExperimentVoltageUnit {
   const maxAbsValueMv = Math.max(
@@ -130,10 +175,59 @@ function LiveChartMetric({ label, value, icon = false }: LiveChartMetricProps) {
   )
 }
 
+interface LiveChartFooterProps {
+  latestMeasurement?: ExperimentMeasurement | null
+  maxValue?: number
+  selectedTimeRange: ExperimentTimeRange
+  formatVoltage: (value?: number | null) => string
+  onTimeRangeChange: (range: ExperimentTimeRange) => void
+}
+
+function LiveChartFooter({
+  latestMeasurement,
+  maxValue,
+  selectedTimeRange,
+  formatVoltage,
+  onTimeRangeChange,
+}: LiveChartFooterProps) {
+  return (
+    <Stack
+      direction={{ xs: 'column', sm: 'row' }}
+      spacing={1.25}
+      alignItems={{ xs: 'stretch', sm: 'center' }}
+      justifyContent="space-between"
+    >
+      <Typography variant="body2" color="text.secondary">
+        Zuletzt: {formatExperimentTimestamp(latestMeasurement)} · Max: {formatVoltage(maxValue)}
+      </Typography>
+      <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 132 } }}>
+        <Select
+          value={selectedTimeRange}
+          onChange={(event) => onTimeRangeChange(event.target.value as ExperimentTimeRange)}
+          inputProps={{ 'aria-label': 'Angezeigten Zeitraum auswählen' }}
+          sx={{
+            borderRadius: '999px',
+            bgcolor: (theme) => alpha(theme.palette.common.white, 0.42),
+            fontSize: '0.875rem',
+          }}
+        >
+          {experimentTimeRangeOptions.map((option) => (
+            <MenuItem key={option.value} value={option.value}>
+              {option.label}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+    </Stack>
+  )
+}
+
 export function ExperimentLiveChart() {
   const [measurements, setMeasurements] = useState<ExperimentMeasurement[]>([])
   const [loaded, setLoaded] = useState(false)
   const [chartDialogOpen, setChartDialogOpen] = useState(false)
+  const [selectedTimeRange, setSelectedTimeRange] = useState<ExperimentTimeRange>('6h')
+  const [currentTimeMs, setCurrentTimeMs] = useState(() => Date.now())
 
   useEffect(() => {
     const unsubscribe = subscribeToExperimentMeasurements((nextMeasurements) => {
@@ -144,31 +238,54 @@ export function ExperimentLiveChart() {
     return unsubscribe
   }, [])
 
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setCurrentTimeMs(Date.now())
+    }, 60_000)
+
+    return () => {
+      window.clearInterval(intervalId)
+    }
+  }, [])
+
   const latestMeasurement = measurements.at(-1)
   const valuesMv = useMemo(
     () => measurements.map((measurement) => measurement.valueMv),
     [measurements],
   )
-  const formatVoltage = useMemo(
+  const formatLatestVoltage = useMemo(
     () => createExperimentVoltageFormatter(valuesMv),
     [valuesMv],
   )
+  const visibleMeasurements = useMemo(
+    () => filterExperimentMeasurementsByTimeRange(measurements, selectedTimeRange, currentTimeMs),
+    [currentTimeMs, measurements, selectedTimeRange],
+  )
+  const visibleValuesMv = useMemo(
+    () => visibleMeasurements.map((measurement) => measurement.valueMv),
+    [visibleMeasurements],
+  )
+  const visibleLatestMeasurement = visibleMeasurements.at(-1)
+  const formatVisibleVoltage = useMemo(
+    () => createExperimentVoltageFormatter(visibleValuesMv),
+    [visibleValuesMv],
+  )
   const chartData = useMemo(
     () =>
-      measurements.map((measurement) => ({
+      visibleMeasurements.map((measurement) => ({
         id: measurement.id,
         value: measurement.valueMv,
         label: formatExperimentTimestamp(measurement),
         shortLabel: formatShortExperimentTimestamp(measurement),
       })),
-    [measurements],
+    [visibleMeasurements],
   )
-  const maxValue = useMemo(
+  const visibleMaxValue = useMemo(
     () =>
-      valuesMv.length > 0
-        ? Math.max(...valuesMv)
+      visibleValuesMv.length > 0
+        ? Math.max(...visibleValuesMv)
         : undefined,
-    [valuesMv],
+    [visibleValuesMv],
   )
 
   return (
@@ -198,7 +315,7 @@ export function ExperimentLiveChart() {
                   justifyContent: 'space-between',
                 }}
               >
-                <LiveChartMetric label="Letzter" value={formatVoltage(latestMeasurement?.valueMv)} icon />
+                <LiveChartMetric label="Letzter" value={formatLatestVoltage(latestMeasurement?.valueMv)} icon />
 
                 <Tooltip title="Diagramm im Vollbild öffnen">
                   <span>
@@ -248,6 +365,28 @@ export function ExperimentLiveChart() {
               >
                 <Typography variant="h6">Noch keine Messwerte</Typography>
               </Box>
+            ) : visibleMeasurements.length === 0 ? (
+              <Stack spacing={1.5}>
+                <Box
+                  sx={{
+                    border: (theme) => `1px solid ${alpha(theme.palette.primary.dark, 0.16)}`,
+                    borderRadius: '22px',
+                    px: { xs: 2, sm: 3 },
+                    py: { xs: 4, sm: 5 },
+                    textAlign: 'center',
+                    bgcolor: (theme) => alpha(theme.palette.common.white, 0.34),
+                  }}
+                >
+                  <Typography variant="h6">Keine Messwerte im gewählten Zeitraum</Typography>
+                </Box>
+                <LiveChartFooter
+                  latestMeasurement={visibleLatestMeasurement}
+                  maxValue={visibleMaxValue}
+                  selectedTimeRange={selectedTimeRange}
+                  formatVoltage={formatVisibleVoltage}
+                  onTimeRangeChange={setSelectedTimeRange}
+                />
+              </Stack>
             ) : (
               <Stack spacing={1.5}>
                 <LineChart
@@ -255,11 +394,15 @@ export function ExperimentLiveChart() {
                   ariaLabel="Live-Diagramm der Spannung am großen Versuchsaufbau"
                   detailLabelTitle="Messzeitpunkt"
                   valueLabelTitle="Spannung"
-                  valueFormatter={formatVoltage}
+                  valueFormatter={formatVisibleVoltage}
                 />
-                <Typography variant="body2" color="text.secondary">
-                  Zuletzt: {formatExperimentTimestamp(latestMeasurement)} · Max: {formatVoltage(maxValue)}
-                </Typography>
+                <LiveChartFooter
+                  latestMeasurement={visibleLatestMeasurement}
+                  maxValue={visibleMaxValue}
+                  selectedTimeRange={selectedTimeRange}
+                  formatVoltage={formatVisibleVoltage}
+                  onTimeRangeChange={setSelectedTimeRange}
+                />
               </Stack>
             )}
           </Stack>
@@ -309,20 +452,48 @@ export function ExperimentLiveChart() {
               alignItems="stretch"
               justifyContent="flex-end"
             >
-              <LiveChartMetric label="Letzter" value={formatVoltage(latestMeasurement?.valueMv)} icon />
+              <LiveChartMetric label="Letzter" value={formatLatestVoltage(latestMeasurement?.valueMv)} icon />
             </Stack>
-            <Stack spacing={1.5}>
-              <LineChart
-                data={chartData}
-                ariaLabel="Live-Diagramm der Spannung am großen Versuchsaufbau im Vollbild"
-                detailLabelTitle="Messzeitpunkt"
-                valueLabelTitle="Spannung"
-                valueFormatter={formatVoltage}
-              />
-              <Typography variant="body2" color="text.secondary">
-                Zuletzt: {formatExperimentTimestamp(latestMeasurement)} · Max: {formatVoltage(maxValue)}
-              </Typography>
-            </Stack>
+            {visibleMeasurements.length === 0 ? (
+              <Stack spacing={1.5}>
+                <Box
+                  sx={{
+                    border: (theme) => `1px solid ${alpha(theme.palette.primary.dark, 0.16)}`,
+                    borderRadius: '22px',
+                    px: { xs: 2, sm: 3 },
+                    py: { xs: 4, sm: 5 },
+                    textAlign: 'center',
+                    bgcolor: (theme) => alpha(theme.palette.common.white, 0.34),
+                  }}
+                >
+                  <Typography variant="h6">Keine Messwerte im gewählten Zeitraum</Typography>
+                </Box>
+                <LiveChartFooter
+                  latestMeasurement={visibleLatestMeasurement}
+                  maxValue={visibleMaxValue}
+                  selectedTimeRange={selectedTimeRange}
+                  formatVoltage={formatVisibleVoltage}
+                  onTimeRangeChange={setSelectedTimeRange}
+                />
+              </Stack>
+            ) : (
+              <Stack spacing={1.5}>
+                <LineChart
+                  data={chartData}
+                  ariaLabel="Live-Diagramm der Spannung am großen Versuchsaufbau im Vollbild"
+                  detailLabelTitle="Messzeitpunkt"
+                  valueLabelTitle="Spannung"
+                  valueFormatter={formatVisibleVoltage}
+                />
+                <LiveChartFooter
+                  latestMeasurement={visibleLatestMeasurement}
+                  maxValue={visibleMaxValue}
+                  selectedTimeRange={selectedTimeRange}
+                  formatVoltage={formatVisibleVoltage}
+                  onTimeRangeChange={setSelectedTimeRange}
+                />
+              </Stack>
+            )}
           </Stack>
         </DialogContent>
         <DialogActions sx={{ px: { xs: 2, sm: 3 }, py: { xs: 1.25, sm: 1.5 } }}>
