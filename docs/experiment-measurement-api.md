@@ -179,21 +179,56 @@ Fehler haben immer diese Form:
 ```json
 {
   "code": "unauthorized",
-  "error": "Unauthorized."
+  "error": "Missing or invalid import token.",
+  "field": "Authorization",
+  "details": {
+    "acceptedHeaders": ["Authorization", "X-Experiment-Import-Token"]
+  }
 }
 ```
 
-| HTTP-Status | Code | Ursache |
-| --- | --- | --- |
-| `400` | `invalid_value` | `valueMv` fehlt oder ist keine endliche Zahl. |
-| `400` | `missing_measured_at` | `measuredAt` fehlt. |
-| `400` | `invalid_timestamp` | `measuredAt` kann nicht als Zeitstempel gelesen werden. |
-| `400` | `invalid_device_id` | `deviceId` ist nach dem Trimmen leer oder länger als 80 Zeichen. |
-| `400` | `invalid_measurement_id` | `measurementId` ist leer, `.` oder `..`. |
-| `401` | `unauthorized` | Token fehlt oder ist falsch. |
-| `405` | `method_not_allowed` | Es wurde nicht `POST` verwendet. |
-| `409` | `measurement_conflict` | Dieselbe Dokument-ID existiert bereits mit anderen Daten. |
-| `500` | `server_error` | Der Messwert konnte serverseitig nicht gespeichert werden. |
+`field` nennt das betroffene Feld, den betroffenen Header oder bei falscher
+HTTP-Methode `method`. `details` enthält maschinenlesbare Zusatzinformationen,
+wenn sie für Schnittstellen-Nutzer hilfreich sind.
+
+| HTTP-Status | Code | Feld | Ursache |
+| --- | --- | --- | --- |
+| `400` | `invalid_value` | `field: "valueMv"` | `valueMv` fehlt oder ist keine endliche Zahl in Millivolt. |
+| `400` | `missing_measured_at` | `field: "measuredAt"` | `measuredAt` fehlt. |
+| `400` | `invalid_timestamp` | `field: "measuredAt"` | `measuredAt` kann nicht als Zeitstempel gelesen werden. |
+| `400` | `invalid_device_id` | `field: "deviceId"` | `deviceId` ist nach dem Trimmen leer oder länger als 80 Zeichen. |
+| `400` | `invalid_measurement_id` | `field: "measurementId"` | `measurementId` ist leer, `.` oder `..`. |
+| `401` | `unauthorized` | `field: "Authorization"` | Token fehlt oder ist falsch. |
+| `405` | `method_not_allowed` | `field: "method"` | Es wurde nicht `POST` verwendet. |
+| `409` | `measurement_conflict` | `field: "measurementId"` | Dieselbe Dokument-ID existiert bereits mit anderem `valueMv`, `deviceId` oder `measuredAt`. |
+| `500` | `server_error` | kein Feld | Der Messwert konnte serverseitig nicht gespeichert werden. |
+
+Beispiel für einen Fehler bei der Validierung:
+
+```json
+{
+  "code": "invalid_value",
+  "error": "valueMv must be a finite number in millivolts.",
+  "field": "valueMv",
+  "details": {
+    "unit": "mV",
+    "rule": "finite_number"
+  }
+}
+```
+
+Beispiel für einen ID-Konflikt:
+
+```json
+{
+  "code": "measurement_conflict",
+  "error": "A measurement with this id already exists with different valueMv, deviceId or measuredAt.",
+  "field": "measurementId",
+  "details": {
+    "conflictingFields": ["valueMv", "deviceId", "measuredAt"]
+  }
+}
+```
 
 ## cURL-Beispiele
 

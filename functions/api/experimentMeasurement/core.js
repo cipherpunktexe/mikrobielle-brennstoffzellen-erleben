@@ -71,7 +71,12 @@ function validateExperimentMeasurementInput(input) {
   if (!Number.isFinite(input.valueMv)) {
     return {
       code: 'invalid_value',
-      error: 'valueMv must be a finite number.',
+      error: 'valueMv must be a finite number in millivolts.',
+      field: 'valueMv',
+      details: {
+        unit: 'mV',
+        rule: 'finite_number',
+      },
     }
   }
 
@@ -79,6 +84,10 @@ function validateExperimentMeasurementInput(input) {
     return {
       code: 'invalid_device_id',
       error: 'deviceId must be a non-empty string with at most 80 characters.',
+      field: 'deviceId',
+      details: {
+        maxLength: 80,
+      },
     }
   }
 
@@ -86,6 +95,10 @@ function validateExperimentMeasurementInput(input) {
     return {
       code: 'missing_measured_at',
       error: 'measuredAt is required.',
+      field: 'measuredAt',
+      details: {
+        expectedFormat: 'ISO 8601 timestamp',
+      },
     }
   }
 
@@ -95,6 +108,11 @@ function validateExperimentMeasurementInput(input) {
     return {
       code: 'invalid_timestamp',
       error: 'measuredAt must be a valid ISO timestamp.',
+      field: 'measuredAt',
+      details: {
+        expectedFormat: 'ISO 8601 timestamp',
+        example: '2026-06-17T12:30:00.000Z',
+      },
     }
   }
 
@@ -106,6 +124,10 @@ function validateExperimentMeasurementInput(input) {
     return {
       code: 'invalid_measurement_id',
       error: 'measurementId must not be empty, "." or "..".',
+      field: 'measurementId',
+      details: {
+        disallowedValues: ['', '.', '..'],
+      },
     }
   }
 

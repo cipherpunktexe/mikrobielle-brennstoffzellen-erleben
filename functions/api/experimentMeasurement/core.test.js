@@ -84,6 +84,10 @@ describe('experiment measurement import core', () => {
     expect(result).toMatchObject({
       code: 'missing_measured_at',
       error: 'measuredAt is required.',
+      field: 'measuredAt',
+      details: {
+        expectedFormat: 'ISO 8601 timestamp',
+      },
     })
   })
 
@@ -95,7 +99,14 @@ describe('experiment measurement import core', () => {
           measuredAt,
         }),
       ),
-    ).toMatchObject({ code: 'invalid_value' })
+    ).toMatchObject({
+      code: 'invalid_value',
+      field: 'valueMv',
+      details: {
+        unit: 'mV',
+        rule: 'finite_number',
+      },
+    })
 
     expect(
       validateExperimentMeasurementInput(
@@ -105,7 +116,13 @@ describe('experiment measurement import core', () => {
           deviceId: ' '.repeat(2),
         }),
       ),
-    ).toMatchObject({ code: 'invalid_device_id' })
+    ).toMatchObject({
+      code: 'invalid_device_id',
+      field: 'deviceId',
+      details: {
+        maxLength: 80,
+      },
+    })
   })
 
   test('returns normalized input for valid requests', () => {

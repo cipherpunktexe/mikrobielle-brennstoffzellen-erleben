@@ -4,8 +4,18 @@ function applyCorsHeaders(res, methods = 'GET, OPTIONS') {
   res.set('Access-Control-Allow-Headers', 'Authorization, Content-Type, X-Experiment-Import-Token')
 }
 
-function sendApiError(res, status, code, error) {
-  res.status(status).json({ code, error })
+function sendApiError(res, status, code, error, options = {}) {
+  const payload = { code, error }
+
+  if (options.field) {
+    payload.field = options.field
+  }
+
+  if (options.details) {
+    payload.details = options.details
+  }
+
+  res.status(status).json(payload)
 }
 
 module.exports = {

@@ -27,14 +27,24 @@ exports.experimentMeasurement = onRequest({
   }
 
   if (req.method !== 'POST') {
-    sendApiError(res, 405, 'method_not_allowed', 'Method not allowed. Use POST.')
+    sendApiError(res, 405, 'method_not_allowed', 'Method not allowed. Use POST.', {
+      field: 'method',
+      details: {
+        allowedMethods: ['POST', 'OPTIONS'],
+      },
+    })
     return
   }
 
   const expectedToken = experimentImportToken.value().trim()
 
   if (!tokensMatch(getExperimentImportToken(req), expectedToken)) {
-    sendApiError(res, 401, 'unauthorized', 'Unauthorized.')
+    sendApiError(res, 401, 'unauthorized', 'Missing or invalid import token.', {
+      field: 'Authorization',
+      details: {
+        acceptedHeaders: ['Authorization', 'X-Experiment-Import-Token'],
+      },
+    })
     return
   }
 
@@ -43,7 +53,10 @@ exports.experimentMeasurement = onRequest({
   )
 
   if (validationResult.code) {
-    sendApiError(res, 400, validationResult.code, validationResult.error)
+    sendApiError(res, 400, validationResult.code, validationResult.error, {
+      field: validationResult.field,
+      details: validationResult.details,
+    })
     return
   }
 
@@ -101,7 +114,13 @@ exports.experimentMeasurement = onRequest({
         res,
         409,
         'measurement_conflict',
-        'A measurement with this id already exists with different data.',
+        'A measurement with this id already exists with different valueMv, deviceId or measuredAt.',
+        {
+          field: 'measurementId',
+          details: {
+            conflictingFields: ['valueMv', 'deviceId', 'measuredAt'],
+          },
+        },
       )
       return
     }

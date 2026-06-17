@@ -167,7 +167,8 @@ Bei `dryRun: true` ist der Status `dry_run`.
 ```json
 {
   "code": "unauthorized",
-  "error": "Unauthorized."
+  "error": "Missing or invalid import token.",
+  "field": "Authorization"
 }
 ```
 
