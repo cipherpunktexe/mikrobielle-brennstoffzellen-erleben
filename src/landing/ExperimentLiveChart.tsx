@@ -1,9 +1,18 @@
+import CloseIcon from '@mui/icons-material/Close'
+import OpenInFullIcon from '@mui/icons-material/OpenInFull'
 import {
   Box,
+  Button,
   Card,
   CardContent,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  IconButton,
   Skeleton,
   Stack,
+  Tooltip,
   Typography,
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
@@ -53,6 +62,7 @@ function formatVoltage(valueMv?: number | null) {
 export function ExperimentLiveChart() {
   const [measurements, setMeasurements] = useState<ExperimentMeasurement[]>([])
   const [loaded, setLoaded] = useState(false)
+  const [chartDialogOpen, setChartDialogOpen] = useState(false)
 
   useEffect(() => {
     const unsubscribe = subscribeToExperimentMeasurements((nextMeasurements) => {
@@ -64,6 +74,16 @@ export function ExperimentLiveChart() {
   }, [])
 
   const latestMeasurement = measurements.at(-1)
+  const chartData = useMemo(
+    () =>
+      measurements.map((measurement) => ({
+        id: measurement.id,
+        value: measurement.valueMv,
+        label: formatExperimentTimestamp(measurement),
+        shortLabel: formatShortExperimentTimestamp(measurement),
+      })),
+    [measurements],
+  )
   const maxValue = useMemo(
     () =>
       measurements.length > 0
@@ -73,71 +93,135 @@ export function ExperimentLiveChart() {
   )
 
   return (
-    <Card>
-      <CardContent sx={{ p: { xs: 2.5, sm: 3, md: 4 } }}>
-        <Stack spacing={2.5}>
-          <Box>
-            <Typography variant="overline">Live-Versuch</Typography>
-            <Typography variant="h2" gutterBottom sx={{ fontSize: { xs: '1.85rem', sm: undefined } }}>
-              Live-Spannung
-            </Typography>
-          </Box>
+    <>
+      <Card>
+        <CardContent sx={{ p: { xs: 2.5, sm: 3, md: 4 } }}>
+          <Stack spacing={2.5}>
+            <Stack direction="row" spacing={2} alignItems="flex-start" justifyContent="space-between">
+              <Box>
+                <Typography variant="overline">Live-Versuch</Typography>
+                <Typography variant="h2" gutterBottom sx={{ fontSize: { xs: '1.85rem', sm: undefined } }}>
+                  Live-Spannung
+                </Typography>
+              </Box>
 
-          {!loaded ? (
-            <Box
-              role="status"
-              aria-label="Live-Messwerte werden geladen"
-              sx={{
-                border: (theme) => `1px solid ${alpha(theme.palette.primary.dark, 0.16)}`,
-                borderRadius: '22px',
-                bgcolor: (theme) => alpha(theme.palette.common.white, 0.34),
-                p: { xs: 1.25, sm: 1.75 },
-              }}
-            >
-              <Stack spacing={1.25}>
-                <Skeleton variant="rounded" height={34} sx={{ maxWidth: 180 }} />
-                <Skeleton variant="rounded" height={220} />
-                <Stack direction="row" justifyContent="space-between" spacing={1.5}>
-                  <Skeleton variant="text" width={72} />
-                  <Skeleton variant="text" width={72} />
-                  <Skeleton variant="text" width={72} />
-                </Stack>
-              </Stack>
-            </Box>
-          ) : measurements.length === 0 ? (
-            <Box
-              sx={{
-                border: (theme) => `1px solid ${alpha(theme.palette.primary.dark, 0.16)}`,
-                borderRadius: '22px',
-                px: { xs: 2, sm: 3 },
-                py: { xs: 4, sm: 5 },
-                textAlign: 'center',
-                bgcolor: (theme) => alpha(theme.palette.common.white, 0.34),
-              }}
-            >
-              <Typography variant="h6">Noch keine Messwerte</Typography>
-            </Box>
-          ) : (
-            <Stack spacing={1.5}>
-              <LineChart
-                data={measurements.map((measurement) => ({
-                  id: measurement.id,
-                  value: measurement.valueMv,
-                  label: formatExperimentTimestamp(measurement),
-                  shortLabel: formatShortExperimentTimestamp(measurement),
-                }))}
-                ariaLabel="Live-Diagramm der Spannung am großen Versuchsaufbau"
-                detailLabelTitle="Messzeitpunkt"
-                valueLabelTitle="Spannung"
-                valueFormatter={formatVoltage}
-              />
-              <Typography variant="body2" color="text.secondary">
-                Zuletzt: {formatExperimentTimestamp(latestMeasurement)} · Max: {formatVoltage(maxValue)}
-              </Typography>
+              <Tooltip title="Diagramm im Vollbild öffnen">
+                <span>
+                  <IconButton
+                    aria-label="Diagramm im Vollbild öffnen"
+                    onClick={() => setChartDialogOpen(true)}
+                    disabled={!loaded || measurements.length === 0}
+                    sx={{ mt: 0.25 }}
+                  >
+                    <OpenInFullIcon />
+                  </IconButton>
+                </span>
+              </Tooltip>
             </Stack>
-          )}
-        </Stack>
-      </CardContent>
-    </Card>
+
+            {!loaded ? (
+              <Box
+                role="status"
+                aria-label="Live-Messwerte werden geladen"
+                sx={{
+                  border: (theme) => `1px solid ${alpha(theme.palette.primary.dark, 0.16)}`,
+                  borderRadius: '22px',
+                  bgcolor: (theme) => alpha(theme.palette.common.white, 0.34),
+                  p: { xs: 1.25, sm: 1.75 },
+                }}
+              >
+                <Stack spacing={1.25}>
+                  <Skeleton variant="rounded" height={34} sx={{ maxWidth: 180 }} />
+                  <Skeleton variant="rounded" height={220} />
+                  <Stack direction="row" justifyContent="space-between" spacing={1.5}>
+                    <Skeleton variant="text" width={72} />
+                    <Skeleton variant="text" width={72} />
+                    <Skeleton variant="text" width={72} />
+                  </Stack>
+                </Stack>
+              </Box>
+            ) : measurements.length === 0 ? (
+              <Box
+                sx={{
+                  border: (theme) => `1px solid ${alpha(theme.palette.primary.dark, 0.16)}`,
+                  borderRadius: '22px',
+                  px: { xs: 2, sm: 3 },
+                  py: { xs: 4, sm: 5 },
+                  textAlign: 'center',
+                  bgcolor: (theme) => alpha(theme.palette.common.white, 0.34),
+                }}
+              >
+                <Typography variant="h6">Noch keine Messwerte</Typography>
+              </Box>
+            ) : (
+              <Stack spacing={1.5}>
+                <LineChart
+                  data={chartData}
+                  ariaLabel="Live-Diagramm der Spannung am großen Versuchsaufbau"
+                  detailLabelTitle="Messzeitpunkt"
+                  valueLabelTitle="Spannung"
+                  valueFormatter={formatVoltage}
+                  showActiveSummary={false}
+                />
+                <Typography variant="body2" color="text.secondary">
+                  Zuletzt: {formatExperimentTimestamp(latestMeasurement)} · Max: {formatVoltage(maxValue)}
+                </Typography>
+              </Stack>
+            )}
+          </Stack>
+        </CardContent>
+      </Card>
+
+      <Dialog
+        open={chartDialogOpen}
+        onClose={() => setChartDialogOpen(false)}
+        fullScreen
+        PaperProps={{
+          sx: {
+            bgcolor: 'background.default',
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            pr: 6,
+            py: { xs: 1.5, sm: 2 },
+            fontSize: { xs: '1.75rem', sm: undefined },
+          }}
+        >
+          Live-Spannung
+          <IconButton
+            aria-label="Vollbild schließen"
+            onClick={() => setChartDialogOpen(false)}
+            sx={{ position: 'absolute', right: 12, top: 12 }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent
+          dividers
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            px: { xs: 1.25, sm: 3, md: 5 },
+            py: { xs: 1.5, sm: 3 },
+          }}
+        >
+          <Box sx={{ width: '100%', maxWidth: 1200, mx: 'auto' }}>
+            <LineChart
+              data={chartData}
+              ariaLabel="Live-Diagramm der Spannung am großen Versuchsaufbau im Vollbild"
+              detailLabelTitle="Messzeitpunkt"
+              valueLabelTitle="Spannung"
+              valueFormatter={formatVoltage}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ px: { xs: 2, sm: 3 }, py: { xs: 1.25, sm: 1.5 } }}>
+          <Button onClick={() => setChartDialogOpen(false)}>Schließen</Button>
+        </DialogActions>
+      </Dialog>
+    </>
   )
 }
