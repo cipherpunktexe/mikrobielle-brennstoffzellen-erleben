@@ -87,6 +87,9 @@ Spannungswerte des grossen Versuchsaufbaus an die App senden. Die Werte werden
 in `experimentMeasurements` gespeichert und auf der Startseite im Live-Diagramm
 angezeigt.
 
+Ausfuehrliche Schnittstellen-Dokumentation mit allen Feldern, Bedingungen,
+Fehlercodes und Python-Beispiel: [docs/experiment-measurement-api.md](docs/experiment-measurement-api.md).
+
 - Endpoint: `POST /api/experiment-measurement`
 - Produktiv-URL: `https://mikrobielle-brennstoffzellen.web.app/api/experiment-measurement`
 - Content-Type: `application/json`
