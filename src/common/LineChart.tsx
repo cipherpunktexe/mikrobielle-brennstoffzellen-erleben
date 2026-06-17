@@ -18,6 +18,30 @@ interface LineChartProps {
   showActiveSummary?: boolean
 }
 
+export function getSampledChartIndexes(length: number, maxCount: number) {
+  if (length <= 0 || maxCount <= 0) {
+    return []
+  }
+
+  if (length <= maxCount) {
+    return Array.from({ length }, (_, index) => index)
+  }
+
+  if (maxCount === 1) {
+    return [length - 1]
+  }
+
+  const step = (length - 1) / (maxCount - 1)
+
+  return Array.from(
+    new Set(
+      Array.from({ length: maxCount }, (_, index) =>
+        Math.round(index * step),
+      ),
+    ),
+  )
+}
+
 export function LineChart({
   data,
   ariaLabel,
@@ -115,17 +139,16 @@ export function LineChart({
   })
 
   const activePoint = activeIndex === null ? null : points[activeIndex] ?? null
+  const visiblePointIndexes = new Set(
+    getSampledChartIndexes(data.length, isMobileViewport ? 24 : 48),
+  )
   const linePoints = points.map((point) => `${point.x},${point.y}`).join(' ')
   const areaPoints = [
     `${padding.left},${padding.top + plotHeight}`,
     ...points.map((point) => `${point.x},${point.y}`),
     `${padding.left + plotWidth},${padding.top + plotHeight}`,
   ].join(' ')
-  const labelIndexes = isMobileViewport
-    ? Array.from(new Set([0, data.length - 1])).filter((index) => index >= 0)
-    : Array.from(
-        new Set([0, Math.floor((data.length - 1) / 3), Math.floor(((data.length - 1) * 2) / 3), data.length - 1]),
-      ).filter((index) => index >= 0)
+  const labelIndexes = getSampledChartIndexes(data.length, isMobileViewport ? 2 : 4)
 
   function getNearestIndex(clientX: number) {
     const svg = svgRef.current
@@ -341,8 +364,13 @@ export function LineChart({
             strokeLinecap="round"
           />
 
-          {points.map((point) => {
+          {points.map((point, index) => {
             const isActive = activePoint?.point.id === point.point.id
+            const isVisiblePoint = visiblePointIndexes.has(index) || isActive
+
+            if (!isVisiblePoint) {
+              return null
+            }
 
             return (
               <g key={point.point.id}>
