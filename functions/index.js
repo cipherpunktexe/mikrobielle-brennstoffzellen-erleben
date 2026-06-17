@@ -1,4 +1,5 @@
 const admin = require('firebase-admin')
+const crypto = require('node:crypto')
 const { onRequest } = require('firebase-functions/v2/https')
 const { defineSecret } = require('firebase-functions/params')
 
@@ -6,6 +7,8 @@ admin.initializeApp()
 
 const db = admin.firestore()
 const experimentImportToken = defineSecret('EXPERIMENT_IMPORT_TOKEN')
+const minExperimentValueMv = -1_000_000
+const maxExperimentValueMv = 1_000_000
 
 function isActiveEntity(status) {
   return status !== 'blocked' && status !== 'deleted'
@@ -22,7 +25,7 @@ function toMillis(timestamp) {
 function applyCorsHeaders(res, methods = 'GET, OPTIONS') {
   res.set('Access-Control-Allow-Origin', '*')
   res.set('Access-Control-Allow-Methods', methods)
-  res.set('Access-Control-Allow-Headers', 'Content-Type, X-Experiment-Import-Token')
+  res.set('Access-Control-Allow-Headers', 'Authorization, Content-Type, X-Experiment-Import-Token')
 }
 
 function getExperimentImportToken(req) {
@@ -32,7 +35,43 @@ function getExperimentImportToken(req) {
     return authHeader.slice('Bearer '.length).trim()
   }
 
-  return String(req.get('X-Experiment-Import-Token') || req.body?.apiKey || '').trim()
+  return String(req.get('X-Experiment-Import-Token') || '').trim()
+}
+
+function sendApiError(res, status, code, error) {
+  res.status(status).json({ code, error })
+}
+
+function normalizeExperimentDocumentId(value) {
+  const normalizedValue = String(value || '').trim()
+
+  if (!normalizedValue) {
+    return null
+  }
+
+  if (!/^[a-zA-Z0-9._:-]{1,120}$/.test(normalizedValue)) {
+    return null
+  }
+
+  return normalizedValue
+}
+
+function createExperimentDocumentId(deviceId, measuredAtDate) {
+  const hash = crypto
+    .createHash('sha256')
+    .update(`${deviceId}|${measuredAtDate.toISOString()}`)
+    .digest('hex')
+    .slice(0, 32)
+
+  return `measurement-${hash}`
+}
+
+function timestampToIso(timestamp) {
+  if (!timestamp || typeof timestamp.toDate !== 'function') {
+    return null
+  }
+
+  return timestamp.toDate().toISOString()
 }
 
 exports.leaderboard = onRequest({ region: 'europe-west1', invoker: 'public' }, async (req, res) => {
@@ -161,55 +200,130 @@ exports.experimentMeasurement = onRequest({
   }
 
   if (req.method !== 'POST') {
-    res.status(405).json({ error: 'Method not allowed. Use POST.' })
+    sendApiError(res, 405, 'method_not_allowed', 'Method not allowed. Use POST.')
     return
   }
 
   const expectedToken = experimentImportToken.value().trim()
 
   if (!expectedToken || getExperimentImportToken(req) !== expectedToken) {
-    res.status(401).json({ error: 'Unauthorized.' })
+    sendApiError(res, 401, 'unauthorized', 'Unauthorized.')
     return
   }
 
   const valueMv = Number(req.body?.valueMv)
   const measuredAtInput = req.body?.measuredAt
   const deviceId = String(req.body?.deviceId || 'hauptversuch').trim()
+  const requestedMeasurementId = req.body?.measurementId
 
-  if (!Number.isFinite(valueMv) || valueMv < -1000 || valueMv > 5000) {
-    res.status(400).json({ error: 'valueMv must be a number between -1000 and 5000.' })
+  if (!Number.isFinite(valueMv) || valueMv < minExperimentValueMv || valueMv > maxExperimentValueMv) {
+    sendApiError(
+      res,
+      400,
+      'invalid_value',
+      `valueMv must be a number between ${minExperimentValueMv} and ${maxExperimentValueMv}.`,
+    )
     return
   }
 
   if (!deviceId || deviceId.length > 80) {
-    res.status(400).json({ error: 'deviceId must be a non-empty string with at most 80 characters.' })
+    sendApiError(
+      res,
+      400,
+      'invalid_device_id',
+      'deviceId must be a non-empty string with at most 80 characters.',
+    )
+    return
+  }
+
+  if (!measuredAtInput && !requestedMeasurementId) {
+    sendApiError(
+      res,
+      400,
+      'missing_idempotency_key',
+      'measuredAt or measurementId is required for idempotent imports.',
+    )
     return
   }
 
   const measuredAtDate = measuredAtInput ? new Date(measuredAtInput) : new Date()
 
   if (Number.isNaN(measuredAtDate.getTime())) {
-    res.status(400).json({ error: 'measuredAt must be a valid ISO timestamp.' })
+    sendApiError(res, 400, 'invalid_timestamp', 'measuredAt must be a valid ISO timestamp.')
     return
   }
 
+  const providedMeasurementId = requestedMeasurementId
+    ? normalizeExperimentDocumentId(requestedMeasurementId)
+    : null
+
+  if (requestedMeasurementId && !providedMeasurementId) {
+    sendApiError(
+      res,
+      400,
+      'invalid_measurement_id',
+      'measurementId must contain only letters, numbers, dots, underscores, colons or hyphens and be at most 120 characters.',
+    )
+    return
+  }
+
+  const measurementId = providedMeasurementId ?? createExperimentDocumentId(deviceId, measuredAtDate)
+  const measurementRef = db.collection('experimentMeasurements').doc(measurementId)
+
   try {
-    const measurementRef = await db.collection('experimentMeasurements').add({
-      valueMv,
-      deviceId,
-      source: 'arduino',
-      measuredAt: admin.firestore.Timestamp.fromDate(measuredAtDate),
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    const result = await db.runTransaction(async (transaction) => {
+      const existingMeasurement = await transaction.get(measurementRef)
+
+      if (existingMeasurement.exists) {
+        const existingData = existingMeasurement.data() || {}
+        const existingMeasuredAt = timestampToIso(existingData.measuredAt)
+        const nextMeasuredAt = measuredAtDate.toISOString()
+
+        if (
+          existingData.valueMv !== valueMv ||
+          existingData.deviceId !== deviceId ||
+          (measuredAtInput && existingMeasuredAt !== nextMeasuredAt)
+        ) {
+          return { status: 'conflict', data: existingData }
+        }
+
+        return { status: 'existing', data: existingData }
+      }
+
+      const nextData = {
+        valueMv,
+        deviceId,
+        source: 'arduino',
+        measuredAt: admin.firestore.Timestamp.fromDate(measuredAtDate),
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      }
+
+      transaction.set(measurementRef, nextData)
+
+      return { status: 'created', data: nextData }
     })
 
-    res.status(201).json({
-      id: measurementRef.id,
-      valueMv,
-      measuredAt: measuredAtDate.toISOString(),
-      deviceId,
+    if (result.status === 'conflict') {
+      sendApiError(
+        res,
+        409,
+        'measurement_conflict',
+        'A measurement with this id already exists with different data.',
+      )
+      return
+    }
+
+    const responseStatus = result.status === 'created' ? 201 : 200
+
+    res.status(responseStatus).json({
+      id: measurementId,
+      valueMv: result.data.valueMv,
+      measuredAt: timestampToIso(result.data.measuredAt) ?? measuredAtDate.toISOString(),
+      deviceId: result.data.deviceId,
+      status: result.status,
     })
   } catch (error) {
     console.error('Experiment measurement import failed', error)
-    res.status(500).json({ error: 'Experiment measurement could not be saved.' })
+    sendApiError(res, 500, 'server_error', 'Experiment measurement could not be saved.')
   }
 })

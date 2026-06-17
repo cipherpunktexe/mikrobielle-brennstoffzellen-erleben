@@ -92,6 +92,7 @@ angezeigt.
 - Content-Type: `application/json`
 - Authentifizierung: Bearer-Token oder Header `X-Experiment-Import-Token`
 - Einheit: `valueMv` wird in Millivolt gesendet
+- Idempotenz: gleicher `deviceId` + gleicher `measuredAt` schreibt dasselbe Dokument
 
 ### Authentifizierung
 
@@ -120,26 +121,35 @@ X-Experiment-Import-Token: <EXPERIMENT_IMPORT_TOKEN>
 {
   "valueMv": 742,
   "measuredAt": "2026-06-17T12:30:00.000Z",
-  "deviceId": "hauptversuch"
+  "deviceId": "hauptversuch",
+  "measurementId": "hauptversuch-2026-06-17T12:30:00.000Z"
 }
 ```
 
 Felder:
 
-- `valueMv` ist erforderlich. Erlaubt sind Zahlen von `-1000` bis `5000`.
-- `measuredAt` ist optional. Wenn der Wert fehlt, verwendet die API den aktuellen Serverzeitpunkt.
+- `valueMv` ist erforderlich. Erlaubt sind Zahlen von `-1000000` bis `1000000`.
+- `measuredAt` ist erforderlich, wenn keine `measurementId` gesendet wird.
 - `deviceId` ist optional. Wenn der Wert fehlt, verwendet die API `hauptversuch`.
+- `measurementId` ist optional. Erlaubt sind Buchstaben, Zahlen, Punkte,
+  Unterstriche, Doppelpunkte und Bindestriche mit maximal 120 Zeichen.
+
+Wenn keine `measurementId` gesendet wird, erzeugt die API eine stabile Dokument-ID
+aus `deviceId` und `measuredAt`. Wiederholt ein Script denselben Request nach
+einem Timeout, entsteht dadurch kein doppelter Messwert.
 
 ### Erfolgreiche Antwort
 
-Status: `201 Created`
+Status: `201 Created` bei neuem Messwert, `200 OK` bei wiederholtem identischem
+Request.
 
 ```json
 {
-  "id": "abc123",
+  "id": "measurement-abc123",
   "valueMv": 742,
   "measuredAt": "2026-06-17T12:30:00.000Z",
-  "deviceId": "hauptversuch"
+  "deviceId": "hauptversuch",
+  "status": "created"
 }
 ```
 
@@ -147,16 +157,31 @@ Status: `201 Created`
 
 ```json
 {
+  "code": "unauthorized",
   "error": "Unauthorized."
 }
 ```
 
 Typische Statuscodes:
 
-- `400`: ungueltiger Messwert, ungueltiger Zeitstempel oder ungueltige `deviceId`
+- `400`: ungueltiger Messwert, ungueltiger Zeitstempel, ungueltige `deviceId`
+  oder ungueltige `measurementId`
 - `401`: fehlender oder falscher Token
+- `409`: Dokument-ID existiert bereits mit anderen Messdaten
 - `405`: falsche HTTP-Methode
 - `500`: Messwert konnte nicht gespeichert werden
+
+Stabile Fehlercodes:
+
+- `invalid_value`
+- `invalid_timestamp`
+- `invalid_device_id`
+- `invalid_measurement_id`
+- `missing_idempotency_key`
+- `unauthorized`
+- `measurement_conflict`
+- `method_not_allowed`
+- `server_error`
 
 ### cURL-Beispiel
 
@@ -167,7 +192,8 @@ curl -X POST "https://mikrobielle-brennstoffzellen.web.app/api/experiment-measur
   -d '{
     "valueMv": 742,
     "measuredAt": "2026-06-17T12:30:00.000Z",
-    "deviceId": "hauptversuch"
+    "deviceId": "hauptversuch",
+    "measurementId": "hauptversuch-2026-06-17T12:30:00.000Z"
   }'
 ```
 
@@ -183,9 +209,10 @@ token = "<EXPERIMENT_IMPORT_TOKEN>"
 
 payload = {
     "valueMv": 742,
-    "measuredAt": datetime.now(timezone.utc).isoformat(),
     "deviceId": "hauptversuch",
 }
+payload["measuredAt"] = datetime.now(timezone.utc).isoformat()
+payload["measurementId"] = f'{payload["deviceId"]}-{payload["measuredAt"]}'
 
 response = requests.post(
     url,
