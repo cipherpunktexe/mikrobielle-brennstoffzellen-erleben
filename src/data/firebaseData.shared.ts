@@ -13,6 +13,7 @@ export { auth, db }
 export const usersCollection = collection(db, 'users')
 export const generatorsCollection = collection(db, 'generators')
 export const measurementsCollection = collection(db, 'measurements')
+export const experimentMeasurementsCollection = collection(db, 'experimentMeasurements')
 const adminStateCollection = collection(db, 'adminState')
 export const qrExportCounterRef = doc(adminStateCollection, 'qr-export-counter')
 export const googleProvider = new GoogleAuthProvider()

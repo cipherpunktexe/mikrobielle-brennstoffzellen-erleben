@@ -12,6 +12,7 @@ import {
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { Link as RouterLink } from 'react-router-dom'
+import { ExperimentLiveChart } from './ExperimentLiveChart'
 
 const canvaViewUrl =
   'https://www.canva.com/design/DAG07O2FJRM/I5SCR0qqx1-stjzMK3V_Qg/view'
@@ -104,6 +105,8 @@ export function LandingPage() {
           </Grid>
         </CardContent>
       </Card>
+
+      <ExperimentLiveChart />
 
       <Card>
         <CardContent sx={{ p: { xs: 2.5, sm: 3, md: 4 } }}>

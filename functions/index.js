@@ -1,9 +1,11 @@
 const admin = require('firebase-admin')
 const { onRequest } = require('firebase-functions/v2/https')
+const { defineSecret } = require('firebase-functions/params')
 
 admin.initializeApp()
 
 const db = admin.firestore()
+const experimentImportToken = defineSecret('EXPERIMENT_IMPORT_TOKEN')
 
 function isActiveEntity(status) {
   return status !== 'blocked' && status !== 'deleted'
@@ -17,10 +19,20 @@ function toMillis(timestamp) {
   return timestamp.toMillis()
 }
 
-function applyCorsHeaders(res) {
+function applyCorsHeaders(res, methods = 'GET, OPTIONS') {
   res.set('Access-Control-Allow-Origin', '*')
-  res.set('Access-Control-Allow-Methods', 'GET, OPTIONS')
-  res.set('Access-Control-Allow-Headers', 'Content-Type')
+  res.set('Access-Control-Allow-Methods', methods)
+  res.set('Access-Control-Allow-Headers', 'Content-Type, X-Experiment-Import-Token')
+}
+
+function getExperimentImportToken(req) {
+  const authHeader = String(req.get('Authorization') || '')
+
+  if (authHeader.startsWith('Bearer ')) {
+    return authHeader.slice('Bearer '.length).trim()
+  }
+
+  return String(req.get('X-Experiment-Import-Token') || req.body?.apiKey || '').trim()
 }
 
 exports.leaderboard = onRequest({ region: 'europe-west1', invoker: 'public' }, async (req, res) => {
@@ -133,5 +145,71 @@ exports.leaderboard = onRequest({ region: 'europe-west1', invoker: 'public' }, a
   } catch (error) {
     console.error('Leaderboard API failed', error)
     res.status(500).json({ error: 'Leaderboard could not be loaded.' })
+  }
+})
+
+exports.experimentMeasurement = onRequest({
+  region: 'europe-west1',
+  invoker: 'public',
+  secrets: [experimentImportToken],
+}, async (req, res) => {
+  applyCorsHeaders(res, 'POST, OPTIONS')
+
+  if (req.method === 'OPTIONS') {
+    res.status(204).send('')
+    return
+  }
+
+  if (req.method !== 'POST') {
+    res.status(405).json({ error: 'Method not allowed. Use POST.' })
+    return
+  }
+
+  const expectedToken = experimentImportToken.value().trim()
+
+  if (!expectedToken || getExperimentImportToken(req) !== expectedToken) {
+    res.status(401).json({ error: 'Unauthorized.' })
+    return
+  }
+
+  const valueMv = Number(req.body?.valueMv)
+  const measuredAtInput = req.body?.measuredAt
+  const deviceId = String(req.body?.deviceId || 'hauptversuch').trim()
+
+  if (!Number.isFinite(valueMv) || valueMv < -1000 || valueMv > 5000) {
+    res.status(400).json({ error: 'valueMv must be a number between -1000 and 5000.' })
+    return
+  }
+
+  if (!deviceId || deviceId.length > 80) {
+    res.status(400).json({ error: 'deviceId must be a non-empty string with at most 80 characters.' })
+    return
+  }
+
+  const measuredAtDate = measuredAtInput ? new Date(measuredAtInput) : new Date()
+
+  if (Number.isNaN(measuredAtDate.getTime())) {
+    res.status(400).json({ error: 'measuredAt must be a valid ISO timestamp.' })
+    return
+  }
+
+  try {
+    const measurementRef = await db.collection('experimentMeasurements').add({
+      valueMv,
+      deviceId,
+      source: 'arduino',
+      measuredAt: admin.firestore.Timestamp.fromDate(measuredAtDate),
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    })
+
+    res.status(201).json({
+      id: measurementRef.id,
+      valueMv,
+      measuredAt: measuredAtDate.toISOString(),
+      deviceId,
+    })
+  } catch (error) {
+    console.error('Experiment measurement import failed', error)
+    res.status(500).json({ error: 'Experiment measurement could not be saved.' })
   }
 })
